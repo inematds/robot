@@ -32,14 +32,11 @@ git add .
 # Fazer commit inicial
 git commit -m "🎉 Inicial commit - Curso completo de Robótica"
 
-# Adicionar remote (substitua USERNAME pelo seu usuário GitHub)
-git remote add origin https://github.com/USERNAME/robot.git
+# Adicionar remote
+git remote add origin https://github.com/inematds/robot.git
 
-# Renomear branch para main (se necessário)
-git branch -M main
-
-# Enviar para GitHub
-git push -u origin main
+# Push para GitHub
+git push -u origin master
 ```
 
 ## ⚙️ Configurar GitHub Pages
@@ -70,10 +67,10 @@ O deploy será automático a cada push na branch `main`!
 Após alguns minutos, seu site estará disponível em:
 
 ```
-https://USERNAME.github.io/robot/
+https://inematds.github.io/robot/
 ```
 
-Substitua `USERNAME` pelo seu usuário do GitHub.
+✅ **Seu site está publicado em:** https://inematds.github.io/robot/
 
 ## 🔄 Atualizando o Site
 
@@ -102,7 +99,7 @@ Se você quiser mudar o nome do repo depois:
 2. Digite o novo nome
 3. Clique em **Rename**
 
-A URL mudará para: `https://USERNAME.github.io/NOVO-NOME/`
+A URL mudará para: `https://inematds.github.io/NOVO-NOME/`
 
 ### Custom Domain (Opcional)
 
@@ -114,7 +111,7 @@ Se você tem um domínio próprio:
    ```
 2. Configure o DNS do domínio apontando para:
    ```
-   USERNAME.github.io
+   inematds.github.io
    ```
 
 ## 📊 Monitorar Deploys
@@ -198,4 +195,4 @@ robot/
 
 🤖 **Boa sorte com seu projeto!**
 
-Para dúvidas, abra uma [Issue no repositório](https://github.com/USERNAME/robot/issues).
+Para dúvidas, abra uma [Issue no repositório](https://github.com/inematds/robot/issues).
