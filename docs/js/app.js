@@ -107,3 +107,24 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🤖 Robótica do Zero ao Expert - JavaScript carregado!');
     console.log('📚 Sistema Compact Topics ATIA ativo');
 });
+
+/* ========================================
+   MODULE TOGGLE FUNCTION (for Nivel pages)
+   ======================================== */
+
+function toggleModule(moduleNumber) {
+    const module = document.getElementById('module-' + moduleNumber);
+    const arrow = document.getElementById('arrow-' + moduleNumber);
+
+    if (module && arrow) {
+        // Toggle visibility
+        module.classList.toggle('hidden');
+
+        // Rotate arrow
+        if (module.classList.contains('hidden')) {
+            arrow.style.transform = 'rotate(0deg)';
+        } else {
+            arrow.style.transform = 'rotate(180deg)';
+        }
+    }
+}
