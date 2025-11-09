@@ -994,6 +994,263 @@ if __name__ == "__main__":
                     </div>
                 </div>
 
+                <!-- Módulo 7 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-expert text-white p-4 flex items-center justify-between cursor-pointer" onclick="toggleModule(7)">
+                        <div class="flex items-center">
+                            <span class="text-2xl mr-3">7️⃣</span>
+                            <div>
+                                <h3 class="text-xl font-bold">Braço Robótico com Visão</h3>
+                                <p class="text-sm text-red-100">12 horas • 7 aulas</p>
+                            </div>
+                        </div>
+                        <svg class="w-6 h-6 transform transition-transform" id="arrow-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <div class="p-6 hidden" id="module-7">
+<div class="prose max-w-none">
+<h3 class="text-2xl font-bold mb-4 mt-6 text-gray-900">Módulo 3.7: Braço Robótico com Visão</h3>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Manipulação Inteligente: A Coordenação Olho-Mão</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Até agora, nosso foco tem sido em robôs móveis. Agora, vamos mudar para um dos pilares da automação industrial e da robótica de serviços: os <strong>braços robóticos</strong> (ou manipuladores). Um braço robótico que pode <strong>ver</strong> o que está fazendo e tomar decisões com base nisso é uma ferramenta incrivelmente poderosa, capaz de realizar tarefas de <em>pick-and-place</em> (pegar e colocar), montagem e interação com objetos.</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O desafio central aqui é a <strong>coordenação olho-mão</strong>: como traduzir a posição de um objeto detectado por uma câmera em uma série de ângulos de junta que o braço robótico precisa para alcançar esse objeto.</p>
+
+<img src="imagens/robotic_arm_vision.png" alt="Braço Robótico com Visão" class="w-full max-w-2xl mx-auto rounded-lg shadow-md my-6">
+<em>Figura 1: Um braço robótico industrial usando um sistema de visão para pegar objetos em uma esteira. Este é um exemplo clássico de coordenação olho-mão.</em>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Cinemática: A Matemática do Movimento</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">A cinemática é o estudo do movimento sem considerar as forças que o causam. Para um braço robótico, existem dois problemas cinemáticos fundamentais:</p>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-800">1. Cinemática Direta (Forward Kinematics - FK)</h5>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>A Pergunta</strong>: Se eu sei os ângulos de todas as juntas do meu braço robótico, onde no espaço estará a sua ponta (o efetuador final ou garra)?</li>
+<li class="mb-2"><strong>A Solução</strong>: Este é o problema "fácil". Usando trigonometria (senos e cossenos), podemos calcular a posição (X, Y, Z) do efetuador final a partir dos ângulos das juntas e dos comprimentos dos elos do braço. Cada junta adiciona uma transformação (rotação e translação) à cadeia cinemática.</li>
+</ul>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-800">2. Cinemática Inversa (Inverse Kinematics - IK)</h5>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>A Pergunta</strong>: Se eu quero que a ponta do meu braço robótico vá para uma posição específica (X, Y, Z) no espaço, quais são os ângulos que cada uma das juntas precisa ter?</li>
+<li class="mb-2"><strong>A Solução</strong>: Este é o problema "difícil" e o mais importante para a automação. A solução matemática para a IK pode ser muito complexa, muitas vezes não tendo uma solução única (o braço pode alcançar o mesmo ponto de várias maneiras) ou, às vezes, nenhuma solução (o ponto está fora do alcance). Para braços robóticos simples (como um braço 2D com 2 ou 3 juntas), a solução pode ser encontrada com geometria. Para braços mais complexos, são usados métodos numéricos iterativos (o computador "chuta" uma solução e a refina até encontrar uma que funcione).</li>
+</ul>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">O Pipeline de um Sistema Pick-and-Place</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Vamos detalhar os passos que um braço robótico com visão executa para pegar um objeto:</p>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Calibração Câmera-Robô</strong>: Este é um passo crucial, feito uma única vez. Precisamos estabelecer uma relação matemática entre o sistema de coordenadas da câmera (em pixels) e o sistema de coordenadas do robô (em milímetros ou centímetros). Isso geralmente é feito mostrando ao robô um padrão conhecido (como um tabuleiro de xadrez) em várias posições e calculando a matriz de transformação que mapeia um sistema ao outro.</li>
+<li class="mb-2"><strong>Detecção de Objetos</strong>: O sistema de visão (rodando em um Raspberry Pi, por exemplo) captura uma imagem do espaço de trabalho. Ele usa um algoritmo de visão computacional (como detecção de cor, forma ou um modelo de IA) para encontrar o objeto de interesse. O resultado é a posição do objeto em <strong>coordenadas de pixel</strong> (ex: pixel 250, 480).</li>
+<li class="mb-2"><strong>Transformação de Coordenadas</strong>: Usando a matriz de calibração do passo 1, o sistema converte as coordenadas de pixel do objeto em <strong>coordenadas do mundo real</strong> no sistema de referência do robô (ex: X=15.2 cm, Y=22.5 cm).</li>
+<li class="mb-2"><strong>Cálculo da Cinemática Inversa</strong>: O cérebro do robô (o Raspberry Pi) agora tem um ponto de destino (X, Y, Z). Ele alimenta essas coordenadas em seu solucionador de IK. O solucionador calcula o conjunto de ângulos necessários para cada junta do braço (ex: Junta 1 = 45°, Junta 2 = 30°, Junta 3 = 75°) para que a garra chegue ao local do objeto.</li>
+<li class="mb-2"><strong>Execução do Movimento</strong>: O Raspberry Pi envia os ângulos calculados para o controlador de baixo nível (um Arduino ou ESP32), que gera os sinais PWM precisos para mover cada servo para sua posição de destino.</li>
+<li class="mb-2"><strong>Ação da Garra</strong>: Uma vez que o braço está posicionado, um comando é enviado para fechar a garra e pegar o objeto.</li>
+<li class="mb-2"><strong>Movimento para o Destino</strong>: O processo é repetido para o local de entrega. O robô calcula a IK para o ponto de destino, move o braço e, finalmente, abre a garra.</li>
+</ol>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Projeto Prático: Braço Robótico 2-DOF que Segue um Objeto</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Vamos construir um projeto que implementa a parte central da coordenação olho-mão. Usaremos um ESP32-CAM para detectar um objeto colorido e controlar um braço robótico simples de 2 juntas (pan/tilt) para que a câmera siga o objeto.</p>
+
+<strong>Materiais:</strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">1x ESP32-CAM</li>
+<li class="mb-2">2x Servos Padrão (SG90)</li>
+<li class="mb-2">1x Kit de montagem Pan/Tilt para servos</li>
+<li class="mb-2">1x Objeto de cor viva (ex: uma bola de tênis ou um post-it vermelho)</li>
+</ul>
+
+<strong>Montagem:</strong>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Monte o kit pan/tilt com os dois servos. Um servo controlará o movimento horizontal (pan) e o outro, o vertical (tilt).</li>
+<li class="mb-2">Fixe o ESP32-CAM no topo do mecanismo pan/tilt.</li>
+<li class="mb-2">Conecte os servos ao ESP32 (ou a uma placa controladora separada, como no módulo de arquitetura híbrida). Lembre-se de usar uma fonte de 5V externa para os servos.
+    <ul class="list-disc list-inside ml-6">
+    <li>Servo Pan (Horizontal): <strong>GPIO 12</strong></li>
+    <li>Servo Tilt (Vertical): <strong>GPIO 13</strong></li>
+    </ul>
+</li>
+</ol>
+
+<strong>Lógica do Código:</strong>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O código rodará inteiramente no ESP32-CAM.</p>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Captura de Imagem</strong>: O loop principal captura um quadro da câmera.</li>
+<li class="mb-2"><strong>Detecção de Cor</strong>: O código converte a imagem do espaço de cor RGB para <strong>HSV (Hue, Saturation, Value)</strong>. O espaço de cor HSV é muito melhor para detecção de cor, pois o componente <strong>Hue (Matiz)</strong> representa a cor pura, independentemente da iluminação (Value) ou da intensidade da cor (Saturation).</li>
+<li class="mb-2"><strong>Limiarização (Thresholding)</strong>: Nós definimos uma faixa de valores de Hue, Saturation e Value que correspondem à cor do nosso objeto. O código cria uma imagem binária (preta e branca) onde os pixels brancos representam as áreas da imagem que correspondem à cor do objeto.</li>
+<li class="mb-2"><strong>Encontrar o Centroide</strong>: O algoritmo calcula o "centro de massa" (centroide) de todos os pixels brancos. Isso nos dá a coordenada (X, Y) do centro do objeto na imagem.</li>
+<li class="mb-2"><strong>Cálculo do Erro</strong>: O código calcula o erro entre a posição do centroide do objeto e o centro da imagem.
+    <ul class="list-disc list-inside ml-6">
+    <li><code class="bg-gray-100 px-2 py-1 rounded text-sm">erro_X = centroide_X - (largura_imagem / 2)</code></li>
+    <li><code class="bg-gray-100 px-2 py-1 rounded text-sm">erro_Y = centroide_Y - (altura_imagem / 2)</code></li>
+    </ul>
+</li>
+<li class="mb-2"><strong>Controle Proporcional (PID Simplificado)</strong>: Usamos um simples controle proporcional para ajustar os ângulos dos servos.
+    <ul class="list-disc list-inside ml-6">
+    <li><code class="bg-gray-100 px-2 py-1 rounded text-sm">novo_angulo_pan = angulo_pan_atual - Kp * erro_X</code></li>
+    <li><code class="bg-gray-100 px-2 py-1 rounded text-sm">novo_angulo_tilt = angulo_tilt_atual + Kp * erro_Y</code></li>
+    </ul>
+    O objetivo é mover os servos de forma a zerar o erro, ou seja, trazer o centroide do objeto para o centro da imagem.
+</li>
+<li class="mb-2"><strong>Comando dos Servos</strong>: Os novos ângulos são enviados para os servos pan e tilt.</li>
+</ol>
+
+<strong>Resultado Esperado:</strong>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Ao ligar o sistema, aponte a câmera para o objeto colorido. O mecanismo pan/tilt se moverá automaticamente para centralizar o objeto na visão da câmera. Se você mover o objeto, o braço o seguirá, mantendo-o sempre no centro do seu campo de visão.</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Você acabou de criar um sistema de rastreamento ativo, a base para qualquer tarefa de manipulação robótica com visão. No projeto final do curso, vamos integrar todos esses conceitos de IA para criar um robô assistente completo.</p>
+
+                    </div>
+                    </div>
+                </div>
+
+                <!-- Módulo 8 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-expert text-white p-4 flex items-center justify-between cursor-pointer" onclick="toggleModule(8)">
+                        <div class="flex items-center">
+                            <span class="text-2xl mr-3">8️⃣</span>
+                            <div>
+                                <h3 class="text-xl font-bold">Projeto Final - Robô Assistente com IA</h3>
+                                <p class="text-sm text-red-100">20 horas • Projeto integrador</p>
+                            </div>
+                        </div>
+                        <svg class="w-6 h-6 transform transition-transform" id="arrow-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <div class="p-6 hidden" id="module-8">
+<div class="prose max-w-none">
+<h3 class="text-2xl font-bold mb-4 mt-6 text-gray-900">Módulo 3.8: Projeto Final Nível 3 - Robô Assistente com IA</h3>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">A Grande Final: Unindo Todas as Peças</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Parabéns por chegar ao projeto final de toda a sua jornada na robótica! Este é o momento de sintetizar o conhecimento dos três níveis – os fundamentos da eletrônica, a navegação autônoma e a inteligência artificial – para construir o projeto mais ambicioso de todos: um <strong>robô assistente autônomo</strong>.</p>
+
+<strong>O Conceito:</strong>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Nosso objetivo é criar um robô móvel que possa navegar de forma autônoma em um ambiente doméstico, responder a comandos de voz e usar sua visão para encontrar e interagir com objetos ou pessoas. Ele será a culminação de tudo o que aprendemos, desde o controle de um simples LED até a implementação de redes neurais.</p>
+
+<img src="imagens/assistant_robot.png" alt="Robô Assistente" class="w-full max-w-2xl mx-auto rounded-lg shadow-md my-6">
+<em>Figura 1: Concepção artística do nosso robô assistente final – um agente inteligente que combina mobilidade, visão e interação por voz.</em>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Arquitetura do Sistema: O Cérebro Híbrido em Ação</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Para este projeto, a arquitetura híbrida (Módulo 3.4) não é apenas uma opção, é uma necessidade. Dividiremos as tarefas entre um Raspberry Pi e um ESP32 para máxima eficiência.</p>
+
+<strong>Componentes do Robô:</strong>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Cérebro de Alto Nível</strong>: <strong>Raspberry Pi 4</strong> (ou superior).
+    <ul class="list-disc list-inside ml-6">
+    <li><strong>Responsabilidades</strong>: Executar o ROS, processamento de visão computacional (OpenCV), reconhecimento de objetos (modelo TensorFlow Lite/YOLO), reconhecimento de voz (Vosk), tomada de decisões e navegação de alto nível (SLAM/Move Base).</li>
+    </ul>
+</li>
+<li class="mb-2"><strong>Controlador de Baixo Nível</strong>: <strong>ESP32</strong>.
+    <ul class="list-disc list-inside ml-6">
+    <li><strong>Responsabilidades</strong>: Controle preciso dos motores das rodas (com PID), leitura de encoders para odometria, leitura de sensores de baixo nível (IMU, sensores de linha), e controle de atuadores secundários (LEDs, garras, etc.).</li>
+    </ul>
+</li>
+<li class="mb-2"><strong>Sensores Principais</strong>:
+    <ul class="list-disc list-inside ml-6">
+    <li><strong>Câmera</strong>: Conectada ao Raspberry Pi para visão.</li>
+    <li><strong>LIDAR (Opcional, mas recomendado)</strong>: Conectado ao Raspberry Pi para SLAM e navegação robusta.</li>
+    <li><strong>Microfone USB</strong>: Conectado ao Raspberry Pi para captura de áudio.</li>
+    </ul>
+</li>
+<li class="mb-2"><strong>Base Móvel</strong>: Um chassi robusto com motores DC e <strong>encoders</strong> nas rodas.</li>
+</ul>
+
+<strong>Fluxo de Dados e Controle:</strong>
+
+<p class="mb-4 text-gray-700 leading-relaxed"><em>Figura 2: A complexa, mas poderosa, arquitetura de software do nosso robô final, orquestrada pelo ROS.</em></p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Fases do Projeto</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">A construção deste robô é um projeto de integração em larga escala. Deve ser abordado em fases.</p>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-800">Fase 1: Construção da Base e Controle de Baixo Nível</h5>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Montagem Física</strong>: Construa o chassi, monte os motores com encoders, o sistema de bateria, o ESP32 e o Raspberry Pi.</li>
+<li class="mb-2"><strong>Controlador do ESP32</strong>: Programe o ESP32 para:
+    <ul class="list-disc list-inside ml-6">
+    <li>Receber comandos de velocidade (velocidade linear e angular) via serial.</li>
+    <li>Implementar um controle PID para manter a velocidade dos motores precisa.</li>
+    <li>Ler os pulsos dos encoders.</li>
+    <li>Calcular a odometria (quanto o robô se moveu) e enviá-la de volta para o Pi via serial.</li>
+    </ul>
+</li>
+</ol>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-800">Fase 2: Configuração do ROS e Navegação Básica</h5>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Instalação</strong>: Instale o Ubuntu e o ROS no Raspberry Pi.</li>
+<li class="mb-2"><strong>Nó de Comunicação</strong>: Crie o nó ROS no Pi que conversa com o ESP32, traduzindo mensagens do tópico <code class="bg-gray-100 px-2 py-1 rounded text-sm">/cmd_vel</code> para comandos seriais e publicando os dados de odometria do ESP32 no tópico <code class="bg-gray-100 px-2 py-1 rounded text-sm">/odom</code>.</li>
+<li class="mb-2"><strong>Teleoperação</strong>: Use um nó de teleoperação do ROS (<code class="bg-gray-100 px-2 py-1 rounded text-sm">teleop_twist_keyboard</code>) para controlar o robô manualmente usando o teclado do seu computador. Isso confirma que toda a cadeia de controle (ROS -> Serial -> ESP32 -> Motores) está funcionando.</li>
+</ol>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-800">Fase 3: Mapeamento e Navegação Autônoma (SLAM)</h5>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Integração do LIDAR</strong>: Configure o driver do LIDAR no ROS para publicar os dados de varredura.</li>
+<li class="mb-2"><strong>Executar o SLAM</strong>: Lance um pacote de SLAM como o <code class="bg-gray-100 px-2 py-1 rounded text-sm">gmapping</code>. Teleopere o robô pelo seu quarto ou casa para construir um mapa 2D do ambiente.</li>
+<li class="mb-2"><strong>Salvar o Mapa</strong>: Salve o mapa gerado.</li>
+<li class="mb-2"><strong>Navegação (Move Base)</strong>: Lance o pacote de navegação <code class="bg-gray-100 px-2 py-1 rounded text-sm">move_base</code>, carregando o mapa salvo. Agora, usando a ferramenta RViz, você pode dar ao robô um destino no mapa, e ele navegará autonomamente até lá, desviando de obstáculos.</li>
+</ol>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-800">Fase 4: Integração da IA (Visão e Voz)</h5>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Nó de Visão</strong>: Crie um nó ROS que captura imagens da câmera e usa um modelo de detecção de objetos (como YOLOv5) para encontrar e publicar a localização de objetos de interesse (ex: "bola", "pessoa") em um tópico.</li>
+<li class="mb-2"><strong>Nó de Voz</strong>: Crie um nó que usa o microfone e o framework Vosk para ouvir continuamente. Quando ele transcreve um comando, ele o publica em um tópico de texto.</li>
+<li class="mb-2"><strong>Nó de Decisão Principal</strong>: Este é o cérebro que une tudo. Ele assina os tópicos de comando de voz e de detecção de objetos. Ele mantém o estado do robô (ex: "procurando", "indo até o objeto", "esperando comando").</li>
+</ol>
+
+<strong>Exemplo de Lógica do Nó Principal:</strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Ouve o tópico de voz. Recebe o comando: "encontre a bola".</li>
+<li class="mb-2">Muda o estado para "procurando a bola".</li>
+<li class="mb-2">Começa a girar lentamente no lugar, enquanto monitora o tópico de detecção de objetos.</li>
+<li class="mb-2">O nó de visão publica: "Objeto 'bola' detectado na coordenada X, Y".</li>
+<li class="mb-2">O nó principal recebe essa informação, para de girar e envia a coordenada (X, Y) como um novo objetivo para o nó de navegação <code class="bg-gray-100 px-2 py-1 rounded text-sm">move_base</code>.</li>
+<li class="mb-2">O <code class="bg-gray-100 px-2 py-1 rounded text-sm">move_base</code> assume, planejando uma rota e movendo o robô até a bola.</li>
+<li class="mb-2">Ao chegar, o nó principal pode usar a síntese de voz para anunciar: "Encontrei a bola".</li>
+</ul>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Conclusão da Sua Jornada</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Construir este robô assistente é um projeto desafiador que pode levar semanas ou meses. No entanto, ao completá-lo, você terá dominado uma vasta gama de habilidades que definem a robótica moderna. Você terá construído um sistema complexo, integrado hardware e software, e implementado algoritmos de ponta em inteligência artificial.</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O campo da robótica está em constante evolução. As ferramentas e técnicas que você aprendeu neste curso são a base sobre a qual as próximas gerações de robôs serão construídas. Continue explorando, continue aprendendo e, acima de tudo, continue construindo.</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed"><strong>Parabéns, Engenheiro(a) de Robótica!</strong></p>
+
+                    </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
