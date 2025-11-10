@@ -1028,36 +1028,832 @@ void loop() {
                         </svg>
                     </div>
                     <div class="p-6 hidden" id="module-6">
-                        <ul class="space-y-3">
-                            <li class="flex items-start">
-                                <span class="text-fundamentos mr-2">📘</span>
-                                <div>
-                                    <strong>UART/Serial</strong>
-                                    <p class="text-sm text-gray-600">Comunicação com PC, Serial Monitor, parsing de comandos</p>
-                                </div>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="text-fundamentos mr-2">📘</span>
-                                <div>
-                                    <strong>I2C</strong>
-                                    <p class="text-sm text-gray-600">Protocolo de 2 fios, endereçamento, múltiplos dispositivos</p>
-                                </div>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="text-fundamentos mr-2">📘</span>
-                                <div>
-                                    <strong>SPI</strong>
-                                    <p class="text-sm text-gray-600">Comunicação de alta velocidade para displays e sensores</p>
-                                </div>
-                            </li>
-                            <li class="flex items-start bg-green-50 p-3 rounded">
-                                <span class="text-fundamentos mr-2">🔨</span>
-                                <div>
-                                    <strong>Projeto: Datalogger</strong>
-                                    <p class="text-sm text-gray-600">Registre dados de sensores via Serial e visualize no PC</p>
-                                </div>
-                            </li>
-                        </ul>
+<div class="prose max-w-none">
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">O Que é Comunicação Serial?</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Até agora, nossos robôs funcionavam de forma independente, sem nos informar o que estava acontecendo "dentro" deles. A <strong>comunicação serial</strong> é a ponte que permite que microcontroladores como o ESP32 conversem com computadores, outros dispositivos eletrônicos e até mesmo entre si.</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">A palavra "serial" significa que os dados são enviados <strong>um bit por vez</strong>, em sequência, através de um ou mais fios. Isso contrasta com a comunicação "paralela", onde múltiplos bits são enviados simultaneamente através de múltiplos fios.</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Imagine a comunicação serial como um túnel estreito onde os carros (bits de dados) passam um de cada vez, enquanto a comunicação paralela seria como uma rodovia de várias pistas onde os carros podem passar lado a lado.</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Por Que a Comunicação Serial é Importante em Robótica?</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">A comunicação serial é fundamental para:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Depuração</strong>: Ver o que o robô está "pensando" através do Serial Monitor</li>
+<li class="mb-2"><strong>Telemetria</strong>: Enviar dados de sensores para um computador para análise</li>
+<li class="mb-2"><strong>Controle Remoto</strong>: Receber comandos de um computador ou smartphone</li>
+<li class="mb-2"><strong>Data Logging</strong>: Armazenar dados de sensores em um cartão SD</li>
+<li class="mb-2"><strong>Comunicação entre Dispositivos</strong>: Conectar múltiplos microcontroladores ou sensores inteligentes</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 6.1: UART e o Serial Monitor</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">O Que é UART?</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed"><strong>UART</strong> (Universal Asynchronous Receiver-Transmitter) é o protocolo de comunicação serial mais básico e amplamente usado. "Asynchronous" significa que não há um sinal de clock compartilhado entre os dispositivos - eles devem concordar previamente sobre a velocidade de transmissão.</p>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Componentes da Comunicação UART</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Uma comunicação UART usa, no mínimo, três fios:</p>
+
+<div class="overflow-x-auto mb-6"><table class="w-full border-collapse border border-gray-300">
+<thead class="bg-gray-100"><tr>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Fio</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Nome</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Função</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>TX</strong></td>
+<td class="border border-gray-300 px-4 py-2">Transmit (Transmitir)</td>
+<td class="border border-gray-300 px-4 py-2">Envia dados do dispositivo</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>RX</strong></td>
+<td class="border border-gray-300 px-4 py-2">Receive (Receber)</td>
+<td class="border border-gray-300 px-4 py-2">Recebe dados para o dispositivo</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>GND</strong></td>
+<td class="border border-gray-300 px-4 py-2">Ground (Terra)</td>
+<td class="border border-gray-300 px-4 py-2">Referência comum de tensão</td>
+</tr>
+</tbody>
+</table>
+</div><p class="mb-4 text-gray-700 leading-relaxed"><strong>Regra de Ouro</strong>: O TX de um dispositivo deve ser conectado ao RX do outro, e vice-versa. Pense nisso como uma conversa: quando você fala (TX), a outra pessoa escuta (RX).</p>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Baud Rate (Taxa de Transmissão)</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O <strong>Baud Rate</strong> é a velocidade de comunicação, medida em bits por segundo (bps). Ambos os dispositivos devem usar o mesmo Baud Rate. Os valores mais comuns são:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">9600 bps (padrão, confiável)</li>
+<li class="mb-2">115200 bps (mais rápido, usado em projetos avançados)</li>
+</ul>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Usando o Serial Monitor</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O Arduino IDE possui uma ferramenta chamada <strong>Serial Monitor</strong> que permite visualizar e enviar dados pela porta serial USB. Ela é acessada através do ícone de lupa no canto superior direito ou pelo atalho <code class="bg-gray-100 px-2 py-1 rounded text-sm">Ctrl+Shift+M</code>.</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Projeto Prático 1: Hello World Serial</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Vamos começar com o exemplo mais básico: fazer o ESP32 enviar uma mensagem para o computador.</p>
+
+<strong><strong>Código:</strong></strong>
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">void setup() {
+  // Inicializa a comunicação serial a 115200 bps
+  Serial.begin(115200);
+
+  // Aguarda a conexão serial (útil para algumas placas)
+  delay(1000);
+
+  Serial.println("=================================");
+  Serial.println("   Bem-vindo ao ESP32!          ");
+  Serial.println("   Sistema Iniciado com Sucesso ");
+  Serial.println("=================================");
+}
+
+void loop() {
+  Serial.print("Tempo desde o início (ms): ");
+  Serial.println(millis()); // millis() retorna o tempo desde que a placa ligou
+
+  delay(1000); // Aguarda 1 segundo entre as mensagens
+}
+</code></pre>
+
+<strong><strong>Como Testar:</strong></strong>
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Carregue o código no ESP32</li>
+<li class="mb-2">Abra o Serial Monitor (<code class="bg-gray-100 px-2 py-1 rounded text-sm">Ferramentas > Monitor Serial</code>)</li>
+<li class="mb-2">Certifique-se de que o Baud Rate no canto inferior direito está configurado para <strong>115200</strong></li>
+<li class="mb-2">Você verá a mensagem de boas-vindas seguida de atualizações a cada segundo</li>
+</ol>
+<strong><strong>Diferença entre <code class="bg-gray-100 px-2 py-1 rounded text-sm">print()</code> e <code class="bg-gray-100 px-2 py-1 rounded text-sm">println()</code>:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><code class="bg-gray-100 px-2 py-1 rounded text-sm">Serial.print()</code>: Imprime o texto na mesma linha</li>
+<li class="mb-2"><code class="bg-gray-100 px-2 py-1 rounded text-sm">Serial.println()</code>: Imprime o texto e pula para a próxima linha (adiciona <code class="bg-gray-100 px-2 py-1 rounded text-sm">\n</code>)</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Projeto Prático 2: Controle por Comandos Seriais</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Agora vamos fazer o inverso: enviar comandos do computador para o ESP32 controlar um LED.</p>
+
+<strong><strong>Materiais:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">1x ESP32</li>
+<li class="mb-2">1x LED</li>
+<li class="mb-2">1x Resistor 220Ω</li>
+<li class="mb-2">Protoboard e jumpers</li>
+</ul>
+<strong><strong>Montagem:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Conecte o LED ao GPIO 25 através do resistor</li>
+<li class="mb-2">Catodo do LED ao GND</li>
+</ul>
+<strong><strong>Código:</strong></strong>
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">const int pinoLED = 25;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(pinoLED, OUTPUT);
+
+  Serial.println("\n=== Sistema de Controle por Serial ===");
+  Serial.println("Comandos disponíveis:");
+  Serial.println("  ON  - Liga o LED");
+  Serial.println("  OFF - Desliga o LED");
+  Serial.println("  STATUS - Mostra o estado atual");
+  Serial.println("=====================================\n");
+}
+
+void loop() {
+  // Verifica se há dados disponíveis para leitura
+  if (Serial.available() &gt; 0) {
+    // Lê a string enviada até encontrar '\n'
+    String comando = Serial.readStringUntil('\n');
+
+    // Remove espaços em branco no início e fim
+    comando.trim();
+
+    // Converte para maiúsculas para facilitar a comparação
+    comando.toUpperCase();
+
+    // Processa o comando
+    if (comando == "ON") {
+      digitalWrite(pinoLED, HIGH);
+      Serial.println("✓ LED ligado!");
+    }
+    else if (comando == "OFF") {
+      digitalWrite(pinoLED, LOW);
+      Serial.println("✓ LED desligado!");
+    }
+    else if (comando == "STATUS") {
+      if (digitalRead(pinoLED) == HIGH) {
+        Serial.println("Estado: LED está LIGADO");
+      } else {
+        Serial.println("Estado: LED está DESLIGADO");
+      }
+    }
+    else {
+      Serial.println("✗ Comando não reconhecido: " + comando);
+      Serial.println("Use: ON, OFF ou STATUS");
+    }
+  }
+}
+</code></pre>
+
+<strong><strong>Como Usar:</strong></strong>
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Carregue o código e abra o Serial Monitor</li>
+<li class="mb-2">No campo de entrada do Serial Monitor, digite <code class="bg-gray-100 px-2 py-1 rounded text-sm">ON</code> e pressione Enter</li>
+<li class="mb-2">O LED deve acender e você verá a confirmação</li>
+<li class="mb-2">Experimente os comandos <code class="bg-gray-100 px-2 py-1 rounded text-sm">OFF</code> e <code class="bg-gray-100 px-2 py-1 rounded text-sm">STATUS</code></li>
+</ol>
+<strong><strong>Conceitos Importantes:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><code class="bg-gray-100 px-2 py-1 rounded text-sm">Serial.available()</code>: Retorna o número de bytes disponíveis para leitura</li>
+<li class="mb-2"><code class="bg-gray-100 px-2 py-1 rounded text-sm">Serial.readStringUntil('\n')</code>: Lê caracteres até encontrar uma nova linha</li>
+<li class="mb-2"><code class="bg-gray-100 px-2 py-1 rounded text-sm">String.trim()</code>: Remove espaços em branco</li>
+<li class="mb-2"><code class="bg-gray-100 px-2 py-1 rounded text-sm">String.toUpperCase()</code>: Converte para maiúsculas</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 6.2: Protocolo I2C</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">O Que é I2C?</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed"><strong>I2C</strong> (Inter-Integrated Circuit), pronunciado "I-squared-C" ou "I-two-C", é um protocolo de comunicação que permite conectar <strong>múltiplos dispositivos</strong> usando apenas <strong>dois fios</strong> para dados.</p>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Como o I2C Funciona?</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O I2C usa um sistema de <strong>mestre-escravo</strong> (master-slave):</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Mestre</strong> (Master): Geralmente o microcontrolador (ESP32), que inicia e controla a comunicação</li>
+<li class="mb-2"><strong>Escravo</strong> (Slave): Sensores, displays ou outros dispositivos que respondem às solicitações do mestre</li>
+</ul>
+<strong><strong>Fios do I2C:</strong></strong>
+<div class="overflow-x-auto mb-6"><table class="w-full border-collapse border border-gray-300">
+<thead class="bg-gray-100"><tr>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Fio</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Nome Completo</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Função</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>SDA</strong></td>
+<td class="border border-gray-300 px-4 py-2">Serial Data</td>
+<td class="border border-gray-300 px-4 py-2">Linha de dados bidirecional</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>SCL</strong></td>
+<td class="border border-gray-300 px-4 py-2">Serial Clock</td>
+<td class="border border-gray-300 px-4 py-2">Linha de clock gerada pelo mestre</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>GND</strong></td>
+<td class="border border-gray-300 px-4 py-2">Ground</td>
+<td class="border border-gray-300 px-4 py-2">Terra comum</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>VCC</strong></td>
+<td class="border border-gray-300 px-4 py-2">Power</td>
+<td class="border border-gray-300 px-4 py-2">Alimentação (3.3V ou 5V)</td>
+</tr>
+</tbody>
+</table>
+</div><h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Endereçamento I2C</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Cada dispositivo I2C tem um <strong>endereço único</strong> (geralmente de 7 bits), permitindo que o mestre especifique com qual dispositivo deseja falar. É como um sistema de apartamentos: você precisa saber o número do apartamento para tocar a campainha certa.</p>
+
+<strong><strong>Pinos I2C no ESP32:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">SDA: GPIO 21</li>
+<li class="mb-2">SCL: GPIO 22</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Projeto Prático 3: Scanner I2C</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Antes de usar um dispositivo I2C, é útil descobrir seu endereço. Vamos criar um scanner que detecta todos os dispositivos I2C conectados.</p>
+
+<strong><strong>Código:</strong></strong>
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">#include &lt;Wire.h&gt;
+
+void setup() {
+  Serial.begin(115200);
+  Wire.begin(21, 22); // SDA = GPIO 21, SCL = GPIO 22
+
+  Serial.println("\n=== Scanner I2C ===");
+  Serial.println("Procurando dispositivos I2C...\n");
+}
+
+void loop() {
+  byte erro, endereco;
+  int dispositivosEncontrados = 0;
+
+  Serial.println("Escaneando...");
+
+  // Testa endereços de 1 a 127
+  for(endereco = 1; endereco &lt; 127; endereco++) {
+    Wire.beginTransmission(endereco);
+    erro = Wire.endTransmission();
+
+    if (erro == 0) {
+      Serial.print("Dispositivo I2C encontrado no endereço 0x");
+      if (endereco &lt; 16) Serial.print("0");
+      Serial.print(endereco, HEX);
+      Serial.println("!");
+
+      dispositivosEncontrados++;
+    }
+    else if (erro == 4) {
+      Serial.print("Erro desconhecido no endereço 0x");
+      if (endereco &lt; 16) Serial.print("0");
+      Serial.println(endereco, HEX);
+    }
+  }
+
+  if (dispositivosEncontrados == 0) {
+    Serial.println("Nenhum dispositivo I2C encontrado.");
+    Serial.println("Verifique as conexões!");
+  }
+  else {
+    Serial.print("\nTotal: ");
+    Serial.print(dispositivosEncontrados);
+    Serial.println(" dispositivo(s) encontrado(s).\n");
+  }
+
+  delay(5000); // Aguarda 5 segundos antes de escanear novamente
+}
+</code></pre>
+
+<strong><strong>Como Usar:</strong></strong>
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Conecte um dispositivo I2C ao ESP32 (como um display OLED ou sensor)</li>
+<li class="mb-2">Carregue o código</li>
+<li class="mb-2">Abra o Serial Monitor</li>
+<li class="mb-2">O scanner mostrará os endereços encontrados em formato hexadecimal (ex: 0x3C)</li>
+</ol>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Projeto Prático 4: Display OLED I2C</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Vamos usar o que aprendemos para controlar um display OLED usando I2C.</p>
+
+<strong><strong>Materiais:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">1x ESP32</li>
+<li class="mb-2">1x Display OLED 0.96" I2C (128x64 pixels, geralmente endereço 0x3C)</li>
+<li class="mb-2">Fios jumper</li>
+</ul>
+<strong><strong>Montagem:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">OLED VCC → ESP32 3.3V</li>
+<li class="mb-2">OLED GND → ESP32 GND</li>
+<li class="mb-2">OLED SDA → GPIO 21</li>
+<li class="mb-2">OLED SCL → GPIO 22</li>
+</ul>
+<strong><strong>Instalação da Biblioteca:</strong></strong>
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Vá em <code class="bg-gray-100 px-2 py-1 rounded text-sm">Ferramentas > Gerenciar Bibliotecas</code></li>
+<li class="mb-2">Procure por "Adafruit SSD1306"</li>
+<li class="mb-2">Instale a biblioteca "Adafruit SSD1306 by Adafruit"</li>
+<li class="mb-2">Instale também a dependência "Adafruit GFX Library"</li>
+</ol>
+<strong><strong>Código:</strong></strong>
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+
+// Configuração do display
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1  // Reset pin (ou -1 se compartilhado com ESP32)
+#define SCREEN_ADDRESS 0x3C
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+void setup() {
+  Serial.begin(115200);
+
+  // Inicializa o display
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println("Falha ao inicializar o display OLED!");
+    while(1); // Para o programa
+  }
+
+  // Limpa o buffer
+  display.clearDisplay();
+
+  // Configurações de texto
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+
+  // Escreve no display
+  display.println("Robo");
+  display.println("Expert");
+  display.setTextSize(1);
+  display.println("");
+  display.println("I2C Funcionando!");
+
+  // Envia o buffer para o display
+  display.display();
+}
+
+void loop() {
+  // Exibe um contador
+  static int contador = 0;
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.println("Sistema Ativo");
+  display.println("");
+
+  display.setTextSize(2);
+  display.print("Count: ");
+  display.println(contador);
+
+  display.display();
+
+  contador++;
+  delay(1000);
+}
+</code></pre>
+
+<strong><strong>Resultado Esperado:</strong></strong>
+<p class="mb-4 text-gray-700 leading-relaxed">O display OLED mostrará o texto "Robo Expert" e um contador que aumenta a cada segundo. Você acabou de dominar a comunicação I2C!</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 6.3: Protocolo SPI</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">O Que é SPI?</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed"><strong>SPI</strong> (Serial Peripheral Interface) é um protocolo de comunicação serial <strong>síncrono</strong> de alta velocidade. Ele é mais rápido que o I2C, mas requer mais fios.</p>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Como o SPI Funciona?</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O SPI também usa um sistema mestre-escravo, mas com mais linhas de comunicação:</p>
+
+<div class="overflow-x-auto mb-6"><table class="w-full border-collapse border border-gray-300">
+<thead class="bg-gray-100"><tr>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Fio</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Nome Completo</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Função</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>MOSI</strong></td>
+<td class="border border-gray-300 px-4 py-2">Master Out Slave In</td>
+<td class="border border-gray-300 px-4 py-2">Dados do mestre para o escravo</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>MISO</strong></td>
+<td class="border border-gray-300 px-4 py-2">Master In Slave Out</td>
+<td class="border border-gray-300 px-4 py-2">Dados do escravo para o mestre</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>SCK</strong></td>
+<td class="border border-gray-300 px-4 py-2">Serial Clock</td>
+<td class="border border-gray-300 px-4 py-2">Clock gerado pelo mestre</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>CS/SS</strong></td>
+<td class="border border-gray-300 px-4 py-2">Chip Select / Slave Select</td>
+<td class="border border-gray-300 px-4 py-2">Seleciona qual escravo está ativo</td>
+</tr>
+</tbody>
+</table>
+</div><strong><strong>Pinos SPI no ESP32:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">MOSI: GPIO 23</li>
+<li class="mb-2">MISO: GPIO 19</li>
+<li class="mb-2">SCK: GPIO 18</li>
+<li class="mb-2">CS: Qualquer GPIO digital (você escolhe)</li>
+</ul>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">SPI vs I2C: Quando Usar Cada Um?</h5>
+
+<div class="overflow-x-auto mb-6"><table class="w-full border-collapse border border-gray-300">
+<thead class="bg-gray-100"><tr>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Característica</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">I2C</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">SPI</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Velocidade</strong></td>
+<td class="border border-gray-300 px-4 py-2">Até 400 kHz (padrão)</td>
+<td class="border border-gray-300 px-4 py-2">Até 80 MHz no ESP32</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Fios Necessários</strong></td>
+<td class="border border-gray-300 px-4 py-2">2 (SDA, SCL)</td>
+<td class="border border-gray-300 px-4 py-2">4+ (MOSI, MISO, SCK, CS)</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Dispositivos</strong></td>
+<td class="border border-gray-300 px-4 py-2">Muitos no mesmo barramento</td>
+<td class="border border-gray-300 px-4 py-2">1 CS por dispositivo</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Melhor Para</strong></td>
+<td class="border border-gray-300 px-4 py-2">Sensores, displays simples</td>
+<td class="border border-gray-300 px-4 py-2">Cartões SD, displays TFT, módulos RF</td>
+</tr>
+</tbody>
+</table>
+</div><p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Projeto Prático 5: Data Logger com Cartão SD (SPI)</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Vamos criar um sistema que grava dados de sensores em um arquivo de texto no cartão SD.</p>
+
+<strong><strong>Materiais:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">1x ESP32</li>
+<li class="mb-2">1x Módulo Leitor de Cartão SD</li>
+<li class="mb-2">1x Cartão microSD (formatado em FAT32)</li>
+<li class="mb-2">1x Sensor de temperatura DHT22 (opcional, usaremos dados simulados)</li>
+</ul>
+<strong><strong>Montagem:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">SD VCC → ESP32 5V</li>
+<li class="mb-2">SD GND → ESP32 GND</li>
+<li class="mb-2">SD MISO → GPIO 19</li>
+<li class="mb-2">SD MOSI → GPIO 23</li>
+<li class="mb-2">SD SCK → GPIO 18</li>
+<li class="mb-2">SD CS → GPIO 5</li>
+</ul>
+<strong><strong>Código:</strong></strong>
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">#include &lt;SPI.h&gt;
+#include &lt;SD.h&gt;
+
+// Pino CS do módulo SD
+const int CS_PIN = 5;
+
+File arquivoDados;
+
+void setup() {
+  Serial.begin(115200);
+
+  Serial.println("=== Sistema de Data Logger ===");
+
+  // Inicializa o cartão SD
+  if (!SD.begin(CS_PIN)) {
+    Serial.println("ERRO: Falha ao inicializar o cartão SD!");
+    Serial.println("Verifique se o cartão está inserido.");
+    while (1);
+  }
+
+  Serial.println("✓ Cartão SD inicializado com sucesso!");
+
+  // Verifica o tipo do cartão
+  uint8_t tipoCartao = SD.cardType();
+  if (tipoCartao == CARD_NONE) {
+    Serial.println("Nenhum cartão SD detectado!");
+    return;
+  }
+
+  Serial.print("Tipo do Cartão: ");
+  if (tipoCartao == CARD_MMC) Serial.println("MMC");
+  else if (tipoCartao == CARD_SD) Serial.println("SD");
+  else if (tipoCartao == CARD_SDHC) Serial.println("SDHC");
+
+  // Mostra o tamanho do cartão
+  uint64_t tamanhoCartao = SD.cardSize() / (1024 * 1024);
+  Serial.print("Tamanho do Cartão: ");
+  Serial.print(tamanhoCartao);
+  Serial.println(" MB");
+
+  Serial.println("\nIniciando gravação de dados...\n");
+}
+
+void loop() {
+  // Simula leituras de sensores
+  float temperatura = 20.0 + random(-50, 50) / 10.0; // Temperatura entre 15°C e 25°C
+  float umidade = 60.0 + random(-100, 100) / 10.0;   // Umidade entre 50% e 70%
+
+  // Obtém o timestamp
+  unsigned long timestamp = millis();
+
+  // Cria string com os dados
+  String linha = String(timestamp) + "," +
+                 String(temperatura, 2) + "," +
+                 String(umidade, 2);
+
+  // Abre o arquivo para adicionar dados (append)
+  arquivoDados = SD.open("/dados.txt", FILE_APPEND);
+
+  if (arquivoDados) {
+    arquivoDados.println(linha);
+    arquivoDados.close();
+
+    Serial.println("✓ Dados gravados: " + linha);
+  } else {
+    Serial.println("✗ Erro ao abrir o arquivo!");
+  }
+
+  delay(5000); // Grava a cada 5 segundos
+}
+</code></pre>
+
+<strong><strong>Como Usar:</strong></strong>
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Insira um cartão microSD formatado (FAT32) no módulo</li>
+<li class="mb-2">Carregue o código</li>
+<li class="mb-2">Abra o Serial Monitor</li>
+<li class="mb-2">O sistema gravará dados simulados de temperatura e umidade a cada 5 segundos</li>
+<li class="mb-2">Após alguns minutos, desligue o ESP32 e insira o cartão SD no computador</li>
+<li class="mb-2">Abra o arquivo <code class="bg-gray-100 px-2 py-1 rounded text-sm">dados.txt</code> - você verá um log CSV dos dados!</li>
+</ol>
+<strong><strong>Formato dos Dados (CSV):</strong></strong>
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">1234,22.34,65.12
+6234,21.98,64.87
+11234,22.15,65.34
+</code></pre>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Você pode abrir este arquivo no Excel ou Google Sheets para análise!</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 6.4: Comparação de Protocolos</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Tabela Resumo</h5>
+
+<div class="overflow-x-auto mb-6"><table class="w-full border-collapse border border-gray-300">
+<thead class="bg-gray-100"><tr>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Protocolo</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">UART</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">I2C</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">SPI</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Fios</strong></td>
+<td class="border border-gray-300 px-4 py-2">2 (TX, RX)</td>
+<td class="border border-gray-300 px-4 py-2">2 (SDA, SCL)</td>
+<td class="border border-gray-300 px-4 py-2">4+ (MOSI, MISO, SCK, CS)</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Velocidade</strong></td>
+<td class="border border-gray-300 px-4 py-2">9600 - 115200 bps</td>
+<td class="border border-gray-300 px-4 py-2">100 - 400 kHz</td>
+<td class="border border-gray-300 px-4 py-2">Até 80 MHz</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Distância</strong></td>
+<td class="border border-gray-300 px-4 py-2">Longa (até 15m)</td>
+<td class="border border-gray-300 px-4 py-2">Curta (< 1m)</td>
+<td class="border border-gray-300 px-4 py-2">Muito curta (< 50cm)</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Dispositivos</strong></td>
+<td class="border border-gray-300 px-4 py-2">1-para-1</td>
+<td class="border border-gray-300 px-4 py-2">Múltiplos (127 max)</td>
+<td class="border border-gray-300 px-4 py-2">Múltiplos (1 CS cada)</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Uso Típico</strong></td>
+<td class="border border-gray-300 px-4 py-2">Debug, GPS, Bluetooth</td>
+<td class="border border-gray-300 px-4 py-2">Sensores, OLED, RTC</td>
+<td class="border border-gray-300 px-4 py-2">SD, TFT, RF, ADC rápidos</td>
+</tr>
+</tbody>
+</table>
+</div><p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Projeto Final: Sistema de Telemetria Completo</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Vamos integrar tudo em um projeto final que combina UART, I2C e conceitos de data logging.</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed"><strong>Objetivo:</strong> Criar um sistema que lê dados de sensores, exibe em um display OLED (I2C) e envia telemetria para o Serial Monitor (UART).</p>
+
+<strong><strong>Materiais:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">1x ESP32</li>
+<li class="mb-2">1x Display OLED I2C</li>
+<li class="mb-2">1x Sensor ultrassônico HC-SR04</li>
+<li class="mb-2">1x LED</li>
+<li class="mb-2">1x Resistor 220Ω</li>
+</ul>
+<strong><strong>Código:</strong></strong>
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+
+// Configuração do OLED
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+#define SCREEN_ADDRESS 0x3C
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// Configuração do sensor ultrassônico
+const int trigPin = 26;
+const int echoPin = 25;
+
+// LED de alerta
+const int ledPin = 27;
+
+// Variáveis
+float distancia = 0;
+unsigned long ultimaLeitura = 0;
+const int intervaloLeitura = 500; // 500ms entre leituras
+
+void setup() {
+  // Inicializa Serial
+  Serial.begin(115200);
+  Serial.println("\n=== Sistema de Telemetria ===");
+  Serial.println("Timestamp(ms), Distancia(cm), Status");
+
+  // Inicializa pinos
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(ledPin, OUTPUT);
+
+  // Inicializa OLED
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println("ERRO: Display OLED não encontrado!");
+    while(1);
+  }
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("Sistema Ativo");
+  display.display();
+}
+
+void loop() {
+  unsigned long tempoAtual = millis();
+
+  // Realiza leitura periódica
+  if (tempoAtual - ultimaLeitura &gt;= intervaloLeitura) {
+    ultimaLeitura = tempoAtual;
+
+    // Lê o sensor ultrassônico
+    distancia = lerDistancia();
+
+    // Determina o status
+    String status;
+    if (distancia &lt; 10) {
+      status = "CRITICO";
+      digitalWrite(ledPin, HIGH);
+    } else if (distancia &lt; 30) {
+      status = "ALERTA";
+      digitalWrite(ledPin, HIGH);
+      delay(100);
+      digitalWrite(ledPin, LOW);
+    } else {
+      status = "NORMAL";
+      digitalWrite(ledPin, LOW);
+    }
+
+    // Envia telemetria via Serial (UART)
+    Serial.print(tempoAtual);
+    Serial.print(", ");
+    Serial.print(distancia, 2);
+    Serial.print(", ");
+    Serial.println(status);
+
+    // Atualiza o display (I2C)
+    atualizarDisplay(distancia, status);
+  }
+}
+
+float lerDistancia() {
+  // Envia pulso
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Lê o eco
+  long duracao = pulseIn(echoPin, HIGH, 30000); // Timeout de 30ms
+
+  // Calcula a distância em cm
+  float dist = duracao * 0.034 / 2;
+
+  // Se o timeout foi atingido
+  if (duracao == 0) {
+    return 999; // Indica erro ou distância muito grande
+  }
+
+  return dist;
+}
+
+void atualizarDisplay(float dist, String status) {
+  display.clearDisplay();
+
+  // Título
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.println("Telemetria v1.0");
+  display.drawLine(0, 10, 127, 10, SSD1306_WHITE);
+
+  // Distância
+  display.setCursor(0, 16);
+  display.print("Distancia:");
+  display.setTextSize(2);
+  display.setCursor(0, 28);
+  if (dist &lt; 999) {
+    display.print(dist, 1);
+    display.println(" cm");
+  } else {
+    display.println("---");
+  }
+
+  // Status
+  display.setTextSize(1);
+  display.setCursor(0, 50);
+  display.print("Status: ");
+  display.println(status);
+
+  display.display();
+}
+</code></pre>
+
+<strong><strong>Resultado Esperado:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">O display OLED mostra a distância medida e o status</li>
+<li class="mb-2">O Serial Monitor exibe os dados em formato CSV para análise</li>
+<li class="mb-2">O LED acende quando objetos estão próximos</li>
+<li class="mb-2">Você tem um sistema completo de telemetria!</li>
+</ul>
+<strong><strong>Desafios de Extensão:</strong></strong>
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Adicione um botão para pausar/retomar as leituras</li>
+<li class="mb-2">Calcule a média das últimas 10 leituras para suavizar os dados</li>
+<li class="mb-2">Implemente logging em cartão SD</li>
+<li class="mb-2">Crie gráficos em tempo real usando Processing ou Python</li>
+</ol>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Conclusão do Módulo 6</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Parabéns! Você dominou os três principais protocolos de comunicação serial:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>UART</strong>: Para comunicação simples ponto-a-ponto (debug, GPS, Bluetooth)</li>
+<li class="mb-2"><strong>I2C</strong>: Para conectar múltiplos sensores e displays com apenas 2 fios</li>
+<li class="mb-2"><strong>SPI</strong>: Para comunicação de alta velocidade (SD, displays TFT)</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">Estes protocolos são a base de praticamente todos os projetos de robótica e IoT. No próximo módulo, usaremos todas essas habilidades para construir nosso primeiro robô autônomo completo: o Robô Seguidor de Linha!</p>
+
+
+                    </div>
                     </div>
                 </div>
 
@@ -1076,36 +1872,828 @@ void loop() {
                         </svg>
                     </div>
                     <div class="p-6 hidden" id="module-7">
-                        <ul class="space-y-3">
-                            <li class="flex items-start">
-                                <span class="text-fundamentos mr-2">🔧</span>
-                                <div>
-                                    <strong>Design e Mecânica</strong>
-                                    <p class="text-sm text-gray-600">Chassis, rodas, suporte para sensores e baterias</p>
-                                </div>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="text-fundamentos mr-2">🔧</span>
-                                <div>
-                                    <strong>Montagem Eletrônica</strong>
-                                    <p class="text-sm text-gray-600">Fiação, ponte H, sensores IR, alimentação</p>
-                                </div>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="text-fundamentos mr-2">🔧</span>
-                                <div>
-                                    <strong>Algoritmo de Controle</strong>
-                                    <p class="text-sm text-gray-600">Lógica de decisão baseada em sensores IR</p>
-                                </div>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="text-fundamentos mr-2">🔧</span>
-                                <div>
-                                    <strong>Calibração e Testes</strong>
-                                    <p class="text-sm text-gray-600">Ajuste de sensores, velocidade e pista de testes</p>
-                                </div>
-                            </li>
-                        </ul>
+<div class="prose max-w-none">
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Bem-vindo ao Seu Primeiro Robô Autônomo!</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Este é um dos momentos mais emocionantes do curso! Você irá construir um <strong>robô seguidor de linha</strong>, um dos projetos mais clássicos e educacionais da robótica. Este robô consegue seguir de forma autônoma uma linha preta (ou branca) desenhada no chão, usando sensores infravermelhos para "ver" o caminho.</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Os robôs seguidores de linha são usados em:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Indústria</strong>: Veículos guiados automaticamente (AGVs) em fábricas</li>
+<li class="mb-2"><strong>Competições</strong>: Eventos de robótica como a RoboCore e OBR (Olimpíada Brasileira de Robótica)</li>
+<li class="mb-2"><strong>Educação</strong>: Ensino de conceitos de sensores, controle e lógica</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">O Que Você Vai Aprender</h4>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Design Mecânico</strong>: Como projetar um chassi eficiente para um robô móvel</li>
+<li class="mb-2"><strong>Sensores Infravermelhos</strong>: Como funcionam e como usá-los para detectar linhas</li>
+<li class="mb-2"><strong>Controle Diferencial</strong>: Como fazer o robô se mover e girar usando dois motores</li>
+<li class="mb-2"><strong>Algoritmos de Controle</strong>: Lógica de decisão baseada em sensores</li>
+<li class="mb-2"><strong>Calibração</strong>: Como ajustar o robô para diferentes superfícies e iluminações</li>
+</ol>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 7.1: Design Mecânico e Lista de Materiais</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Conceito do Robô Seguidor de Linha</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O robô seguidor de linha usa um array de sensores infravermelhos posicionados na parte frontal inferior do chassi. Esses sensores detectam o contraste entre a linha e o fundo, permitindo que o robô determine sua posição relativa à linha.</p>
+
+<strong><strong>Princípio de Funcionamento:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Sensores sobre a superfície clara (fundo) → Detectam reflexão alta</li>
+<li class="mb-2">Sensores sobre a linha preta → Detectam reflexão baixa</li>
+<li class="mb-2">O robô ajusta continuamente sua direção para manter os sensores centrais sobre a linha</li>
+</ul>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Materiais Necessários</h5>
+
+<div class="overflow-x-auto mb-6"><table class="w-full border-collapse border border-gray-300">
+<thead class="bg-gray-100"><tr>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Quantidade</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Componente</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Especificações</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Custo Aprox.</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="border border-gray-300 px-4 py-2">1x</td>
+<td class="border border-gray-300 px-4 py-2"><strong>ESP32 DevKit</strong></td>
+<td class="border border-gray-300 px-4 py-2">Microcontrolador principal</td>
+<td class="border border-gray-300 px-4 py-2">R$ 35</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2">1x</td>
+<td class="border border-gray-300 px-4 py-2"><strong>Módulo Sensor IR 5 canais</strong></td>
+<td class="border border-gray-300 px-4 py-2">TCRT5000 ou similar</td>
+<td class="border border-gray-300 px-4 py-2">R$ 15</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2">1x</td>
+<td class="border border-gray-300 px-4 py-2"><strong>Ponte H L298N</strong></td>
+<td class="border border-gray-300 px-4 py-2">Driver de motor duplo</td>
+<td class="border border-gray-300 px-4 py-2">R$ 12</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2">2x</td>
+<td class="border border-gray-300 px-4 py-2"><strong>Motor DC com Caixa de Redução</strong></td>
+<td class="border border-gray-300 px-4 py-2">3-6V, 100-200 RPM</td>
+<td class="border border-gray-300 px-4 py-2">R$ 20</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2">2x</td>
+<td class="border border-gray-300 px-4 py-2"><strong>Rodas</strong></td>
+<td class="border border-gray-300 px-4 py-2">65-70mm de diâmetro</td>
+<td class="border border-gray-300 px-4 py-2">R$ 10</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2">1x</td>
+<td class="border border-gray-300 px-4 py-2"><strong>Rodízio ou Roda Boba</strong></td>
+<td class="border border-gray-300 px-4 py-2">Para suporte dianteiro/traseiro</td>
+<td class="border border-gray-300 px-4 py-2">R$ 8</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2">1x</td>
+<td class="border border-gray-300 px-4 py-2"><strong>Suporte de Baterias</strong></td>
+<td class="border border-gray-300 px-4 py-2">4x pilhas AA (6V)</td>
+<td class="border border-gray-300 px-4 py-2">R$ 5</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2">1x</td>
+<td class="border border-gray-300 px-4 py-2"><strong>Chassi Acrílico ou MDF</strong></td>
+<td class="border border-gray-300 px-4 py-2">15x12cm, 3mm espessura</td>
+<td class="border border-gray-300 px-4 py-2">R$ 8</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2">-</td>
+<td class="border border-gray-300 px-4 py-2"><strong>Fios Jumper e Parafusos</strong></td>
+<td class="border border-gray-300 px-4 py-2">Para montagem</td>
+<td class="border border-gray-300 px-4 py-2">R$ 15</td>
+</tr>
+</tbody>
+</table>
+</div><p class="mb-4 text-gray-700 leading-relaxed"><strong>Custo Total Aproximado:</strong> R$ 128</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Design do Chassi</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O chassi é a base estrutural do robô. Para um seguidor de linha eficiente, considere:</p>
+
+<strong><strong>Dimensões Recomendadas:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Comprimento: 15-18 cm</li>
+<li class="mb-2">Largura: 12-15 cm</li>
+<li class="mb-2">Altura: 5-8 cm (com componentes)</li>
+</ul>
+<strong><strong>Distribuição de Peso:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Parte Traseira</strong>: Baterias (mais pesadas) sobre as rodas motoras para melhor tração</li>
+<li class="mb-2"><strong>Parte Frontal</strong>: Sensores próximos ao chão (2-5mm de altura)</li>
+<li class="mb-2"><strong>Centro</strong>: ESP32 e ponte H em posição acessível</li>
+</ul>
+<strong><strong>Pontos de Montagem:</strong></strong>
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Suportes para motores (fixos nas laterais)</li>
+<li class="mb-2">Área para sensores (parte frontal inferior)</li>
+<li class="mb-2">Plataforma elevada para eletrônica</li>
+<li class="mb-2">Suporte para baterias (traseiro)</li>
+</ol>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 7.2: Entendendo os Sensores Infravermelhos</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Como Funcionam os Sensores TCRT5000</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O TCRT5000 é um sensor óptico reflexivo que consiste em:</p>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>LED Infravermelho Emissor</strong>: Emite luz infravermelha (invisível aos olhos humanos)</li>
+<li class="mb-2"><strong>Fototransistor Receptor</strong>: Detecta a luz infravermelha refletida</li>
+</ol>
+<strong><strong>Princípio de Operação:</strong></strong>
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">Superfície Clara (Branco):        Superfície Escura (Preto):
+LED IR → Alta Reflexão → Sensor   LED IR → Baixa Reflexão → Sensor
+Saída: HIGH (1)                   Saída: LOW (0)
+</code></pre>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Módulo Sensor de 5 Canais</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Um módulo típico possui 5 sensores TCRT5000 em linha:</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">[S1] [S2] [S3] [S4] [S5]
+ ←        ↑        →
+Esq     Centro    Dir
+</code></pre>
+
+<strong><strong>Saídas Digitais:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Cada sensor tem um comparador que gera saída digital (HIGH/LOW)</li>
+<li class="mb-2">Potenciômetros de ajuste permitem calibrar a sensibilidade</li>
+</ul>
+<strong><strong>Distância Ideal:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">2-5mm entre o sensor e o chão</li>
+<li class="mb-2">Distância maior: perde sensibilidade</li>
+<li class="mb-2">Distância menor: campo de visão muito estreito</li>
+</ul>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Pinagem do Módulo</h5>
+
+<div class="overflow-x-auto mb-6"><table class="w-full border-collapse border border-gray-300">
+<thead class="bg-gray-100"><tr>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Pino</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Função</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Conexão ESP32</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>VCC</strong></td>
+<td class="border border-gray-300 px-4 py-2">Alimentação (+5V)</td>
+<td class="border border-gray-300 px-4 py-2">5V ou 3.3V</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>GND</strong></td>
+<td class="border border-gray-300 px-4 py-2">Terra</td>
+<td class="border border-gray-300 px-4 py-2">GND</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>OUT1</strong></td>
+<td class="border border-gray-300 px-4 py-2">Sensor 1 (Esquerda)</td>
+<td class="border border-gray-300 px-4 py-2">GPIO 32</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>OUT2</strong></td>
+<td class="border border-gray-300 px-4 py-2">Sensor 2</td>
+<td class="border border-gray-300 px-4 py-2">GPIO 33</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>OUT3</strong></td>
+<td class="border border-gray-300 px-4 py-2">Sensor 3 (Centro)</td>
+<td class="border border-gray-300 px-4 py-2">GPIO 25</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>OUT4</strong></td>
+<td class="border border-gray-300 px-4 py-2">Sensor 4</td>
+<td class="border border-gray-300 px-4 py-2">GPIO 26</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>OUT5</strong></td>
+<td class="border border-gray-300 px-4 py-2">Sensor 5 (Direita)</td>
+<td class="border border-gray-300 px-4 py-2">GPIO 27</td>
+</tr>
+</tbody>
+</table>
+</div><p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 7.3: Ponte H e Controle de Motores</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">O Que é uma Ponte H?</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Uma <strong>Ponte H</strong> (H-Bridge) é um circuito eletrônico que permite controlar a direção e velocidade de motores DC. O nome vem da configuração em forma de "H" dos transistores internos.</p>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Módulo L298N</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O L298N é um driver de motor duplo muito popular que pode controlar:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">2 motores DC simultaneamente</li>
+<li class="mb-2">Corrente: até 2A por canal</li>
+<li class="mb-2">Tensão: 5-35V</li>
+</ul>
+<strong><strong>Pinagem do L298N:</strong></strong>
+<div class="overflow-x-auto mb-6"><table class="w-full border-collapse border border-gray-300">
+<thead class="bg-gray-100"><tr>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Pino</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Função</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Conexão</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>IN1, IN2</strong></td>
+<td class="border border-gray-300 px-4 py-2">Controle do Motor A</td>
+<td class="border border-gray-300 px-4 py-2">GPIOs do ESP32</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>IN3, IN4</strong></td>
+<td class="border border-gray-300 px-4 py-2">Controle do Motor B</td>
+<td class="border border-gray-300 px-4 py-2">GPIOs do ESP32</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>ENA, ENB</strong></td>
+<td class="border border-gray-300 px-4 py-2">Enable (PWM para velocidade)</td>
+<td class="border border-gray-300 px-4 py-2">GPIOs do ESP32 ou jumper</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>OUT1, OUT2</strong></td>
+<td class="border border-gray-300 px-4 py-2">Saída para Motor A</td>
+<td class="border border-gray-300 px-4 py-2">Motor Esquerdo</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>OUT3, OUT4</strong></td>
+<td class="border border-gray-300 px-4 py-2">Saída para Motor B</td>
+<td class="border border-gray-300 px-4 py-2">Motor Direito</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>+12V</strong></td>
+<td class="border border-gray-300 px-4 py-2">Alimentação dos motores</td>
+<td class="border border-gray-300 px-4 py-2">Bateria 6V (4xAA)</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>GND</strong></td>
+<td class="border border-gray-300 px-4 py-2">Terra</td>
+<td class="border border-gray-300 px-4 py-2">GND comum</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>+5V</strong></td>
+<td class="border border-gray-300 px-4 py-2">Saída regulada 5V</td>
+<td class="border border-gray-300 px-4 py-2">Pode alimentar ESP32</td>
+</tr>
+</tbody>
+</table>
+</div><h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Controle de Direção</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">A direção do motor é controlada pelos pinos IN1 e IN2:</p>
+
+<div class="overflow-x-auto mb-6"><table class="w-full border-collapse border border-gray-300">
+<thead class="bg-gray-100"><tr>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">IN1</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">IN2</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Resultado</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="border border-gray-300 px-4 py-2">LOW</td>
+<td class="border border-gray-300 px-4 py-2">LOW</td>
+<td class="border border-gray-300 px-4 py-2">Motor PARADO</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2">HIGH</td>
+<td class="border border-gray-300 px-4 py-2">LOW</td>
+<td class="border border-gray-300 px-4 py-2">Motor FRENTE</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2">LOW</td>
+<td class="border border-gray-300 px-4 py-2">HIGH</td>
+<td class="border border-gray-300 px-4 py-2">Motor TRÁS</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2">HIGH</td>
+<td class="border border-gray-300 px-4 py-2">HIGH</td>
+<td class="border border-gray-300 px-4 py-2">Motor FREIO</td>
+</tr>
+</tbody>
+</table>
+</div><p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 7.4: Montagem Eletrônica Completa</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Diagrama de Conexões</h5>
+
+<strong><strong>ESP32 → L298N:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">GPIO 18 → IN1 (Motor Esquerdo)</li>
+<li class="mb-2">GPIO 19 → IN2 (Motor Esquerdo)</li>
+<li class="mb-2">GPIO 22 → IN3 (Motor Direito)</li>
+<li class="mb-2">GPIO 23 → IN4 (Motor Direito)</li>
+<li class="mb-2">GPIO 21 → ENA (PWM Motor Esquerdo)</li>
+<li class="mb-2">GPIO 12 → ENB (PWM Motor Direito)</li>
+</ul>
+<strong><strong>L298N → Motores:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">OUT1, OUT2 → Motor Esquerdo</li>
+<li class="mb-2">OUT3, OUT4 → Motor Direito</li>
+</ul>
+<strong><strong>L298N → Bateria:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">+12V → Positivo da bateria (6V)</li>
+<li class="mb-2">GND → Negativo da bateria</li>
+</ul>
+<strong><strong>Sensores → ESP32:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">VCC → 3.3V</li>
+<li class="mb-2">GND → GND</li>
+<li class="mb-2">OUT1-5 → GPIOs 32, 33, 25, 26, 27</li>
+</ul>
+<strong><strong>Importante - GND Comum:</strong></strong>
+<p class="mb-4 text-gray-700 leading-relaxed">Conecte o GND do ESP32, L298N e sensores juntos. Isto é crítico!</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 7.5: Código Base - Teste dos Motores</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Antes de implementar o seguidor de linha, vamos testar os motores.</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">// ===== Definição dos Pinos =====
+// Motor Esquerdo
+const int MOTOR_ESQ_IN1 = 18;
+const int MOTOR_ESQ_IN2 = 19;
+const int MOTOR_ESQ_EN = 21;
+
+// Motor Direito
+const int MOTOR_DIR_IN3 = 22;
+const int MOTOR_DIR_IN4 = 23;
+const int MOTOR_DIR_EN = 12;
+
+// Configuração PWM
+const int PWM_FREQ = 1000;  // 1 kHz
+const int PWM_RESOLUTION = 8; // 8 bits (0-255)
+const int PWM_CHANNEL_ESQ = 0;
+const int PWM_CHANNEL_DIR = 1;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("=== Teste de Motores ===");
+
+  // Configura pinos como saída
+  pinMode(MOTOR_ESQ_IN1, OUTPUT);
+  pinMode(MOTOR_ESQ_IN2, OUTPUT);
+  pinMode(MOTOR_DIR_IN3, OUTPUT);
+  pinMode(MOTOR_DIR_IN4, OUTPUT);
+
+  // Configura PWM
+  ledcSetup(PWM_CHANNEL_ESQ, PWM_FREQ, PWM_RESOLUTION);
+  ledcSetup(PWM_CHANNEL_DIR, PWM_FREQ, PWM_RESOLUTION);
+  ledcAttachPin(MOTOR_ESQ_EN, PWM_CHANNEL_ESQ);
+  ledcAttachPin(MOTOR_DIR_EN, PWM_CHANNEL_DIR);
+}
+
+void loop() {
+  Serial.println("Teste: FRENTE");
+  frente(200);
+  delay(2000);
+
+  Serial.println("Teste: PARAR");
+  parar();
+  delay(1000);
+
+  Serial.println("Teste: TRÁS");
+  tras(200);
+  delay(2000);
+
+  Serial.println("Teste: PARAR");
+  parar();
+  delay(1000);
+
+  Serial.println("Teste: GIRAR DIREITA");
+  girarDireita(180);
+  delay(2000);
+
+  Serial.println("Teste: PARAR");
+  parar();
+  delay(1000);
+
+  Serial.println("Teste: GIRAR ESQUERDA");
+  girarEsquerda(180);
+  delay(2000);
+
+  Serial.println("Teste: PARAR");
+  parar();
+  delay(2000);
+}
+
+// ===== Funções de Movimento =====
+
+void frente(int velocidade) {
+  // Motor Esquerdo: Frente
+  digitalWrite(MOTOR_ESQ_IN1, HIGH);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  // Motor Direito: Frente
+  digitalWrite(MOTOR_DIR_IN3, HIGH);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void tras(int velocidade) {
+  // Motor Esquerdo: Trás
+  digitalWrite(MOTOR_ESQ_IN1, LOW);
+  digitalWrite(MOTOR_ESQ_IN2, HIGH);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  // Motor Direito: Trás
+  digitalWrite(MOTOR_DIR_IN3, LOW);
+  digitalWrite(MOTOR_DIR_IN4, HIGH);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void girarDireita(int velocidade) {
+  // Motor Esquerdo: Frente
+  digitalWrite(MOTOR_ESQ_IN1, HIGH);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  // Motor Direito: Trás
+  digitalWrite(MOTOR_DIR_IN3, LOW);
+  digitalWrite(MOTOR_DIR_IN4, HIGH);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void girarEsquerda(int velocidade) {
+  // Motor Esquerdo: Trás
+  digitalWrite(MOTOR_ESQ_IN1, LOW);
+  digitalWrite(MOTOR_ESQ_IN2, HIGH);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  // Motor Direito: Frente
+  digitalWrite(MOTOR_DIR_IN3, HIGH);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void parar() {
+  digitalWrite(MOTOR_ESQ_IN1, LOW);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, 0);
+
+  digitalWrite(MOTOR_DIR_IN3, LOW);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, 0);
+}
+</code></pre>
+
+<p class="mb-4 text-gray-700 leading-relaxed"><strong>Teste este código antes de prosseguir!</strong> Certifique-se de que o robô se move corretamente em todas as direções.</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 7.6: Código do Seguidor de Linha</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Agora vamos implementar o algoritmo de seguimento de linha!</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">// ===== Pinos dos Motores =====
+const int MOTOR_ESQ_IN1 = 18;
+const int MOTOR_ESQ_IN2 = 19;
+const int MOTOR_ESQ_EN = 21;
+
+const int MOTOR_DIR_IN3 = 22;
+const int MOTOR_DIR_IN4 = 23;
+const int MOTOR_DIR_EN = 12;
+
+// ===== Pinos dos Sensores IR =====
+const int SENSOR_1 = 32; // Esquerda extrema
+const int SENSOR_2 = 33; // Esquerda
+const int SENSOR_3 = 25; // Centro
+const int SENSOR_4 = 26; // Direita
+const int SENSOR_5 = 27; // Direita extrema
+
+// ===== Configurações PWM =====
+const int PWM_FREQ = 1000;
+const int PWM_RESOLUTION = 8;
+const int PWM_CHANNEL_ESQ = 0;
+const int PWM_CHANNEL_DIR = 1;
+
+// ===== Parâmetros de Velocidade =====
+const int VELOCIDADE_BASE = 150;    // Velocidade quando na linha reta
+const int VELOCIDADE_CURVA = 100;   // Velocidade ao fazer curvas
+const int VELOCIDADE_CORRECAO = 180; // Velocidade para correções rápidas
+
+// ===== Variáveis dos Sensores =====
+int s1, s2, s3, s4, s5;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("=== Robô Seguidor de Linha ===");
+
+  // Configura pinos dos motores
+  pinMode(MOTOR_ESQ_IN1, OUTPUT);
+  pinMode(MOTOR_ESQ_IN2, OUTPUT);
+  pinMode(MOTOR_DIR_IN3, OUTPUT);
+  pinMode(MOTOR_DIR_IN4, OUTPUT);
+
+  // Configura PWM
+  ledcSetup(PWM_CHANNEL_ESQ, PWM_FREQ, PWM_RESOLUTION);
+  ledcSetup(PWM_CHANNEL_DIR, PWM_FREQ, PWM_RESOLUTION);
+  ledcAttachPin(MOTOR_ESQ_EN, PWM_CHANNEL_ESQ);
+  ledcAttachPin(MOTOR_DIR_EN, PWM_CHANNEL_DIR);
+
+  // Configura pinos dos sensores
+  pinMode(SENSOR_1, INPUT);
+  pinMode(SENSOR_2, INPUT);
+  pinMode(SENSOR_3, INPUT);
+  pinMode(SENSOR_4, INPUT);
+  pinMode(SENSOR_5, INPUT);
+
+  Serial.println("Aguardando 3 segundos...");
+  delay(3000);
+  Serial.println("INICIANDO!");
+}
+
+void loop() {
+  // Lê os sensores (0 = preto/linha, 1 = branco/fundo)
+  s1 = digitalRead(SENSOR_1);
+  s2 = digitalRead(SENSOR_2);
+  s3 = digitalRead(SENSOR_3);
+  s4 = digitalRead(SENSOR_4);
+  s5 = digitalRead(SENSOR_5);
+
+  // Debug (envie para Serial Monitor)
+  Serial.print(s1); Serial.print(" ");
+  Serial.print(s2); Serial.print(" ");
+  Serial.print(s3); Serial.print(" ");
+  Serial.print(s4); Serial.print(" ");
+  Serial.println(s5);
+
+  // ===== LÓGICA DE DECISÃO =====
+
+  // Caso 1: Sensor central na linha - SEGUIR RETO
+  if (s3 == 0) {
+    frente(VELOCIDADE_BASE);
+    Serial.println("Ação: RETO");
+  }
+
+  // Caso 2: Sensores centrais e à direita na linha - LEVE CURVA À DIREITA
+  else if (s3 == 0 && s4 == 0) {
+    curvaLeveDireita();
+    Serial.println("Ação: CURVA LEVE DIREITA");
+  }
+
+  // Caso 3: Sensores centrais e à esquerda na linha - LEVE CURVA À ESQUERDA
+  else if (s2 == 0 && s3 == 0) {
+    curvaLeveEsquerda();
+    Serial.println("Ação: CURVA LEVE ESQUERDA");
+  }
+
+  // Caso 4: Apenas sensor direito na linha - CURVA FORTE DIREITA
+  else if (s4 == 0 || s5 == 0) {
+    curvaForteDireita();
+    Serial.println("Ação: CURVA FORTE DIREITA");
+  }
+
+  // Caso 5: Apenas sensor esquerdo na linha - CURVA FORTE ESQUERDA
+  else if (s1 == 0 || s2 == 0) {
+    curvaForteEsquerda();
+    Serial.println("Ação: CURVA FORTE ESQUERDA");
+  }
+
+  // Caso 6: Todos os sensores no branco - PERDEU A LINHA
+  else if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1) {
+    frente(VELOCIDADE_CURVA);
+    Serial.println("Ação: PROCURANDO LINHA...");
+  }
+
+  // Caso 7: Todos os sensores no preto - CRUZAMENTO OU LINHA GROSSA
+  else if (s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0) {
+    frente(VELOCIDADE_BASE);
+    Serial.println("Ação: CRUZAMENTO - SEGUIR RETO");
+  }
+
+  // Pequeno delay para estabilidade
+  delay(10);
+}
+
+// ===== FUNÇÕES DE MOVIMENTO =====
+
+void frente(int velocidade) {
+  digitalWrite(MOTOR_ESQ_IN1, HIGH);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  digitalWrite(MOTOR_DIR_IN3, HIGH);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void curvaLeveDireita() {
+  // Reduz velocidade do motor direito
+  digitalWrite(MOTOR_ESQ_IN1, HIGH);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, VELOCIDADE_BASE);
+
+  digitalWrite(MOTOR_DIR_IN3, HIGH);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, VELOCIDADE_CURVA);
+}
+
+void curvaLeveEsquerda() {
+  // Reduz velocidade do motor esquerdo
+  digitalWrite(MOTOR_ESQ_IN1, HIGH);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, VELOCIDADE_CURVA);
+
+  digitalWrite(MOTOR_DIR_IN3, HIGH);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, VELOCIDADE_BASE);
+}
+
+void curvaForteDireita() {
+  // Motor esquerdo frente, direito parado ou trás
+  digitalWrite(MOTOR_ESQ_IN1, HIGH);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, VELOCIDADE_CORRECAO);
+
+  digitalWrite(MOTOR_DIR_IN3, LOW);
+  digitalWrite(MOTOR_DIR_IN4, HIGH);
+  ledcWrite(PWM_CHANNEL_DIR, VELOCIDADE_CURVA);
+}
+
+void curvaForteEsquerda() {
+  // Motor direito frente, esquerdo parado ou trás
+  digitalWrite(MOTOR_ESQ_IN1, LOW);
+  digitalWrite(MOTOR_ESQ_IN2, HIGH);
+  ledcWrite(PWM_CHANNEL_ESQ, VELOCIDADE_CURVA);
+
+  digitalWrite(MOTOR_DIR_IN3, HIGH);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, VELOCIDADE_CORRECAO);
+}
+
+void parar() {
+  digitalWrite(MOTOR_ESQ_IN1, LOW);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, 0);
+
+  digitalWrite(MOTOR_DIR_IN3, LOW);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, 0);
+}
+</code></pre>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 7.7: Calibração e Ajustes</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Calibração dos Sensores</h5>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Ajuste de Altura</strong>: Mantenha os sensores entre 2-5mm do chão</li>
+<li class="mb-2"><strong>Potenciômetros</strong>: Gire os potenciômetros no módulo até que:</li>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">LED acenda quando sobre a linha preta</li>
+<li class="mb-2">LED apague quando sobre o fundo branco</li>
+3. <strong>Teste Manual</strong>: Use o Serial Monitor para ver os valores dos sensores
+</ul>
+</ol>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Ajuste de Velocidades</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Se o robô estiver:</p>
+
+<strong><strong>Muito Lento:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Aumente <code class="bg-gray-100 px-2 py-1 rounded text-sm">VELOCIDADE_BASE</code> (máximo 255)</li>
+</ul>
+<strong><strong>Oscilando Muito:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Diminua <code class="bg-gray-100 px-2 py-1 rounded text-sm">VELOCIDADE_CORRECAO</code></li>
+<li class="mb-2">Aumente <code class="bg-gray-100 px-2 py-1 rounded text-sm">VELOCIDADE_CURVA</code></li>
+</ul>
+<strong><strong>Saindo da Linha em Curvas:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Diminua <code class="bg-gray-100 px-2 py-1 rounded text-sm">VELOCIDADE_BASE</code></li>
+<li class="mb-2">Aumente <code class="bg-gray-100 px-2 py-1 rounded text-sm">VELOCIDADE_CORRECAO</code></li>
+</ul>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Pista de Teste</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Crie uma pista simples usando:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Fita isolante preta</strong> (18-25mm de largura) sobre fundo branco</li>
+<li class="mb-2"><strong>Cartolina branca</strong> com linha desenhada com marcador preto</li>
+<li class="mb-2"><strong>Impressão</strong> de uma pista em papel</li>
+</ul>
+<strong><strong>Dicas de Design da Pista:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Comece com linhas retas e curvas suaves</li>
+<li class="mb-2">Largura da linha: 18-25mm (ideal para 5 sensores)</li>
+<li class="mb-2">Evite curvas de 90° no início</li>
+<li class="mb-2">Adicione curvas fechadas depois que o robô estiver funcionando bem</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 7.8: Desafios e Melhorias</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Desafio 1: Detecção de Marcações Especiais</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Adicione detecção de quando todos os sensores detectam preto (cruzamento) e faça o robô:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Piscar um LED</li>
+<li class="mb-2">Enviar telemetria via Serial</li>
+<li class="mb-2">Contar quantos cruzamentos passou</li>
+</ul>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Desafio 2: Controle PID</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Implemente um controlador PID (Proporcional-Integral-Derivativo) para um seguimento mais suave:</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">float kP = 25;  // Ganho proporcional
+float kD = 15;  // Ganho derivativo
+
+int erroAnterior = 0;
+
+void seguirLinhaPID() {
+  // Calcula o erro de posição
+  int erro = calcularErro();
+
+  // Termo Proporcional
+  float P = erro * kP;
+
+  // Termo Derivativo
+  float D = (erro - erroAnterior) * kD;
+  erroAnterior = erro;
+
+  // Ajuste de velocidade
+  int ajuste = P + D;
+
+  int velEsq = constrain(VELOCIDADE_BASE + ajuste, 0, 255);
+  int velDir = constrain(VELOCIDADE_BASE - ajuste, 0, 255);
+
+  moverMotores(velEsq, velDir);
+}
+
+int calcularErro() {
+  // -2: muito à esquerda, 0: centralizado, +2: muito à direita
+  if (s1 == 0) return -2;
+  if (s2 == 0) return -1;
+  if (s3 == 0) return 0;
+  if (s4 == 0) return 1;
+  if (s5 == 0) return 2;
+  return 0;
+}
+</code></pre>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Desafio 3: Interface de Calibração</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Adicione um botão que permite alternar entre:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Modo de calibração (mostra valores dos sensores)</li>
+<li class="mb-2">Modo de operação (segue a linha)</li>
+</ul>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Desafio 4: Display de Status</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Adicione um display OLED que mostra:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Estado atual (qual sensor está na linha)</li>
+<li class="mb-2">Velocidade</li>
+<li class="mb-2">Número de curvas feitas</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Conclusão do Módulo 7</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Parabéns! Você construiu um robô autônomo completo que:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Navega de forma independente seguindo uma linha</li>
+<li class="mb-2">Usa sensores para perceber o ambiente</li>
+<li class="mb-2">Toma decisões em tempo real</li>
+<li class="mb-2">Ajusta seu comportamento com base no feedback dos sensores</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">Este projeto ensinou conceitos fundamentais de:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Controle diferencial de motores</li>
+<li class="mb-2">Lógica de decisão baseada em sensores</li>
+<li class="mb-2">Calibração de hardware</li>
+<li class="mb-2">Debugging de sistemas robóticos</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">No próximo módulo, vamos elevar o nível construindo um <strong>Robô Desviador de Obstáculos</strong> que navega livremente evitando colisões!</p>
+
+
+                    </div>
                     </div>
                 </div>
 
@@ -1124,43 +2712,1131 @@ void loop() {
                         </svg>
                     </div>
                     <div class="p-6 hidden" id="module-8">
-                        <ul class="space-y-3">
-                            <li class="flex items-start">
-                                <span class="text-fundamentos mr-2">🔧</span>
-                                <div>
-                                    <strong>Integração de Ultrassom</strong>
-                                    <p class="text-sm text-gray-600">Sensor HC-SR04 para detecção de obstáculos à frente</p>
-                                </div>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="text-fundamentos mr-2">🔧</span>
-                                <div>
-                                    <strong>Algoritmo de Navegação</strong>
-                                    <p class="text-sm text-gray-600">Lógica de decisão: parar, girar esquerda/direita, avançar</p>
-                                </div>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="text-fundamentos mr-2">🔧</span>
-                                <div>
-                                    <strong>Servo Pan-Tilt (Opcional)</strong>
-                                    <p class="text-sm text-gray-600">Sensor ultrassom com varredura em 180° para melhor detecção</p>
-                                </div>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="text-fundamentos mr-2">🔧</span>
-                                <div>
-                                    <strong>Modos de Operação</strong>
-                                    <p class="text-sm text-gray-600">Autônomo, manual via Serial, display de status</p>
-                                </div>
-                            </li>
-                            <li class="flex items-start bg-green-50 p-3 rounded">
-                                <span class="text-fundamentos mr-2">🏆</span>
-                                <div>
-                                    <strong>Desafio Final</strong>
-                                    <p class="text-sm text-gray-600">Crie um labirinto e faça seu robô navegar autonomamente!</p>
-                                </div>
-                            </li>
-                        </ul>
+<div class="prose max-w-none">
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Bem-vindo ao Projeto Final do Nível 1!</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Neste módulo culminante, você construirá um <strong>robô desviador de obstáculos</strong> - um robô móvel autônomo capaz de navegar em ambientes desconhecidos, detectando e evitando obstáculos em tempo real. Este é um dos projetos mais empolgantes da robótica, pois o robô precisa "pensar" e tomar decisões sozinho!</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Robôs desviadores de obstáculos são usados em:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Aspiradores Robóticos</strong>: Como o Roomba, que limpa casas autonomamente</li>
+<li class="mb-2"><strong>Robôs de Exploração</strong>: Rovers em Marte, robôs de resgate em áreas perigosas</li>
+<li class="mb-2"><strong>Veículos Autônomos</strong>: Carros que evitam colisões</li>
+<li class="mb-2"><strong>Drones</strong>: Para navegação em ambientes fechados</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">O Que Você Vai Aprender</h4>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Sensor Ultrassônico HC-SR04</strong>: Medição precisa de distâncias</li>
+<li class="mb-2"><strong>Algoritmos de Navegação</strong>: Como fazer o robô decidir para onde ir</li>
+<li class="mb-2"><strong>Servo Pan-Tilt</strong>: Varredura do ambiente para melhor percepção</li>
+<li class="mb-2"><strong>Máquinas de Estado</strong>: Organização de comportamentos complexos</li>
+<li class="mb-2"><strong>Navegação Autônoma em Labirintos</strong>: Desafio final!</li>
+</ol>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 8.1: O Sensor Ultrassônico HC-SR04</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Revisão e Aprofundamento</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Você já foi apresentado ao HC-SR04 no Módulo 3. Agora vamos dominar completamente este sensor e usá-lo para navegação real.</p>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Especificações Técnicas</h5>
+
+<div class="overflow-x-auto mb-6"><table class="w-full border-collapse border border-gray-300">
+<thead class="bg-gray-100"><tr>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Parâmetro</th>
+<th class="border border-gray-300 px-4 py-2 text-left font-semibold">Valor</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Tensão de Operação</strong></td>
+<td class="border border-gray-300 px-4 py-2">5V</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Corrente</strong></td>
+<td class="border border-gray-300 px-4 py-2">15 mA</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Alcance</strong></td>
+<td class="border border-gray-300 px-4 py-2">2 cm a 400 cm</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Precisão</strong></td>
+<td class="border border-gray-300 px-4 py-2">±3 mm</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Ângulo de Medição</strong></td>
+<td class="border border-gray-300 px-4 py-2">15° (cone)</td>
+</tr>
+<tr>
+<td class="border border-gray-300 px-4 py-2"><strong>Frequência do Ultrassom</strong></td>
+<td class="border border-gray-300 px-4 py-2">40 kHz</td>
+</tr>
+</tbody>
+</table>
+</div><h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Código de Leitura Otimizado</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Vamos criar uma função robusta para ler distâncias:</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">const int TRIG_PIN = 26;
+const int ECHO_PIN = 25;
+
+// Constantes físicas
+const float VELOCIDADE_SOM = 0.0343; // cm/µs (343 m/s = 0.0343 cm/µs)
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+}
+
+float lerDistanciaUltrassonico() {
+  // Garante que o pino TRIG está LOW
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+
+  // Envia pulso de 10µs
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  // Lê o tempo do pulso de eco
+  // Timeout de 30ms (equivale a aproximadamente 5m)
+  long duracao = pulseIn(ECHO_PIN, HIGH, 30000);
+
+  // Se timeout, retorna valor indicando erro
+  if (duracao == 0) {
+    return -1; // Nada detectado ou fora de alcance
+  }
+
+  // Calcula distância em cm
+  // Distância = (Tempo * Velocidade do Som) / 2
+  // Dividimos por 2 porque o som vai e volta
+  float distancia = (duracao * VELOCIDADE_SOM) / 2.0;
+
+  return distancia;
+}
+
+void loop() {
+  float dist = lerDistanciaUltrassonico();
+
+  if (dist &gt; 0) {
+    Serial.print("Distância: ");
+    Serial.print(dist);
+    Serial.println(" cm");
+  } else {
+    Serial.println("Erro na leitura ou sem obstáculo detectável");
+  }
+
+  delay(100); // Aguarda 100ms entre leituras
+}
+</code></pre>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Lidando com Leituras Ruidosas</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Sensores ultrassônicos podem ter leituras instáveis. Vamos implementar um filtro de média móvel:</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">const int NUM_LEITURAS = 5;
+float leituras[NUM_LEITURAS];
+int indiceLeitura = 0;
+
+float lerDistanciaFiltrada() {
+  // Faz uma nova leitura
+  float novaLeitura = lerDistanciaUltrassonico();
+
+  // Armazena no array circular
+  leituras[indiceLeitura] = novaLeitura;
+  indiceLeitura = (indiceLeitura + 1) % NUM_LEITURAS;
+
+  // Calcula a média (ignorando valores inválidos)
+  float soma = 0;
+  int contadorValidos = 0;
+
+  for (int i = 0; i &lt; NUM_LEITURAS; i++) {
+    if (leituras[i] &gt; 0) { // Ignora leituras com erro
+      soma += leituras[i];
+      contadorValidos++;
+    }
+  }
+
+  if (contadorValidos &gt; 0) {
+    return soma / contadorValidos;
+  } else {
+    return -1; // Todas as leituras inválidas
+  }
+}
+</code></pre>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 8.2: Algoritmo de Navegação Básico</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Máquina de Estados Finitos</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Vamos organizar o comportamento do robô usando uma <strong>Máquina de Estados Finitos (FSM - Finite State Machine)</strong>. Este é um padrão de design fundamental em robótica.</p>
+
+<strong><strong>Estados do Robô:</strong></strong>
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">┌─────────────┐
+│   AVANÇAR   │ ← Estado inicial
+└──────┬──────┘
+       │ Obstáculo detectado
+       ↓
+┌─────────────┐
+│    PARAR    │
+└──────┬──────┘
+       │ Avalia situação
+       ↓
+┌─────────────┐
+│   DECIDIR   │ ← Verifica direita/esquerda
+└──────┬──────┘
+       │ Escolhe direção
+       ↓
+┌─────────────┐
+│    GIRAR    │
+└──────┬──────┘
+       │ Giro completo
+       ↓
+   (volta para AVANÇAR)
+</code></pre>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Lista de Materiais</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Use os mesmos componentes do Módulo 7 (seguidor de linha), mas:</p>
+
+<strong><strong>Substitua:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Módulo de 5 sensores IR → 1x Sensor Ultrassônico HC-SR04</li>
+</ul>
+<strong><strong>Adicione (Opcional):</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">1x Servo Motor SG90 (para pan-tilt do sensor)</li>
+<li class="mb-2">1x Suporte para servo (pode ser feito com papelão)</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 8.3: Montagem do Robô</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Configuração 1: Sensor Fixo (Simples)</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O sensor ultrassônico fica fixo apontando para frente.</p>
+
+<strong><strong>Posicionamento:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Altura: 5-10 cm do chão</li>
+<li class="mb-2">Ângulo: Ligeiramente inclinado para baixo (10-15°)</li>
+<li class="mb-2">Posição: Centro da frente do chassi</li>
+</ul>
+<strong><strong>Conexões:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">HC-SR04 VCC → ESP32 5V</li>
+<li class="mb-2">HC-SR04 GND → ESP32 GND</li>
+<li class="mb-2">HC-SR04 TRIG → GPIO 26</li>
+<li class="mb-2">HC-SR04 ECHO → GPIO 25</li>
+</ul>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Configuração 2: Sensor com Pan-Tilt (Avançado)</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">O sensor pode girar para "olhar" para os lados.</p>
+
+<strong><strong>Montagem:</strong></strong>
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Fixe o servo SG90 na parte frontal do chassi</li>
+<li class="mb-2">Crie um suporte pequeno para o HC-SR04</li>
+<li class="mb-2">Cole o HC-SR04 no "horn" do servo</li>
+<li class="mb-2">Ajuste para que o servo possa girar de 0° a 180°</li>
+</ol>
+<strong><strong>Conexões Adicionais:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Servo Sinal → GPIO 13</li>
+<li class="mb-2">Servo VCC → 5V</li>
+<li class="mb-2">Servo GND → GND</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 8.4: Código - Versão Básica (Sensor Fixo)</h4>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">// ===== Pinos dos Motores =====
+const int MOTOR_ESQ_IN1 = 18;
+const int MOTOR_ESQ_IN2 = 19;
+const int MOTOR_ESQ_EN = 21;
+
+const int MOTOR_DIR_IN3 = 22;
+const int MOTOR_DIR_IN4 = 23;
+const int MOTOR_DIR_EN = 12;
+
+// ===== Pinos do Sensor Ultrassônico =====
+const int TRIG_PIN = 26;
+const int ECHO_PIN = 25;
+
+// ===== Configurações PWM =====
+const int PWM_FREQ = 1000;
+const int PWM_RESOLUTION = 8;
+const int PWM_CHANNEL_ESQ = 0;
+const int PWM_CHANNEL_DIR = 1;
+
+// ===== Parâmetros de Navegação =====
+const int DISTANCIA_SEGURA = 30;        // cm - distância mínima antes de desviar
+const int VELOCIDADE_NORMAL = 180;      // Velocidade de cruzeiro
+const int VELOCIDADE_LENTA = 120;       // Velocidade ao se aproximar de obstáculos
+const int TEMPO_GIRO_90_GRAUS = 500;    // ms - ajuste conforme seu robô
+
+// ===== Estados da Máquina de Estados =====
+enum Estado {
+  AVANCAR,
+  PARAR,
+  GIRAR_DIREITA,
+  GIRAR_ESQUERDA,
+  RE
+};
+
+Estado estadoAtual = AVANCAR;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("=== Robô Desviador de Obstáculos ===");
+
+  // Configura motores
+  pinMode(MOTOR_ESQ_IN1, OUTPUT);
+  pinMode(MOTOR_ESQ_IN2, OUTPUT);
+  pinMode(MOTOR_DIR_IN3, OUTPUT);
+  pinMode(MOTOR_DIR_IN4, OUTPUT);
+
+  ledcSetup(PWM_CHANNEL_ESQ, PWM_FREQ, PWM_RESOLUTION);
+  ledcSetup(PWM_CHANNEL_DIR, PWM_FREQ, PWM_RESOLUTION);
+  ledcAttachPin(MOTOR_ESQ_EN, PWM_CHANNEL_ESQ);
+  ledcAttachPin(MOTOR_DIR_EN, PWM_CHANNEL_DIR);
+
+  // Configura sensor
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  Serial.println("Robô pronto!");
+  delay(2000);
+}
+
+void loop() {
+  // Lê a distância
+  float distancia = lerDistancia();
+
+  // Exibe no Serial Monitor
+  Serial.print("Distância: ");
+  Serial.print(distancia);
+  Serial.print(" cm | Estado: ");
+
+  // ===== MÁQUINA DE ESTADOS =====
+  switch(estadoAtual) {
+
+    case AVANCAR:
+      Serial.println("AVANÇAR");
+
+      if (distancia &gt; 0 && distancia &lt; DISTANCIA_SEGURA) {
+        // Obstáculo próximo - parar e decidir
+        estadoAtual = PARAR;
+      } else if (distancia &gt; DISTANCIA_SEGURA && distancia &lt; DISTANCIA_SEGURA * 2) {
+        // Obstáculo à distância média - reduzir velocidade
+        frente(VELOCIDADE_LENTA);
+      } else {
+        // Caminho livre - velocidade normal
+        frente(VELOCIDADE_NORMAL);
+      }
+      break;
+
+    case PARAR:
+      Serial.println("PARAR");
+      parar();
+      delay(300);
+
+      // Decide para qual lado girar (aleatório nesta versão simples)
+      if (random(0, 2) == 0) {
+        estadoAtual = GIRAR_DIREITA;
+      } else {
+        estadoAtual = GIRAR_ESQUERDA;
+      }
+      break;
+
+    case GIRAR_DIREITA:
+      Serial.println("GIRAR DIREITA");
+      girarDireita(200);
+      delay(TEMPO_GIRO_90_GRAUS);
+      estadoAtual = AVANCAR;
+      break;
+
+    case GIRAR_ESQUERDA:
+      Serial.println("GIRAR ESQUERDA");
+      girarEsquerda(200);
+      delay(TEMPO_GIRO_90_GRAUS);
+      estadoAtual = AVANCAR;
+      break;
+
+    case RE:
+      Serial.println("RÉ");
+      tras(180);
+      delay(500);
+      estadoAtual = GIRAR_DIREITA; // Depois de dar ré, gira
+      break;
+  }
+
+  delay(50); // Pequeno delay para estabilidade
+}
+
+// ===== FUNÇÃO DE LEITURA DO SENSOR =====
+float lerDistancia() {
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duracao = pulseIn(ECHO_PIN, HIGH, 30000);
+
+  if (duracao == 0) {
+    return 400; // Retorna valor alto se não detectar nada
+  }
+
+  float distancia = (duracao * 0.0343) / 2.0;
+  return distancia;
+}
+
+// ===== FUNÇÕES DE MOVIMENTO =====
+void frente(int velocidade) {
+  digitalWrite(MOTOR_ESQ_IN1, HIGH);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  digitalWrite(MOTOR_DIR_IN3, HIGH);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void tras(int velocidade) {
+  digitalWrite(MOTOR_ESQ_IN1, LOW);
+  digitalWrite(MOTOR_ESQ_IN2, HIGH);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  digitalWrite(MOTOR_DIR_IN3, LOW);
+  digitalWrite(MOTOR_DIR_IN4, HIGH);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void girarDireita(int velocidade) {
+  digitalWrite(MOTOR_ESQ_IN1, HIGH);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  digitalWrite(MOTOR_DIR_IN3, LOW);
+  digitalWrite(MOTOR_DIR_IN4, HIGH);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void girarEsquerda(int velocidade) {
+  digitalWrite(MOTOR_ESQ_IN1, LOW);
+  digitalWrite(MOTOR_ESQ_IN2, HIGH);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  digitalWrite(MOTOR_DIR_IN3, HIGH);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void parar() {
+  digitalWrite(MOTOR_ESQ_IN1, LOW);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, 0);
+
+  digitalWrite(MOTOR_DIR_IN3, LOW);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, 0);
+}
+</code></pre>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 8.5: Código - Versão Avançada (com Pan-Tilt)</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Agora vamos fazer o robô "olhar" para os lados antes de decidir para onde girar!</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">#include &lt;ESP32Servo.h&gt;
+
+// ===== Pinos dos Motores =====
+const int MOTOR_ESQ_IN1 = 18;
+const int MOTOR_ESQ_IN2 = 19;
+const int MOTOR_ESQ_EN = 21;
+
+const int MOTOR_DIR_IN3 = 22;
+const int MOTOR_DIR_IN4 = 23;
+const int MOTOR_DIR_EN = 12;
+
+// ===== Pinos do Sensor Ultrassônico =====
+const int TRIG_PIN = 26;
+const int ECHO_PIN = 25;
+
+// ===== Pino do Servo =====
+const int SERVO_PIN = 13;
+Servo servoSensor;
+
+// ===== Ângulos do Servo =====
+const int ANGULO_CENTRO = 90;
+const int ANGULO_DIREITA = 30;
+const int ANGULO_ESQUERDA = 150;
+
+// ===== Configurações PWM =====
+const int PWM_FREQ = 1000;
+const int PWM_RESOLUTION = 8;
+const int PWM_CHANNEL_ESQ = 0;
+const int PWM_CHANNEL_DIR = 1;
+
+// ===== Parâmetros de Navegação =====
+const int DISTANCIA_SEGURA = 35;
+const int VELOCIDADE_NORMAL = 180;
+const int TEMPO_GIRO_90_GRAUS = 500;
+
+// ===== Estados =====
+enum Estado {
+  AVANCAR,
+  ESCANEAR,
+  GIRAR_DIREITA,
+  GIRAR_ESQUERDA,
+  RE
+};
+
+Estado estadoAtual = AVANCAR;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("=== Robô Inteligente com Pan-Tilt ===");
+
+  // Motores
+  pinMode(MOTOR_ESQ_IN1, OUTPUT);
+  pinMode(MOTOR_ESQ_IN2, OUTPUT);
+  pinMode(MOTOR_DIR_IN3, OUTPUT);
+  pinMode(MOTOR_DIR_IN4, OUTPUT);
+
+  ledcSetup(PWM_CHANNEL_ESQ, PWM_FREQ, PWM_RESOLUTION);
+  ledcSetup(PWM_CHANNEL_DIR, PWM_FREQ, PWM_RESOLUTION);
+  ledcAttachPin(MOTOR_ESQ_EN, PWM_CHANNEL_ESQ);
+  ledcAttachPin(MOTOR_DIR_EN, PWM_CHANNEL_DIR);
+
+  // Sensor
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  // Servo
+  servoSensor.attach(SERVO_PIN);
+  servoSensor.write(ANGULO_CENTRO);
+
+  Serial.println("Sistema pronto!");
+  delay(2000);
+}
+
+void loop() {
+  // Sensor olha para frente
+  servoSensor.write(ANGULO_CENTRO);
+  delay(100);
+
+  float distanciaFrente = lerDistancia();
+
+  Serial.print("Frente: ");
+  Serial.print(distanciaFrente);
+  Serial.print(" cm | Estado: ");
+
+  // ===== MÁQUINA DE ESTADOS =====
+  switch(estadoAtual) {
+
+    case AVANCAR:
+      Serial.println("AVANÇAR");
+
+      if (distanciaFrente &gt; 0 && distanciaFrente &lt; DISTANCIA_SEGURA) {
+        estadoAtual = ESCANEAR;
+      } else {
+        frente(VELOCIDADE_NORMAL);
+      }
+      break;
+
+    case ESCANEAR:
+      Serial.println("ESCANEAR");
+      parar();
+      delay(200);
+
+      // Olha para a direita
+      servoSensor.write(ANGULO_DIREITA);
+      delay(500); // Aguarda o servo se posicionar
+      float distanciaDireita = lerDistancia();
+      Serial.print("  → Direita: ");
+      Serial.print(distanciaDireita);
+      Serial.println(" cm");
+
+      // Olha para a esquerda
+      servoSensor.write(ANGULO_ESQUERDA);
+      delay(500);
+      float distanciaEsquerda = lerDistancia();
+      Serial.print("  → Esquerda: ");
+      Serial.print(distanciaEsquerda);
+      Serial.println(" cm");
+
+      // Volta para o centro
+      servoSensor.write(ANGULO_CENTRO);
+      delay(300);
+
+      // DECISÃO INTELIGENTE
+      if (distanciaDireita &lt; 15 && distanciaEsquerda &lt; 15) {
+        // Ambos os lados bloqueados - dar ré
+        Serial.println("  → Decisão: DAR RÉ");
+        estadoAtual = RE;
+      }
+      else if (distanciaDireita &gt; distanciaEsquerda) {
+        // Direita está mais livre
+        Serial.println("  → Decisão: GIRAR DIREITA");
+        estadoAtual = GIRAR_DIREITA;
+      }
+      else {
+        // Esquerda está mais livre
+        Serial.println("  → Decisão: GIRAR ESQUERDA");
+        estadoAtual = GIRAR_ESQUERDA;
+      }
+      break;
+
+    case GIRAR_DIREITA:
+      Serial.println("GIRAR DIREITA");
+      girarDireita(200);
+      delay(TEMPO_GIRO_90_GRAUS);
+      parar();
+      estadoAtual = AVANCAR;
+      break;
+
+    case GIRAR_ESQUERDA:
+      Serial.println("GIRAR ESQUERDA");
+      girarEsquerda(200);
+      delay(TEMPO_GIRO_90_GRAUS);
+      parar();
+      estadoAtual = AVANCAR;
+      break;
+
+    case RE:
+      Serial.println("RÉ");
+      tras(180);
+      delay(800);
+      parar();
+      // Após dar ré, gira 180 graus
+      girarDireita(200);
+      delay(TEMPO_GIRO_90_GRAUS * 2);
+      parar();
+      estadoAtual = AVANCAR;
+      break;
+  }
+
+  delay(50);
+}
+
+// ===== FUNÇÃO DE LEITURA =====
+float lerDistancia() {
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duracao = pulseIn(ECHO_PIN, HIGH, 30000);
+
+  if (duracao == 0) {
+    return 400;
+  }
+
+  return (duracao * 0.0343) / 2.0;
+}
+
+// ===== FUNÇÕES DE MOVIMENTO =====
+void frente(int velocidade) {
+  digitalWrite(MOTOR_ESQ_IN1, HIGH);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  digitalWrite(MOTOR_DIR_IN3, HIGH);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void tras(int velocidade) {
+  digitalWrite(MOTOR_ESQ_IN1, LOW);
+  digitalWrite(MOTOR_ESQ_IN2, HIGH);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  digitalWrite(MOTOR_DIR_IN3, LOW);
+  digitalWrite(MOTOR_DIR_IN4, HIGH);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void girarDireita(int velocidade) {
+  digitalWrite(MOTOR_ESQ_IN1, HIGH);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  digitalWrite(MOTOR_DIR_IN3, LOW);
+  digitalWrite(MOTOR_DIR_IN4, HIGH);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void girarEsquerda(int velocidade) {
+  digitalWrite(MOTOR_ESQ_IN1, LOW);
+  digitalWrite(MOTOR_ESQ_IN2, HIGH);
+  ledcWrite(PWM_CHANNEL_ESQ, velocidade);
+
+  digitalWrite(MOTOR_DIR_IN3, HIGH);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, velocidade);
+}
+
+void parar() {
+  digitalWrite(MOTOR_ESQ_IN1, LOW);
+  digitalWrite(MOTOR_ESQ_IN2, LOW);
+  ledcWrite(PWM_CHANNEL_ESQ, 0);
+
+  digitalWrite(MOTOR_DIR_IN3, LOW);
+  digitalWrite(MOTOR_DIR_IN4, LOW);
+  ledcWrite(PWM_CHANNEL_DIR, 0);
+}
+</code></pre>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 8.6: Calibração e Otimizações</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Calibração do Tempo de Giro</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Para que o robô gire exatamente 90°:</p>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Execute este código de teste:</li>
+</ol>
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">void setup() {
+  // Configurações de motor aqui
+}
+
+void loop() {
+  Serial.println("Girando 90° para direita...");
+  girarDireita(200);
+  delay(500); // Ajuste este valor
+  parar();
+  delay(5000); // Espera 5 segundos
+
+  Serial.println("Girando 90° para esquerda...");
+  girarEsquerda(200);
+  delay(500); // Ajuste este valor
+  parar();
+  delay(5000);
+}
+</code></pre>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Use uma fita no chão como referência</li>
+<li class="mb-2">Ajuste o valor do <code class="bg-gray-100 px-2 py-1 rounded text-sm">delay()</code> até o giro ser preciso</li>
+</ol>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Ajuste de Distância Segura</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Se o robô estiver:</p>
+
+<strong><strong>Batendo em obstáculos:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Aumente <code class="bg-gray-100 px-2 py-1 rounded text-sm">DISTANCIA_SEGURA</code> (ex: de 30 para 40 cm)</li>
+</ul>
+<strong><strong>Parando longe demais:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Diminua <code class="bg-gray-100 px-2 py-1 rounded text-sm">DISTANCIA_SEGURA</code> (ex: de 30 para 20 cm)</li>
+</ul>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Otimização: Evitando Loops Infinitos</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Adicione um contador para detectar quando o robô está preso:</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">int tentativasGiro = 0;
+const int MAX_TENTATIVAS = 3;
+
+// No estado ESCANEAR, adicione:
+if (estadoAtual == ESCANEAR) {
+  tentativasGiro++;
+
+  if (tentativasGiro &gt;= MAX_TENTATIVAS) {
+    // Está preso - estratégia de escape!
+    Serial.println("ROBÔ PRESO - MODO ESCAPE");
+    tras(200);
+    delay(1000);
+    girarDireita(200);
+    delay(TEMPO_GIRO_90_GRAUS * 3); // Gira 270°
+    tentativasGiro = 0;
+    estadoAtual = AVANCAR;
+  }
+}
+
+// No estado AVANCAR, resete o contador:
+if (estadoAtual == AVANCAR && distanciaFrente &gt; DISTANCIA_SEGURA) {
+  tentativasGiro = 0;
+}
+</code></pre>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 8.7: Desafio Final - Navegação em Labirinto</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Algoritmo de Seguir Parede (Wall Following)</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Este é um algoritmo clássico que sempre mantém uma parede à direita (ou esquerda) do robô:</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed"><strong>Regra de Ouro:</strong> "Sempre mantém a mão direita na parede"</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">void navegarLabirinto() {
+  servoSensor.write(ANGULO_DIREITA);
+  delay(200);
+  float distDireita = lerDistancia();
+
+  servoSensor.write(ANGULO_CENTRO);
+  delay(200);
+  float distFrente = lerDistancia();
+
+  const int DIST_PAREDE = 25; // Distância ideal da parede
+
+  // Lógica de seguir parede direita
+  if (distFrente &lt; 30) {
+    // Obstáculo à frente - girar esquerda
+    parar();
+    girarEsquerda(180);
+    delay(TEMPO_GIRO_90_GRAUS);
+  }
+  else if (distDireita &gt; DIST_PAREDE + 10) {
+    // Muito longe da parede - corrigir para direita
+    digitalWrite(MOTOR_ESQ_IN1, HIGH);
+    digitalWrite(MOTOR_ESQ_IN2, LOW);
+    ledcWrite(PWM_CHANNEL_ESQ, 200);
+
+    digitalWrite(MOTOR_DIR_IN3, HIGH);
+    digitalWrite(MOTOR_DIR_IN4, LOW);
+    ledcWrite(PWM_CHANNEL_DIR, 150); // Motor direito mais lento
+  }
+  else if (distDireita &lt; DIST_PAREDE - 10) {
+    // Muito perto da parede - corrigir para esquerda
+    digitalWrite(MOTOR_ESQ_IN1, HIGH);
+    digitalWrite(MOTOR_ESQ_IN2, LOW);
+    ledcWrite(PWM_CHANNEL_ESQ, 150); // Motor esquerdo mais lento
+
+    digitalWrite(MOTOR_DIR_IN3, HIGH);
+    digitalWrite(MOTOR_DIR_IN4, LOW);
+    ledcWrite(PWM_CHANNEL_DIR, 200);
+  }
+  else {
+    // Distância ideal - seguir reto
+    frente(180);
+  }
+}
+</code></pre>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Construindo um Labirinto de Teste</h5>
+
+<strong><strong>Materiais:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Caixas de papelão</li>
+<li class="mb-2">Livros</li>
+<li class="mb-2">Garrafas PET</li>
+<li class="mb-2">Blocos de madeira</li>
+</ul>
+<strong><strong>Dicas de Design:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Corredores de pelo menos 30cm de largura</li>
+<li class="mb-2">Paredes de pelo menos 15cm de altura</li>
+<li class="mb-2">Evite superfícies muito reflexivas (espelhos, metal brilhante)</li>
+<li class="mb-2">Use paredes opacas para melhor detecção</li>
+</ul>
+<strong><strong>Exemplo de Labirinto Simples:</strong></strong>
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">┌─────────────────┐
+│  START          │
+│    │            │
+│    │    ┌───────┤
+│    │    │       │
+│    └────┤       │
+│         │   ┌───┤
+│         │   │   │
+│         └───┤ E │
+│             │ N │
+│             │ D │
+└─────────────┴───┘
+</code></pre>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 8.8: Funcionalidades Avançadas</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">1. Modo de Operação Selecionável</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Adicione um botão para alternar entre modos:</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">const int BOTAO_PIN = 14;
+
+enum Modo {
+  EXPLORADOR,      // Navegação livre
+  SEGUIR_PAREDE,   // Algoritmo de parede
+  RETORNAR_BASE    // Volta para o ponto inicial
+};
+
+Modo modoAtual = EXPLORADOR;
+
+void setup() {
+  pinMode(BOTAO_PIN, INPUT_PULLUP);
+  // ... resto do setup
+}
+
+void loop() {
+  // Verifica se o botão foi pressionado
+  if (digitalRead(BOTAO_PIN) == LOW) {
+    modoAtual = (Modo)((modoAtual + 1) % 3);
+    Serial.print("Modo alterado para: ");
+    Serial.println(modoAtual);
+    delay(500); // Debounce
+  }
+
+  switch(modoAtual) {
+    case EXPLORADOR:
+      navegarLivremente();
+      break;
+    case SEGUIR_PAREDE:
+      navegarLabirinto();
+      break;
+    case RETORNAR_BASE:
+      retornarBase();
+      break;
+  }
+}
+</code></pre>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">2. Mapeamento Simples</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Mantenha registro dos movimentos para criar um "mapa mental":</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">const int MAX_MOVIMENTOS = 100;
+char historico[MAX_MOVIMENTOS];
+int indiceHistorico = 0;
+
+void registrarMovimento(char movimento) {
+  // 'F' = Frente, 'D' = Direita, 'E' = Esquerda, 'R' = Ré
+  if (indiceHistorico &lt; MAX_MOVIMENTOS) {
+    historico[indiceHistorico] = movimento;
+    indiceHistorico++;
+  }
+}
+
+void imprimirMapa() {
+  Serial.println("=== Mapa de Movimentos ===");
+  for (int i = 0; i &lt; indiceHistorico; i++) {
+    Serial.print(historico[i]);
+    if ((i + 1) % 20 == 0) Serial.println(); // Quebra de linha a cada 20
+  }
+  Serial.println();
+}
+</code></pre>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">3. Telemetria via Wi-Fi</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Envie dados do robô para um dashboard web:</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">#include &lt;WiFi.h&gt;
+
+const char* ssid = "ROBO_EXPLORER";
+WiFiServer server(80);
+
+void enviarTelemetria() {
+  WiFiClient client = server.available();
+  if (client) {
+    String dados = "Distancia:" + String(lerDistancia()) +
+                   ",Estado:" + String(estadoAtual) +
+                   ",Velocidade:" + String(VELOCIDADE_NORMAL);
+
+    client.println("HTTP/1.1 200 OK");
+    client.println("Content-Type: application/json");
+    client.println("Connection: close");
+    client.println();
+    client.println("{\"" + dados + "\"}");
+    client.stop();
+  }
+}
+</code></pre>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">4. Detecção de Bordas (para mesas)</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Adicione sensores IR apontando para baixo para detectar quedas:</p>
+
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">const int SENSOR_BORDA_ESQ = 34;
+const int SENSOR_BORDA_DIR = 35;
+
+void verificarBordas() {
+  if (digitalRead(SENSOR_BORDA_ESQ) == HIGH ||
+      digitalRead(SENSOR_BORDA_DIR) == HIGH) {
+    // Borda detectada!
+    Serial.println("ALERTA: BORDA DETECTADA!");
+    parar();
+    tras(200);
+    delay(500);
+    girarDireita(200);
+    delay(TEMPO_GIRO_90_GRAUS * 2); // 180°
+  }
+}
+</code></pre>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Módulo 8.9: Troubleshooting (Resolução de Problemas)</h4>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Problema 1: Sensor não detecta obstáculos próximos</h5>
+
+<strong><strong>Causas possíveis:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Objeto muito pequeno ou fino</li>
+<li class="mb-2">Superfície absorve ultrassom (tecido, espuma)</li>
+<li class="mb-2">Ângulo de incidência muito oblíquo</li>
+</ul>
+<strong><strong>Solução:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Use múltiplos sensores</li>
+<li class="mb-2">Adicione sensores IR para objetos próximos</li>
+<li class="mb-2">Teste com diferentes materiais</li>
+</ul>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Problema 2: Robô oscila muito</h5>
+
+<strong><strong>Causas possíveis:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Leituras do sensor muito ruidosas</li>
+<li class="mb-2">Reações muito bruscas</li>
+</ul>
+<strong><strong>Solução:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Implemente filtro de média móvel</li>
+<li class="mb-2">Adicione "zona morta" (hysteresis)</li>
+<li class="mb-2">Reduza velocidades</li>
+</ul>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Problema 3: Baterias descarregam rápido</h5>
+
+<strong><strong>Causas possíveis:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Motores consumindo muita corrente</li>
+<li class="mb-2">Curto-circuito</li>
+<li class="mb-2">Baterias fracas</li>
+</ul>
+<strong><strong>Solução:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Use baterias de maior capacidade (2500mAh+)</li>
+<li class="mb-2">Adicione um display de nível de bateria</li>
+<li class="mb-2">Implemente modo de economia de energia</li>
+</ul>
+<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-cpp">float lerTensaoBateria() {
+  // ESP32 ADC no pino 36 (VP)
+  int leitura = analogRead(36);
+  float tensao = (leitura / 4095.0) * 3.3 * 2; // Divisor de tensão 1:1
+  return tensao;
+}
+
+void verificarBateria() {
+  float tensao = lerTensaoBateria();
+  if (tensao &lt; 5.5) { // Bateria fraca (&lt; 5.5V)
+    Serial.println("BATERIA FRACA!");
+    VELOCIDADE_NORMAL = 120; // Reduz velocidade
+  }
+}
+</code></pre>
+
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Conclusão do Nível 1</h4>
+
+<p class="mb-4 text-gray-700 leading-relaxed"><strong>PARABÉNS!</strong> Você completou o Nível 1 do curso de Robótica!</p>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">O Que Você Conquistou:</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">✓ Domínio de eletrônica básica (lei de Ohm, componentes)</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">✓ Programação em C/C++ para microcontroladores</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">✓ Uso de sensores (ultrassônico, IR, temperatura)</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">✓ Controle de atuadores (LEDs, motores DC, servos)</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">✓ Comunicação serial (UART, I2C, SPI)</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">✓ Construção de dois robôs autônomos completos</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">✓ Algoritmos de navegação e controle</p>
+
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Projetos Construídos:</h5>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Circuitos eletrônicos básicos</li>
+<li class="mb-2">Semáforo inteligente</li>
+<li class="mb-2">Sistema de telemetria</li>
+<li class="mb-2">Robô rover controlado por Wi-Fi</li>
+<li class="mb-2"><strong>Robô seguidor de linha</strong></li>
+<li class="mb-2"><strong>Robô desviador de obstáculos</strong></li>
+</ol>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Próximos Passos - Nível 2: Robótica Autônoma</h5>
+
+<p class="mb-4 text-gray-700 leading-relaxed">No Nível 2, você aprenderá:</p>
+
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Visão computacional com câmeras</li>
+<li class="mb-2">Sensores IMU e odometria</li>
+<li class="mb-2">SLAM (Localização e Mapeamento Simultâneos)</li>
+<li class="mb-2">ROS (Robot Operating System)</li>
+<li class="mb-2">Inteligência artificial para robôs</li>
+<li class="mb-2">Robôs com braços manipuladores</li>
+</ul>
+<h5 class="text-lg font-bold mb-2 mt-4 text-gray-700">Desafios Finais para Consolidar o Conhecimento:</h5>
+
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Combine os dois robôs</strong>: Crie um robô que segue linha MAS desvia se houver obstáculo na frente</li>
+</ol>
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Competição</strong>: Faça uma corrida de robôs seguidores de linha com amigos</li>
+</ol>
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Labirinto Complexo</strong>: Construa um labirinto com múltiplos caminhos e faça o robô encontrar a saída</li>
+</ol>
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Controle por Voz</strong>: Adicione um módulo de reconhecimento de voz</li>
+</ol>
+<ol class="list-decimal list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2"><strong>Robô Social</strong>: Faça o robô seguir pessoas usando o sensor ultrassônico</li>
+</ol>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<h4 class="text-xl font-bold mb-3 mt-5 text-gray-800">Recursos Adicionais</h4>
+
+<strong><strong>Fóruns e Comunidades:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Arduino Forum</li>
+<li class="mb-2">ESP32.com</li>
+<li class="mb-2">Reddit: r/robotics, r/arduino</li>
+</ul>
+<strong><strong>Competições:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">OBR - Olimpíada Brasileira de Robótica</li>
+<li class="mb-2">RoboCore Competition</li>
+<li class="mb-2">FIRST Robotics</li>
+</ul>
+<strong><strong>Livros Recomendados:</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">"Programming Robots with ROS" - Morgan Quigley</li>
+<li class="mb-2">"Make: Electronics" - Charles Platt</li>
+<li class="mb-2">"Robot Builder's Bonanza" - Gordon McComb</li>
+</ul>
+<strong><strong>Canais do YouTube (em português):</strong></strong>
+<ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+<li class="mb-2">Brincando com Ideias</li>
+<li class="mb-2">Manual do Mundo</li>
+<li class="mb-2">Laboratório de Garagem</li>
+</ul>
+<p class="mb-4 text-gray-700 leading-relaxed">---</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed">Você agora tem as fundações sólidas para construir praticamente qualquer projeto de robótica! Continue experimentando, quebrando coisas (literalmente, às vezes), aprendendo e, acima de tudo, se divertindo.</p>
+
+<p class="mb-4 text-gray-700 leading-relaxed"><strong>Bem-vindo à comunidade de criadores de robôs!</strong> 🤖</p>
+
+
+                    </div>
                     </div>
                 </div>
 
