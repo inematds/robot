@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Módulo 3.4 · IA dentro del microcontrolador | Robótica desde cero hasta nivel experto</title>
+<meta content="TinyML en el ESP32-S3: por qué ejecutar IA en el microcontrolador, cuantización int8, Edge Impulse desde los datos hasta el sketch Arduino, TensorFlow Lite Micro (LiteRT) con esp-tflite-micro, gestos con IMU, palabra clave y personas en la cámara." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Primeros pasos",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "Qué es un robot y su kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Electrónica esencial",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: el primer programa",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensores: el robot percibe",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motores y energía",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Proyecto: rover que esquiva obstáculos",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Robot autónomo",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control desde el celular: Wi-Fi y BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU y encoders: saber dónde está",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "Control PID en la práctica",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Varias tareas al mismo tiempo",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetría y registro de datos",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Proyecto: seguidor de línea con PID",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Visión e IA integrada",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 y Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Cámara y OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detectar objetos con YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "IA dentro del microcontrolador",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi se comunica con el ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Proyecto: robot que sigue un objeto",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 y navegación",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 sin miedo",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describir y simular el robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS en el ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR y mapas (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navegación con Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Proyecto: robot que mapea y navega",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "IA moderna y brazo robótico",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "Modelo de lenguaje como cerebro",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Voz local: escuchar y hablar",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "Brazo SO-101 y LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Aprender por demostración",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simular antes de hacerlo en la realidad",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Proyecto final: robot asistente",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "Para el docente",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "Cómo impartir este curso",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha3/modulo-3-4.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha3/modulo-3-4.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha3/modulo-3-4.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha3/modulo-3-4.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha3/modulo-3-4.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha3/modulo-3-4.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="../../../en/curso/trilha3/modulo-3-4.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">EN</a><a href="modulo-3-4.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">ES</a></div>
+<a class="skip" href="#conteudo">Saltar al contenido</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T3 ativa -->
+<nav aria-label="Navegación principal" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robótica desde cero hasta experto — inicio" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeros pasos</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autónomo</span></a>
+<a aria-current="page" class="nav-trail text-purple-400 bg-purple-500/10" href="index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visión e IA</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Docente</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="Mi recorrido" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Mi recorrido</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Apariencia" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Apariencia</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Oscuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Enfoque</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fuente</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Lectura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamaño</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Ancho</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estrecho</button><button data-inema-set-linewidth="68" type="button">Mediano</button><button data-inema-set-linewidth="75" type="button">Ancho</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Interlineado</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Cómodo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento morado" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento ámbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/oscuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="3-4" data-inema-track="3" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Ruta de navegación" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-purple-400" href="../../index.html">Inicio</a><span aria-hidden="true">/</span>
+<a class="hover:text-purple-400" href="index.html">Ruta 3</a><span aria-hidden="true">/</span>
+<span class="text-purple-400">Módulo 3.4</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MÓDULO 3.4 · FUNDAMENTO</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🧠 IA dentro del microcontrolador</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">En los módulos anteriores, la IA se ejecutó en Raspberry Pi 5. Aquí baja a un chip que cuesta unos pocos reales y consume unos pocos milivatios: el <strong class="text-neutral-100">ESP32-S3</strong>. Entenderás qué es <strong class="text-purple-400">TinyML</strong>, por qué el modelo debe cuantizarse en int8 y dos formas de hacerlo: Edge Impulse (sin escribir la red) y TensorFlow Lite Micro (control total).</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">6</div><div class="text-xs text-neutral-400">Temas</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Intermedio</div><div class="text-xs text-neutral-400">Nivel</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Fundamentos</div><div class="text-xs text-neutral-400">Tipo</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">ESP32-S3</div><div class="text-xs text-neutral-400">Placa sugerida</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progreso del módulo 3.4" class="inema-ring" data-inema-meter="modulo:3-4"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:3-4"><strong data-inema-meter-frac="">0 de 0</strong> temas leídos · <span data-inema-section-counter="">Sección 1 de 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Índice de la página" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">En este módulo</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-1">1. Por qué IA en el microcontrolador</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-2">2. TinyML e int8</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-3">3. Edge Impulse</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-4">4. TFLite Micro / LiteRT</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-5">5. Gestos con la IMU</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-6">6. Voz y personas en la cámara</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Contenido detallado</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-3-4#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">📍 Por qué IA dentro del microcontrolador</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t1-p1">Un modelo de IA puede ejecutarse en tres lugares: en un servidor en internet, en una computadora dentro del robot (el Pi 5 del módulo 3.3) o <strong class="text-neutral-100">en el propio microcontrolador</strong> que ya lee los sensores. Cuanto más cerca del sensor, menor es el retraso y el consumo, y ningún dato sale del robot. El costo es el tamaño: en el ESP32-S3 caben modelos de decenas a cientos de kilobytes, que responden preguntas sencillas, como «¿este movimiento es un saludo?» o «¿hay una persona enfrente?».</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-4-t1-p2"><strong>Modelo</strong> es el archivo con el «conocimiento» aprendido durante el entrenamiento: una red de números llamados <strong>pesos</strong>. <strong>Entrenar</strong> es ajustar esos pesos con muchos ejemplos, y eso ocurre en la PC o en la nube. <strong>Inferencia</strong> es usar el modelo listo para responder sobre un dato nuevo, y eso es todo lo que hace el microcontrolador.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Tres lugares donde ejecutar IA: la nube, con cientos de milisegundos de retraso y dependencia de internet; Raspberry Pi 5, con decenas o cientos de milisegundos y algunos watts; ESP32-S3, con pocos milisegundos, una fracción de watt y un modelo pequeño." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs>
+<filter height="180%" id="m34-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+<pattern height="32" id="m34-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+</defs>
+<rect fill="url(#m34-grid1)" height="300" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0e1b26" height="150" rx="14" stroke="#38bdf8" stroke-width="2" width="180" x="20" y="40"></rect>
+<text fill="#7dd3fc" font-size="20" font-weight="600" x="110" y="76">NUBE</text><text fill="#bfe6ff" font-size="15" x="110" y="106">modelo enorme</text><text fill="#bfe6ff" font-size="15" x="110" y="130">necesita internet</text><text fill="#bfe6ff" font-size="15" x="110" y="154">100–1000 ms</text>
+<rect fill="#1a1230" height="150" rx="14" stroke="#c084fc" stroke-width="2" width="180" x="230" y="40"></rect>
+<text fill="#c084fc" font-size="20" font-weight="600" x="320" y="76">PI 5</text><text fill="#e9d5ff" font-size="15" x="320" y="106">YOLO26, OpenCV</text><text fill="#e9d5ff" font-size="15" x="320" y="130">unos pocos watts</text><text fill="#e9d5ff" font-size="15" x="320" y="154">decenas de ms</text>
+<g filter="url(#m34-glow1)"><rect fill="#221640" height="150" rx="14" stroke="#a855f7" stroke-width="2.5" width="180" x="440" y="40"></rect></g>
+<text fill="#c084fc" font-size="20" font-weight="600" x="530" y="76">ESP32-S3</text><text fill="#e9d5ff" font-size="15" x="530" y="106">modelo de KB</text><text fill="#e9d5ff" font-size="15" x="530" y="130">fracción de watt</text><text fill="#e9d5ff" font-size="15" x="530" y="154">unos pocos ms</text>
+<path d="M40,232 L600,232" opacity="0.6" stroke="#a8a8b3" stroke-width="1.8"></path>
+<text fill="#7dd3fc" font-size="15" x="110" y="262">lejos del sensor</text>
+<text fill="#c084fc" font-size="15" x="530" y="262">junto al sensor</text>
+<text fill="#a8a8b3" font-size="14" x="320" y="262">menos retraso →</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Cómo leer:</strong> de izquierda a derecha, el modelo se hace más pequeño y está más cerca del sensor. El recuadro destacado corresponde al tema de este módulo. Los tiempos son órdenes de magnitud, no mediciones de tu placa: mide siempre en tu caso.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Ideal para TinyML</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Clasificar movimientos con la IMU (gestos, caídas, vibraciones del motor).</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Una o unas pocas palabras de comando de voz.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>«Hay una persona o no» en una imagen pequeña en escala de grises.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Robot a batería que necesita reaccionar rápido y sin Wi-Fi.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Déjalo para el Pi o la PC</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Detectar decenas de clases con cuadros, como YOLO26.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Entender frases libres o conversar (eso es la Ruta 5).</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Entrenar el modelo: el entrenamiento nunca se ejecuta en el microcontrolador.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Imagen a color en alta resolución, cuadro por cuadro.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t1-p3">Saber dónde debe ejecutarse cada modelo evita dos errores costosos: poner un Pi 5 en un proyecto que un ESP32-S3 resolvería con batería, o intentar meter en el microcontrolador una tarea que solo cabe en la computadora. En el robot completo (módulos 3.5 y 3.6), ambos conviven: el Pi ve el mundo y el ESP32 reacciona.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Inferencia</div><div class="text-xs text-neutral-400">usar el modelo listo</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Entrenamiento</div><div class="text-xs text-neutral-400">en la PC o en la nube</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Latencia</div><div class="text-xs text-neutral-400">tiempo hasta la respuesta</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Edge AI</div><div class="text-xs text-neutral-400">IA junto al sensor</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-3-4#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🗜️ TinyML: modelo pequeño, cuantizado en int8</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t2-p1"><strong class="text-purple-400">TinyML</strong> es el nombre que se da al aprendizaje automático que se ejecuta en microcontroladores. El ESP32-S3 tiene cerca de 512 KB de RAM interna y algunos megabytes de flash; muchas placas suman una PSRAM externa de 2 a 8 MB. Un modelo entrenado en la PC guarda cada peso como <strong class="text-neutral-100">float32</strong> (4 bytes). La <strong class="text-neutral-100">cuantización</strong> convierte cada peso a <strong class="text-neutral-100">int8</strong> (1 byte, de −128 a 127): el modelo queda 4 veces más pequeño y los cálculos con enteros son mucho más rápidos, con una pequeña pérdida de precisión cuando se hace bien.</p>
+<figure class="fig mb-3">
+<svg aria-label="Cuantización: un peso float32 de 4 bytes, por ejemplo 0,4172, se convierte en un entero int8 de 1 byte, 53, usando una escala y un punto cero; el modelo queda cuatro veces más pequeño." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs>
+<pattern height="32" id="m34-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m34-ah2" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+</defs>
+<rect fill="url(#m34-grid2)" height="280" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<text fill="#7dd3fc" font-size="17" font-weight="600" x="150" y="36">float32 · 4 bytes</text>
+<rect fill="#0e1b26" height="56" rx="6" stroke="#38bdf8" stroke-width="2" width="60" x="30" y="52"></rect><rect fill="#0e1b26" height="56" rx="6" stroke="#38bdf8" stroke-width="2" width="60" x="90" y="52"></rect><rect fill="#0e1b26" height="56" rx="6" stroke="#38bdf8" stroke-width="2" width="60" x="150" y="52"></rect><rect fill="#0e1b26" height="56" rx="6" stroke="#38bdf8" stroke-width="2" width="60" x="210" y="52"></rect>
+<text fill="#bfe6ff" font-size="18" x="150" y="140">0,4172</text>
+<path d="M290,80 L400,80" fill="none" marker-end="url(#m34-ah2)" stroke="#c084fc" stroke-width="2"></path>
+<text fill="#e9d5ff" font-size="15" x="345" y="64">cuantizar</text>
+<text fill="#c084fc" font-size="17" font-weight="600" x="490" y="36">int8 · 1 byte</text>
+<rect fill="#221640" height="56" rx="6" stroke="#a855f7" stroke-width="2.5" width="60" x="460" y="52"></rect>
+<text fill="#e9d5ff" font-size="18" x="490" y="140">53</text>
+<text fill="#e9d5ff" font-size="16" x="320" y="190">entero = redondear(valor ÷ escala) + punto cero</text>
+<text fill="#a8a8b3" font-size="15" x="320" y="218">ej.: escala 0,0079 y punto cero 0 → 0,4172 ÷ 0,0079 ≈ 53</text>
+<text fill="#c084fc" font-size="16" font-weight="600" x="320" y="256">modelo de 400 KB en float32 → cerca de 100 KB en int8</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Cómo leer:</strong> cada peso deja de ocupar cuatro cajitas (bytes) y pasa a ocupar una. La escala y el punto cero quedan guardados en el modelo para convertirlo de vuelta cuando haga falta. Los números del ejemplo son ilustrativos.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-4-t2-p2"><strong>Flash</strong> es la memoria que guarda el programa y el modelo incluso sin energía. <strong>RAM</strong> es la memoria de trabajo, que se borra al apagar; allí quedan los cálculos intermedios de la inferencia (la «arena»). <strong>PSRAM</strong> es una RAM extra, más lenta, soldada junto al chip en algunas placas, como la XIAO ESP32-S3 Sense.</p>
+</div>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3 text-purple-400">Tarea</th><th class="text-left p-3 text-purple-400">Tamaño típico del modelo (int8)</th><th class="text-left p-3 text-purple-400">¿Cabe en el S3?</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">Gesto con IMU</td><td class="p-3">de unos pocos a decenas de KB</td><td class="p-3">Sí, con holgura</td></tr>
+<tr><td class="p-3">Palabra clave de voz</td><td class="p-3">decenas de KB</td><td class="p-3">Sí</td></tr>
+<tr><td class="p-3">Persona sí/no, 96×96 en escala de grises</td><td class="p-3">algunos cientos de KB</td><td class="p-3">Sí, mejor con PSRAM</td></tr>
+<tr><td class="p-3">YOLO26n, 640 px</td><td class="p-3">algunos MB</td><td class="p-3">No: usa el Pi 5</td></tr>
+</tbody>
+</table>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t2-p3">Cuando falla un proyecto de TinyML, casi siempre es por la memoria: el modelo no cabe en la flash o la arena no cabe en la RAM. Entender que int8 es el formato estándar y conocer el orden de magnitud de cada tarea te permite elegir la placa y el modelo antes de pasar una tarde compilando.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">TinyML</div><div class="text-xs text-neutral-400">IA en microcontrolador</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Cuantización</div><div class="text-xs text-neutral-400">float32 → int8</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Arena</div><div class="text-xs text-neutral-400">RAM para los cálculos</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">PSRAM</div><div class="text-xs text-neutral-400">RAM extra de la placa</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-3-4#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🧪 Edge Impulse: del dato al sketch Arduino</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t3-p1">O <strong class="text-purple-400">Edge Impulse</strong> es una plataforma web con un plan gratuito para proyectos personales. Envías los datos del sensor, los etiquetas, eliges los bloques de procesamiento y de red neuronal con unos clics, entrenas en la nube y descargas el resultado como una <strong class="text-neutral-100">biblioteca Arduino en .zip</strong>, ya cuantizada. No escribes la red; solo escribes el sketch que lee el sensor y llama al clasificador.</p>
+<figure class="fig mb-3">
+<svg aria-label="Flujo de Edge Impulse en cinco etapas: recopilar datos del sensor, etiquetarlos, diseñar el impulso con una ventana, procesamiento y clasificador, entrenar y probar, y exportar como biblioteca Arduino que se ejecuta en el ESP32-S3." class="w-full h-auto" role="img" viewbox="0 0 640 250">
+<defs>
+<pattern height="32" id="m34-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m34-ah3" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+<filter height="180%" id="m34-glow3" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs>
+<rect fill="url(#m34-grid3)" height="250" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#1a1230" height="80" rx="12" stroke="#c084fc" stroke-width="2" width="110" x="10" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="65" y="84">1 recopilar</text><text fill="#e9d5ff" font-size="14" x="65" y="108">sensor → PC</text>
+<rect fill="#1a1230" height="80" rx="12" stroke="#c084fc" stroke-width="2" width="110" x="136" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="191" y="84">2 etiquetar</text><text fill="#e9d5ff" font-size="14" x="191" y="108">nombre de la clase</text>
+<rect fill="#1a1230" height="80" rx="12" stroke="#c084fc" stroke-width="2" width="110" x="262" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="317" y="84">3 impulso</text><text fill="#e9d5ff" font-size="14" x="317" y="108">ventana + bloques</text>
+<rect fill="#1a1230" height="80" rx="12" stroke="#c084fc" stroke-width="2" width="110" x="388" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="443" y="84">4 entrenar</text><text fill="#e9d5ff" font-size="14" x="443" y="108">y probar</text>
+<g filter="url(#m34-glow3)"><rect fill="#221640" height="80" rx="12" stroke="#a855f7" stroke-width="2.5" width="116" x="514" y="50"></rect></g><text fill="#c084fc" font-size="17" font-weight="600" x="572" y="84">5 exportar</text><text fill="#e9d5ff" font-size="14" x="572" y="108">biblioteca .zip</text>
+</g>
+<g fill="none" opacity="0.7" stroke="#c084fc" stroke-width="1.8"><path d="M120,90 L130,90" marker-end="url(#m34-ah3)"></path><path d="M246,90 L256,90" marker-end="url(#m34-ah3)"></path><path d="M372,90 L382,90" marker-end="url(#m34-ah3)"></path><path d="M498,90 L508,90" marker-end="url(#m34-ah3)"></path></g>
+<path d="M572,134 C572,210 65,210 65,138" fill="none" opacity="0.8" stroke="#38bdf8" stroke-dasharray="7 7" stroke-width="2"></path>
+<text fill="#7dd3fc" font-family="Inter,sans-serif" font-size="15" text-anchor="middle" x="320" y="232">¿se equivocó en la prueba? vuelve y recopila más ejemplos de la clase que confundió</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Cómo leer:</strong> las cinco cajas son las pestañas del proyecto en Edge Impulse, en el orden en que vas pasando por ellas. El ciclo cian es lo que ocurre en la práctica: el primer modelo casi siempre confunde dos clases, y la solución es recopilar más datos, no modificar la red.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-4">Paso a paso</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Crea el proyecto e instala la herramienta</h4><p class="text-neutral-300 text-sm">Crea una cuenta en edgeimpulse.com y un proyecto nuevo. En la PC, instala Node.js y luego la CLI oficial con <span class="font-mono text-xs">npm install -g edge-impulse-cli</span> (consulta la instrucción actual en la documentación).</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Envía los datos por el puerto serial</h4><p class="text-neutral-300 text-sm">Carga en el ESP32-S3 un sketch que imprima las lecturas separadas por comas (el del tema 5). Ejecuta <span class="font-mono text-xs">edge-impulse-data-forwarder</span>, inicia sesión y ponles nombre a los ejes. La placa aparece en la pestaña de recopilación.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Diseña el impulso y entrena</h4><p class="text-neutral-300 text-sm">Elige el tamaño de la ventana, un bloque de procesamiento (para IMU, «Spectral Analysis») y un clasificador. Entrena, revisa la matriz de confusión y ejecuta la prueba con los datos separados para eso.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">4</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Exporta e instala la biblioteca</h4><p class="text-neutral-300 text-sm">En «Deployment», elige «Arduino library» con optimización int8 y descarga el .zip. En Arduino IDE 2.x: Sketch → Incluir biblioteca → Añadir biblioteca .ZIP. El header generado lleva el nombre de tu proyecto: <span class="font-mono text-xs">&lt;seu_projeto&gt;_inferencing.h</span>.</p></div></div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 La primera compilación tarda</h3>
+<p class="text-neutral-300 text-sm">La biblioteca de Edge Impulse incluye el motor de inferencia completo en código fuente, así que la primera compilación en el ESP32 tarda varios minutos. Es normal. Las siguientes aprovechan la caché del IDE y son mucho más rápidas.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t3-p2">Es el camino más corto entre «tengo un sensor» y «tengo un clasificador ejecutándose en la placa». En el aula, los alumnos recopilan sus propios datos y ven de inmediato el efecto de los datos deficientes o de una clase desequilibrada, que es la lección más importante de cualquier proyecto de IA.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Impulso</div><div class="text-xs text-neutral-400">ventana + bloques</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Etiqueta</div><div class="text-xs text-neutral-400">la respuesta correcta</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Data forwarder</div><div class="text-xs text-neutral-400">serial → Edge Impulse</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Matriz de confusión</div><div class="text-xs text-neutral-400">quién se confunde con quién</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-3-4#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">⚙️ TensorFlow Lite Micro / LiteRT en el ESP32-S3</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t4-p1">Detrás de muchos proyectos de TinyML está <strong class="text-purple-400">TensorFlow Lite Micro</strong> (TFLM), el motor de inferencia de Google para microcontroladores. En 2024, TensorFlow Lite pasó a llamarse <strong class="text-neutral-100">LiteRT</strong>; vas a ver ambos nombres. Espressif mantiene el componente <strong class="text-neutral-100">esp-tflite-micro</strong> para ESP-IDF, con ejemplos listos (<span class="font-mono text-xs">hello_world</span>, <span class="font-mono text-xs">micro_speech</span>, <span class="font-mono text-xs">person_detection</span>) y las optimizaciones <strong class="text-neutral-100">ESP-NN</strong>, que usan las instrucciones vectoriales del S3 para acelerar las capas de la red.</p>
+<figure class="fig mb-3">
+<svg aria-label="Cómo funciona TensorFlow Lite Micro: el modelo .tflite se convierte en un vector C dentro de la flash; el resolvedor de operaciones enumera las capas que se usan; el intérprete reserva la arena en la RAM, recibe la entrada, ejecuta Invoke y devuelve la salida; ESP-NN acelera las capas en el ESP32-S3." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs>
+<pattern height="32" id="m34-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m34-ah4" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+<filter height="180%" id="m34-glow4" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs>
+<rect fill="url(#m34-grid4)" height="300" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0e1b26" height="70" rx="12" stroke="#38bdf8" stroke-width="2" width="180" x="20" y="30"></rect><text fill="#7dd3fc" font-size="17" font-weight="600" x="110" y="60">modelo .tflite</text><text fill="#bfe6ff" font-size="14" x="110" y="84">vector en C en la flash</text>
+<rect fill="#0e1b26" height="70" rx="12" stroke="#38bdf8" stroke-width="2" width="180" x="20" y="130"></rect><text fill="#7dd3fc" font-size="17" font-weight="600" x="110" y="160">op resolver</text><text fill="#bfe6ff" font-size="14" x="110" y="184">capas usadas</text>
+<g filter="url(#m34-glow4)"><rect fill="#221640" height="110" rx="14" stroke="#a855f7" stroke-width="2.5" width="160" x="250" y="60"></rect></g>
+<text fill="#c084fc" font-size="18" font-weight="600" x="330" y="100">intérprete</text><text fill="#e9d5ff" font-size="15" x="330" y="126">Invoke()</text><text fill="#e9d5ff" font-size="14" x="330" y="150">área en la RAM</text>
+<rect fill="#1a1230" height="60" rx="12" stroke="#c084fc" stroke-width="2" width="160" x="460" y="30"></rect><text fill="#e9d5ff" font-size="16" x="540" y="66">entrada int8</text>
+<rect fill="#1a1230" height="60" rx="12" stroke="#c084fc" stroke-width="2" width="160" x="460" y="140"></rect><text fill="#e9d5ff" font-size="16" x="540" y="176">salida: puntuaciones</text>
+<rect fill="#1a1230" height="56" rx="12" stroke="#c084fc" stroke-dasharray="5 4" stroke-width="2" width="160" x="250" y="220"></rect><text fill="#c084fc" font-size="16" x="330" y="254">ESP-NN (S3)</text>
+</g>
+<g fill="none" opacity="0.7" stroke="#c084fc" stroke-width="1.8">
+<path d="M200,70 L243,95" marker-end="url(#m34-ah4)"></path><path d="M200,165 L243,140" marker-end="url(#m34-ah4)"></path>
+<path d="M460,60 L417,90" marker-end="url(#m34-ah4)"></path><path d="M410,140 L453,165" marker-end="url(#m34-ah4)"></path><path d="M330,214 L330,178" marker-end="url(#m34-ah4)"></path>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Cómo leer:</strong> a la izquierda está lo que preparas una vez (el modelo y la lista de capas). En el centro, el intérprete hace los cálculos en un área fija de la RAM. A la derecha, el ciclo de cada inferencia: escribir la entrada, llamar <span class="font-mono">Invoke()</span>, leer la salida. La línea discontinua de abajo indica la aceleración de ESP-NN, que se activa automáticamente en el S3.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-4">Los cinco pasos de todo programa con TFLM</h3>
+<div class="space-y-3 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">1</span></div><p class="text-neutral-300 text-sm pt-1.5"><span class="font-mono text-xs text-purple-400">tflite::GetModel(g_model)</span> carga el modelo que se convirtió en un vector C (con <span class="font-mono text-xs">xxd -i</span>).</p></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">2</span></div><p class="text-neutral-300 text-sm pt-1.5"><span class="font-mono text-xs text-purple-400">MicroMutableOpResolver</span> registra solo las capas utilizadas (convolución, totalmente conectada, softmax), lo que ahorra memoria flash.</p></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">3</span></div><p class="text-neutral-300 text-sm pt-1.5"><span class="font-mono text-xs text-purple-400">MicroInterpreter</span> recibe el modelo, el resolvedor y el área; <span class="font-mono text-xs">AllocateTensors()</span> avisa si el área es demasiado pequeña.</p></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">4</span></div><p class="text-neutral-300 text-sm pt-1.5">Llenas <span class="font-mono text-xs text-purple-400">interpreter.input(0)</span> con los datos ya convertidos a int8 y llamas a <span class="font-mono text-xs">Invoke()</span>.</p></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">5</span></div><p class="text-neutral-300 text-sm pt-1.5">Lee <span class="font-mono text-xs text-purple-400">interpreter.output(0)</span>: una puntuación por clase. La más alta es la respuesta.</p></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-4-t4-p2"><strong class="text-neutral-100">Objetivo:</strong> compilar y cargar el ejemplo oficial <span class="font-mono text-xs">hello_world</span> (una red que aprende la curva seno) en el ESP32-S3. Requiere tener ESP-IDF 5.x instalado y abrir la terminal de ESP-IDF.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal (ESP-IDF)</span></div>
+<pre><code><span class="c"># 1. descargar el componente con los ejemplos</span>
+git clone https://github.com/espressif/esp-tflite-micro.git
+cd esp-tflite-micro/examples/hello_world
+
+<span class="c"># 2. elegir el chip y compilar</span>
+idf.py set-target esp32s3
+idf.py build
+
+<span class="c"># 3. cargar y abrir el monitor (cambia el puerto por el tuyo)</span>
+idf.py -p /dev/ttyACM0 flash monitor
+<span class="c"># en Windows el puerto es algo como COM5; para salir del monitor: Ctrl+]</span></code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>El monitor muestra líneas con un valor x y el valor y previsto, que suben y bajan como una onda seno.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>¿Funcionó? Repite el proceso con <span class="font-mono text-xs">examples/person_detection</span>; necesita una placa con cámara.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"idf.py: command not found": la terminal no cargó el entorno de ESP-IDF. Abre "ESP-IDF Terminal" o ejecuta el script export de ESP-IDF.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t4-p3">Edge Impulse resuelve la mayoría de los casos, pero cuando entrenas tu propia red en TensorFlow o quieres controlar cada byte de memoria, TFLM es la herramienta indicada. Y saber cómo funciona el intérprete te ayuda a entender los mensajes de error de cualquier biblioteca de TinyML, incluida la de Edge Impulse.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">LiteRT</div><div class="text-xs text-neutral-400">nuevo nombre de TF Lite</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">esp-tflite-micro</div><div class="text-xs text-neutral-400">componente de ESP-IDF</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Invoke()</div><div class="text-xs text-neutral-400">ejecuta una inferencia</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">ESP-NN</div><div class="text-xs text-neutral-400">aceleración en el S3</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-3-4#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">👋 Ejemplo: reconocer un gesto con la IMU</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t5-p1">Usa la MPU-6050 del módulo 2.2 conectada al ESP32-S3 y enséñale tres clases: <strong class="text-neutral-100">detenido</strong>, <strong class="text-neutral-100">sacudir</strong> e <strong class="text-neutral-100">círculo</strong>. El modelo no observa una lectura aislada, sino una <strong class="text-purple-400">ventana</strong>: por ejemplo, 2 segundos de aceleración en los tres ejes, leídos 100 veces por segundo. Son dos sketches: uno para recopilar datos y otro para clasificar.</p>
+<figure class="fig mb-3">
+<svg aria-label="Ventana deslizante: tres curvas de aceleración x, y y z a lo largo del tiempo; se recorta una ventana de 2 segundos con 200 lecturas por eje y se entrega al clasificador, que devuelve las puntuaciones quieto 0,03, sacudir 0,91 y círculo 0,06." class="w-full h-auto" role="img" viewbox="0 0 640 270">
+<defs>
+<pattern height="32" id="m34-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m34-ah5" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+</defs>
+<rect fill="url(#m34-grid5)" height="270" width="640"></rect>
+<rect fill="#221640" height="170" opacity="0.6" rx="10" stroke="#a855f7" stroke-width="2" width="190" x="150" y="30"></rect>
+<g fill="none" stroke-width="2">
+<path d="M50,70 L160,70 L175,45 L195,95 L215,45 L235,95 L255,45 L275,95 L295,45 L315,95 L330,70 L420,70" stroke="#c084fc"></path>
+<path d="M50,120 L160,120 L178,100 L198,140 L218,100 L238,140 L258,100 L278,140 L298,100 L318,140 L330,120 L420,120" stroke="#38bdf8"></path>
+<path d="M50,170 L160,170 L185,162 L210,178 L235,162 L260,178 L285,162 L310,178 L330,170 L420,170" opacity="0.8" stroke="#e9d5ff"></path>
+</g>
+<g font-family="Inter,sans-serif">
+<text fill="#c084fc" font-size="15" x="24" y="58">ax</text><text fill="#7dd3fc" font-size="15" x="24" y="108">ay</text><text fill="#e9d5ff" font-size="15" x="24" y="158">az</text>
+<text fill="#c084fc" font-size="15" text-anchor="middle" x="245" y="226">ventana: 2 s × 100 Hz = 200 × 3</text>
+<path d="M425,115 L462,115" fill="none" marker-end="url(#m34-ah5)" stroke="#c084fc" stroke-width="2"></path>
+<rect fill="#1a1230" height="150" rx="12" stroke="#c084fc" stroke-width="2" width="160" x="470" y="40"></rect>
+<text fill="#c084fc" font-size="16" font-weight="600" text-anchor="middle" x="550" y="70">puntuaciones</text>
+<text fill="#a8a8b3" font-size="15" x="485" y="104">quieto 0,03</text>
+<text fill="#e9d5ff" font-size="15" font-weight="600" x="485" y="134">sacudir 0,91</text>
+<text fill="#a8a8b3" font-size="15" x="485" y="164">círculo 0,06</text>
+<text fill="#7dd3fc" font-size="14" text-anchor="middle" x="320" y="258">la ventana avanza en el tiempo y el clasificador vuelve a ejecutarse</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Cómo leer:</strong> las tres líneas son los ejes del acelerómetro. El rectángulo es la ventana que el modelo observa de una vez. A la derecha está la salida: una puntuación de 0 a 1 por clase, cuya suma es 1. Acepta la respuesta solo si la puntuación más alta supera un límite (0,8 en el sketch).</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-4-t5-p2"><strong class="text-neutral-100">Objetivo (recopilación de datos):</strong> imprimir la aceleración en m/s², 100 veces por segundo, en el formato que entiende <span class="font-mono text-xs">edge-impulse-data-forwarder</span> (valores separados por comas, una línea por lectura).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">coleta-imu.ino</span></div>
+<pre><code><span class="c">// Recopilación de datos de la MPU-6050 para Edge Impulse (ESP32-S3, paquete esp32 3.x)</span>
+<span class="c">// Salida: "ax,ay,az" en m/s², 100 líneas por segundo, 115200 baud.</span>
+<span class="k">#include</span> &lt;Wire.h&gt;
+
+<span class="k">const int</span> PINO_SDA = 8;           <span class="c">// cambia por los pines I2C de tu placa</span>
+<span class="k">const int</span> PINO_SCL = 9;
+<span class="k">const uint8_t</span> MPU = 0x68;        <span class="c">// dirección de la MPU-6050 (AD0 en GND)</span>
+<span class="k">const unsigned long</span> PERIODO_US = 10000; <span class="c">// 10 ms = 100 Hz</span>
+<span class="k">unsigned long</span> proxima = 0;
+
+<span class="k">void</span> escreveRegistro(<span class="k">uint8_t</span> reg, <span class="k">uint8_t</span> valor) {
+  Wire.beginTransmission(MPU); Wire.write(reg); Wire.write(valor); Wire.endTransmission();
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  Wire.begin(PINO_SDA, PINO_SCL);
+  Wire.setClock(400000);
+  escreveRegistro(0x6B, 0x00);      <span class="c">// activa el sensor</span>
+  escreveRegistro(0x1C, 0x00);      <span class="c">// rango de ±2 g: 16384 por g</span>
+  proxima = micros();
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">if</span> ((<span class="k">long</span>)(micros() - proxima) &lt; 0) <span class="k">return</span>;  <span class="c">// espera el siguiente intervalo de 10 ms</span>
+  proxima += PERIODO_US;
+  Wire.beginTransmission(MPU); Wire.write(0x3B); Wire.endTransmission(<span class="k">false</span>);
+  Wire.requestFrom(MPU, (<span class="k">uint8_t</span>)6);
+  <span class="k">if</span> (Wire.available() &lt; 6) <span class="k">return</span>;
+  int16_t bruto[3];
+  <span class="k">for</span> (<span class="k">int</span> i = 0; i &lt; 3; i++) { <span class="k">uint8_t</span> alto = Wire.read(), baixo = Wire.read(); bruto[i] = (int16_t)((alto &lt;&lt; 8) | baixo); }
+  <span class="k">const float</span> G = 9.80665f / 16384.0f;  <span class="c">// cuentas → m/s²</span>
+  Serial.printf(<span class="s">"%.3f,%.3f,%.3f\n"</span>, bruto[0] * G, bruto[1] * G, bruto[2] * G);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>En reposo sobre la mesa, un eje muestra cerca de 9,8 y los otros, cerca de 0.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Cierra el Monitor Serial y ejecuta <span class="font-mono text-xs">edge-impulse-data-forwarder</span>: detecta cerca de 100 Hz y 3 ejes. Graba al menos 3 minutos por clase.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿Todo en cero? Revisa SDA/SCL y comprueba si el sensor responde en la dirección 0x68.</span></li>
+</ul>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-4-t5-p3"><strong class="text-neutral-100">Objetivo (clasificación):</strong> con la biblioteca exportada instalada, llenar la ventana con lecturas al mismo ritmo que durante el entrenamiento, llamar al clasificador y encender el LED cuando el gesto "sacudir" supere 0,8. Cambia el nombre de <span class="font-mono text-xs">#include</span> por el header de tu proyecto y las etiquetas por las que creaste.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">gesto-imu.ino</span></div>
+<pre><code><span class="c">// Clasifica gestos con la biblioteca exportada por Edge Impulse (ESP32-S3)</span>
+<span class="k">#include</span> &lt;Wire.h&gt;
+<span class="k">#include</span> &lt;seu_projeto_inferencing.h&gt;  <span class="c">// cambia por el header generado: &lt;seu_projeto&gt;_inferencing.h</span>
+
+<span class="k">const int</span> PINO_SDA = 8, PINO_SCL = 9, PINO_LED = 2;
+<span class="k">const uint8_t</span> MPU = 0x68;
+<span class="k">const float</span> LIMITE = 0.80f;
+<span class="k">static float</span> janela[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE];  <span class="c">// 200 lecturas × 3 ejes</span>
+
+<span class="k">void</span> escreveRegistro(<span class="k">uint8_t</span> reg, <span class="k">uint8_t</span> valor) {
+  Wire.beginTransmission(MPU); Wire.write(reg); Wire.write(valor); Wire.endTransmission();
+}
+
+<span class="k">void</span> leAceleracao(<span class="k">float</span> *a) {
+  Wire.beginTransmission(MPU); Wire.write(0x3B); Wire.endTransmission(<span class="k">false</span>);
+  Wire.requestFrom(MPU, (<span class="k">uint8_t</span>)6);
+  <span class="k">const float</span> G = 9.80665f / 16384.0f;
+  <span class="k">for</span> (<span class="k">int</span> i = 0; i &lt; 3; i++) { <span class="k">uint8_t</span> alto = Wire.read(), baixo = Wire.read(); a[i] = (int16_t)((alto &lt;&lt; 8) | baixo) * G; }
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_LED, OUTPUT);
+  Wire.begin(PINO_SDA, PINO_SCL); Wire.setClock(400000);
+  escreveRegistro(0x6B, 0x00); escreveRegistro(0x1C, 0x00);
+  Serial.printf(<span class="s">"Modelo listo: %d clases, ventana de %d valores\n"</span>, EI_CLASSIFIER_LABEL_COUNT, EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE);
+}
+
+<span class="k">void</span> loop() {
+  <span class="c">// 1) llena la ventana al mismo ritmo que se usó en el entrenamiento</span>
+  <span class="k">for</span> (size_t i = 0; i &lt; EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE; i += EI_CLASSIFIER_RAW_SAMPLES_PER_FRAME) {
+    <span class="k">unsigned long</span> t0 = micros();
+    leAceleracao(&amp;janela[i]);
+    <span class="k">while</span> (micros() - t0 &lt; (<span class="k">unsigned long</span>)(EI_CLASSIFIER_INTERVAL_MS * 1000)) {}
+  }
+  <span class="c">// 2) ejecuta el clasificador</span>
+  signal_t sinal;
+  numpy::signal_from_buffer(janela, EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE, &amp;sinal);
+  ei_impulse_result_t resultado = { 0 };
+  <span class="k">if</span> (run_classifier(&amp;sinal, &amp;resultado, <span class="k">false</span>) != EI_IMPULSE_OK) { Serial.println(<span class="s">"error en el clasificador"</span>); <span class="k">return</span>; }
+  <span class="c">// 3) muestra las puntuaciones y decide</span>
+  <span class="k">bool</span> chacoalhou = <span class="k">false</span>;
+  <span class="k">for</span> (size_t i = 0; i &lt; EI_CLASSIFIER_LABEL_COUNT; i++) {
+    Serial.printf(<span class="s">"%s: %.2f  "</span>, resultado.classification[i].label, resultado.classification[i].value);
+    <span class="k">if</span> (strcmp(resultado.classification[i].label, <span class="s">"chacoalhar"</span>) == 0 &amp;&amp; resultado.classification[i].value &gt; LIMITE) chacoalhou = <span class="k">true</span>;
+  }
+  Serial.printf(<span class="s">"| %d ms\n"</span>, resultado.timing.dsp + resultado.timing.classification);
+  digitalWrite(PINO_LED, chacoalhou ? HIGH : LOW);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Cada 2 segundos aparece una línea con las tres puntuaciones y el tiempo de inferencia en milisegundos.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Sacude la placa: la puntuación de "sacudir" supera 0,8 y el LED se enciende.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿Error de compilación en <span class="font-mono text-xs">#include</span>? El nombre del header no coincide con el de la biblioteca instalada.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t5-p4">El mismo esquema sirve para detectar si el robot se volcó, si una rueda está golpeando o si alguien levantó el robot. Son reacciones que deben ser locales y rápidas, sin esperar al Pi.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Ventana</div><div class="text-xs text-neutral-400">fragmento de tiempo analizado</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Frecuencia fija</div><div class="text-xs text-neutral-400">igual durante el entrenamiento y en la placa</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">run_classifier</div><div class="text-xs text-neutral-400">llama al modelo</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Límite</div><div class="text-xs text-neutral-400">solo acepta una puntuación alta</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-3-4#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🎙️ Ejemplo: palabra clave por voz o persona en la cámara</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t6-p1">Placas como la <strong class="text-neutral-100">XIAO ESP32-S3 Sense</strong> incluyen micrófono y cámara. Con ellas puedes ejecutar los dos ejemplos clásicos de esp-tflite-micro: el <span class="font-mono text-xs">micro_speech</span>, que reconoce las palabras en inglés "yes" y "no", y el <span class="font-mono text-xs">person_detection</span>que asigna una puntuación de «hay una persona» a una imagen de 96×96 píxeles en escala de grises. Para palabras en portugués, entrena tu modelo de palabra clave en Edge Impulse con grabaciones de tu grupo.</p>
+<figure class="fig mb-3">
+<svg aria-label="Dos flujos: el audio de 1 segundo se convierte en un espectrograma y el modelo responde sí, no, silencio o desconocido; la imagen de la cámara, reducida a 96 por 96 en gris, se convierte en una puntuación de persona y otra de sin persona." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs>
+<pattern height="32" id="m34-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m34-ah6" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+</defs>
+<rect fill="url(#m34-grid6)" height="280" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<text fill="#c084fc" font-size="16" font-weight="600" text-anchor="start" x="20" y="34">VOZ</text>
+<rect fill="#1a1230" height="70" rx="10" stroke="#c084fc" stroke-width="2" width="150" x="20" y="48"></rect>
+<path d="M35,83 l10,-18 l10,36 l10,-30 l10,24 l10,-14 l10,8 l10,-20 l10,26 l10,-12 l10,0" fill="none" stroke="#e9d5ff" stroke-width="2"></path>
+<rect fill="#1a1230" height="70" rx="10" stroke="#c084fc" stroke-width="2" width="160" x="225" y="48"></rect>
+<g opacity="0.85"><rect fill="#a855f7" height="46" opacity="0.4" width="16" x="240" y="60"></rect><rect fill="#a855f7" height="46" opacity="0.8" width="16" x="260" y="60"></rect><rect fill="#a855f7" height="46" opacity="0.6" width="16" x="280" y="60"></rect><rect fill="#a855f7" height="46" opacity="0.9" width="16" x="300" y="60"></rect><rect fill="#a855f7" height="46" opacity="0.3" width="16" x="320" y="60"></rect><rect fill="#a855f7" height="46" opacity="0.5" width="16" x="340" y="60"></rect><rect fill="#a855f7" height="46" opacity="0.2" width="12" x="360" y="60"></rect></g>
+<rect fill="#221640" height="70" rx="10" stroke="#a855f7" stroke-width="2.5" width="180" x="440" y="48"></rect>
+<text fill="#e9d5ff" font-size="15" x="530" y="78">sí · no</text><text fill="#a8a8b3" font-size="14" x="530" y="102">silencio · otra</text>
+<text fill="#e9d5ff" font-size="14" x="95" y="140">1 s de audio</text><text fill="#e9d5ff" font-size="14" x="305" y="140">espectrograma</text>
+<text fill="#7dd3fc" font-size="16" font-weight="600" text-anchor="start" x="20" y="182">CÁMARA</text>
+<rect fill="#0e1b26" height="62" rx="10" stroke="#38bdf8" stroke-width="2" width="150" x="20" y="196"></rect><text fill="#bfe6ff" font-size="15" x="95" y="232">cuadro QVGA</text>
+<rect fill="#0e1b26" height="62" rx="10" stroke="#38bdf8" stroke-width="2" width="160" x="225" y="196"></rect><text fill="#bfe6ff" font-size="15" x="305" y="232">96×96 en gris</text>
+<rect fill="#0e1b26" height="62" rx="10" stroke="#38bdf8" stroke-width="2" width="180" x="440" y="196"></rect><text fill="#bfe6ff" font-size="15" x="530" y="222">persona 0,87</text><text fill="#a8a8b3" font-size="14" x="530" y="244">sin persona 0,13</text>
+</g>
+<g fill="none" opacity="0.7" stroke="#c084fc" stroke-width="1.8"><path d="M170,83 L218,83" marker-end="url(#m34-ah6)"></path><path d="M385,83 L433,83" marker-end="url(#m34-ah6)"></path><path d="M170,227 L218,227" marker-end="url(#m34-ah6)"></path><path d="M385,227 L433,227" marker-end="url(#m34-ah6)"></path></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Cómo leer:</strong> en ambos flujos, el microcontrolador primero <strong>reduce</strong> el dato (el sonido se convierte en un mapa de frecuencias; la imagen se convierte en una imagen de 96×96 en gris) y solo después llama al modelo. Este preprocesamiento es la mitad del trabajo y debe ser igual al que se usó durante el entrenamiento.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Expectativa correcta</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Pocas palabras cortas y bien diferenciadas entre sí («frente», «para»).</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>«¿Hay una persona?» a uno o dos metros, con buena luz.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Graba voces de varias personas y con el ruido del motor encendido.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Expectativa incorrecta</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Transcribir frases: eso es Whisper, en la Pi o en la PC (Ruta 5).</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Decir dónde está la persona y quién es: el modelo solo responde sí o no.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Entrenar solo con tu voz y esperar que funcione con el grupo.</span></li>
+</ul>
+</div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-4-t6-p2"><strong class="text-neutral-100">Objetivo:</strong> graba el detector de personas oficial en una placa ESP32-S3 con cámara y PSRAM. Los pines de la cámara de cada placa están en el archivo de configuración del ejemplo; revisa su README para comprobar si tu placa ya aparece en la lista.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal (ESP-IDF)</span></div>
+<pre><code>cd esp-tflite-micro/examples/person_detection
+idf.py set-target esp32s3
+idf.py menuconfig      <span class="c"># comprueba la placa/cámara y si la PSRAM está habilitada</span>
+idf.py build
+idf.py -p /dev/ttyACM0 flash monitor</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>El monitor imprime las puntuaciones de «person» y «no person» con cada imagen; apunta la cámara hacia ti y la primera sube.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿Error al iniciar la cámara? Los pines configurados no son los de tu placa o la PSRAM está desactivada.</span></li>
+</ul>
+</div>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-4-t6-p3">Un <strong>espectrograma</strong> es una «foto» del sonido: el eje horizontal representa el tiempo, el vertical, la frecuencia, y el color indica la intensidad. Los modelos de palabra clave tratan este mapa como si fuera una imagen pequeña. <strong>Palabra clave</strong> (keyword spotting) consiste en reconocer una palabra de una lista corta, no en entender el habla.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t6-p4">Un «para» que el ESP32 entiende por sí solo es un bloqueo de seguridad que no depende del Wi-Fi ni de la Pi. Y un detector de personas económico puede activar la Pi solo cuando hay alguien enfrente, para ahorrar batería. En el módulo 3.5 conectarás ambos mundos con un cable serial.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Palabra clave</div><div class="text-xs text-neutral-400">lista corta de palabras</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Espectrograma</div><div class="text-xs text-neutral-400">sonido como imagen</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">person_detection</div><div class="text-xs text-neutral-400">persona sí o no</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Preprocesamiento</div><div class="text-xs text-neutral-400">igual al del entrenamiento</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Resumen del módulo</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">IA junto al sensor</strong><span class="text-neutral-400">: menos retraso, menos energía y nada sale del robot; el costo es un modelo pequeño.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">int8 es el estándar</strong><span class="text-neutral-400">: cuantizar hace que el modelo sea 4 veces más pequeño y más rápido.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Edge Impulse</strong><span class="text-neutral-400">: recopilar, etiquetar, entrenar y exportar como biblioteca Arduino.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">TFLM / LiteRT</strong><span class="text-neutral-400">: modelo, resolvedor, intérprete, arena e Invoke(); esp-tflite-micro en el S3.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Expectativa correcta</strong><span class="text-neutral-400">: los gestos, unas pocas palabras y «¿hay una persona?» son posibles; la detección completa se hace en la Pi.</span></div></div>
+</div>
+<h3 class="font-semibold text-purple-400 mb-3">Para profundizar</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.edgeimpulse.com/" rel="noopener" target="_blank">Documentación de Edge Impulse</a> <span class="text-neutral-500">— data forwarder, deployment Arduino</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/espressif/esp-tflite-micro" rel="noopener" target="_blank">esp-tflite-micro (Espressif)</a> <span class="text-neutral-500">— ejemplos hello_world, micro_speech, person_detection</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://ai.google.dev/edge/litert/microcontrollers/overview" rel="noopener" target="_blank">LiteRT para microcontroladores (Google)</a> <span class="text-neutral-500">— TensorFlow Lite Micro</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/get-started/" rel="noopener" target="_blank">ESP-IDF: primeros pasos en ESP32-S3</a> <span class="text-neutral-500">— instalar el entorno</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/" rel="noopener" target="_blank">XIAO ESP32-S3 Sense (Seeed Studio)</a> <span class="text-neutral-500">— pines de cámara y micrófono</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-purple-400 mb-1">Siguiente módulo</h3>
+<p class="text-neutral-300">3.5 · La Raspberry Pi se comunica con el ESP32: la Pi decide, el ESP32 ejecuta; se conectan por un cable serial con protocolo y parada segura.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-3-3.html">← Anterior: 3.3 Detectar objetos con YOLO26</a>
+<a class="inline-flex items-center px-5 py-3 bg-purple-700 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors" href="modulo-3-5.html">Siguiente: 3.5 La Pi se comunica con el ESP32 →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica de cero a experto · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licencia MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

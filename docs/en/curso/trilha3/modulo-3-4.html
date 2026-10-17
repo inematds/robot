@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 3.4 · AI inside the microcontroller | Robotics from Zero to Expert</title>
+<meta content="TinyML on the ESP32-S3: why run AI on a microcontroller, int8 quantization, Edge Impulse from data to Arduino sketch, TensorFlow Lite Micro (LiteRT) with esp-tflite-micro, gestures with an IMU, keyword spotting, and person detection with the camera." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha3/modulo-3-4.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha3/modulo-3-4.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha3/modulo-3-4.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha3/modulo-3-4.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha3/modulo-3-4.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha3/modulo-3-4.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-3-4.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha3/modulo-3-4.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T3 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a aria-current="page" class="nav-trail text-purple-400 bg-purple-500/10" href="index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="3-4" data-inema-track="3" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-purple-400" href="../../index.html">Home</a><span aria-hidden="true">/</span>
+<a class="hover:text-purple-400" href="index.html">Learning Path 3</a><span aria-hidden="true">/</span>
+<span class="text-purple-400">Module 3.4</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MODULE 3.4 · FUNDAMENTALS</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🧠 AI inside the microcontroller</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">In previous modules, AI ran on the Raspberry Pi 5. Here, it moves down to a chip that costs a few reais and uses just a few milliwatts: the <strong class="text-neutral-100">ESP32-S3</strong>. You’ll learn what <strong class="text-purple-400">TinyML</strong>is, why the model needs to be quantized to int8, and two ways to get there: Edge Impulse (without writing the network) and TensorFlow Lite Micro (full control).</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Intermediate</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Foundation</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">ESP32-S3</div><div class="text-xs text-neutral-400">Suggested board</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 3.4 progress" class="inema-ring" data-inema-meter="modulo:3-4"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:3-4"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-1">1. Why AI on a microcontroller</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-2">2. TinyML and int8</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-3">3. Edge Impulse</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-4">4. TFLite Micro / LiteRT</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-5">5. Gestures with the IMU</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-6">6. Voice and people on camera</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-3-4#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">📍 Why AI inside the microcontroller</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t1-p1">An AI model can run in three places: on a server on the internet, on a computer inside the robot (the Pi 5 from module 3.3), or <strong class="text-neutral-100">on the microcontroller itself</strong> which already reads the sensors. The closer it is to the sensor, the lower the latency and power use, and no data leaves the robot. The trade-off is size: the ESP32-S3 can fit models ranging from tens to hundreds of kilobytes, which answer simple questions like "is this movement a wave?" or "is there a person in front?".</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-4-t1-p2"><strong>Model</strong> is the file containing the "knowledge" learned during training: a network of numbers called <strong>weights</strong>. <strong>Training</strong> means adjusting these weights using many examples, and it happens on a PC or in the cloud. <strong>Inference</strong> means using a trained model to answer questions about new data; that’s all the microcontroller does.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Three places to run AI: the cloud, with hundreds of milliseconds of delay and an internet connection required; Raspberry Pi 5, with tens to hundreds of milliseconds of delay and a few watts; ESP32-S3, with a few milliseconds of delay, a fraction of a watt, and a small model." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs>
+<filter height="180%" id="m34-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+<pattern height="32" id="m34-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+</defs>
+<rect fill="url(#m34-grid1)" height="300" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0e1b26" height="150" rx="14" stroke="#38bdf8" stroke-width="2" width="180" x="20" y="40"></rect>
+<text fill="#7dd3fc" font-size="20" font-weight="600" x="110" y="76">CLOUD</text><text fill="#bfe6ff" font-size="15" x="110" y="106">huge model</text><text fill="#bfe6ff" font-size="15" x="110" y="130">requires internet</text><text fill="#bfe6ff" font-size="15" x="110" y="154">100–1000 ms</text>
+<rect fill="#1a1230" height="150" rx="14" stroke="#c084fc" stroke-width="2" width="180" x="230" y="40"></rect>
+<text fill="#c084fc" font-size="20" font-weight="600" x="320" y="76">PI 5</text><text fill="#e9d5ff" font-size="15" x="320" y="106">YOLO26, OpenCV</text><text fill="#e9d5ff" font-size="15" x="320" y="130">a few watts</text><text fill="#e9d5ff" font-size="15" x="320" y="154">tens of ms</text>
+<g filter="url(#m34-glow1)"><rect fill="#221640" height="150" rx="14" stroke="#a855f7" stroke-width="2.5" width="180" x="440" y="40"></rect></g>
+<text fill="#c084fc" font-size="20" font-weight="600" x="530" y="76">ESP32-S3</text><text fill="#e9d5ff" font-size="15" x="530" y="106">KB-sized model</text><text fill="#e9d5ff" font-size="15" x="530" y="130">fraction of a watt</text><text fill="#e9d5ff" font-size="15" x="530" y="154">a few ms</text>
+<path d="M40,232 L600,232" opacity="0.6" stroke="#a8a8b3" stroke-width="1.8"></path>
+<text fill="#7dd3fc" font-size="15" x="110" y="262">far from the sensor</text>
+<text fill="#c084fc" font-size="15" x="530" y="262">next to the sensor</text>
+<text fill="#a8a8b3" font-size="14" x="320" y="262">less latency →</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> From left to right, the model gets smaller and closer to the sensor. The highlighted box is the focus of this module. The times are orders of magnitude, not measurements from your board: always measure on your setup.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Good for TinyML</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Classifying movement using the IMU (gestures, falls, motor vibrations).</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>One or a few voice command words.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>"Person or no person" in a small grayscale image.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>A battery-powered robot that needs to react quickly without Wi-Fi.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Leave these to the Pi or PC</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Detecting dozens of classes with boxes, like YOLO26.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Understanding free-form sentences or having a conversation (that’s Track 5).</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Training the model: training never runs on the microcontroller.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>High-resolution color images, frame by frame.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t1-p3">Knowing where each model should run helps you avoid two costly mistakes: adding a Pi 5 to a project that an ESP32-S3 could handle on battery power, or trying to fit on the microcontroller a task that only a computer can handle. In the complete robot (modules 3.5 and 3.6), both work together: the Pi sees the world and the ESP32 reacts.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Inference</div><div class="text-xs text-neutral-400">use the ready-made model</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Training</div><div class="text-xs text-neutral-400">on a PC or in the cloud</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Latency</div><div class="text-xs text-neutral-400">time to respond</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Edge AI</div><div class="text-xs text-neutral-400">AI next to the sensor</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-3-4#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🗜️ TinyML: a small model, quantized to int8</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t2-p1"><strong class="text-purple-400">TinyML</strong> is the term for machine learning that runs on microcontrollers. The ESP32-S3 has about 512 KB of internal RAM and a few megabytes of flash; many boards add 2 to 8 MB of external PSRAM. A model trained on a PC stores each weight as <strong class="text-neutral-100">float32</strong> (4 bytes). <strong class="text-neutral-100">Quantization</strong> converts each weight to <strong class="text-neutral-100">int8</strong> (1 byte, from −128 to 127): the model becomes 4 times smaller and integer calculations run much faster, with only a small drop in accuracy when done well.</p>
+<figure class="fig mb-3">
+<svg aria-label="Quantization: a 4-byte float32 weight, for example 0,4172, becomes a 1-byte int8 integer, 53, using a scale and a zero point; the model becomes four times smaller." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs>
+<pattern height="32" id="m34-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m34-ah2" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+</defs>
+<rect fill="url(#m34-grid2)" height="280" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<text fill="#7dd3fc" font-size="17" font-weight="600" x="150" y="36">float32 · 4 bytes</text>
+<rect fill="#0e1b26" height="56" rx="6" stroke="#38bdf8" stroke-width="2" width="60" x="30" y="52"></rect><rect fill="#0e1b26" height="56" rx="6" stroke="#38bdf8" stroke-width="2" width="60" x="90" y="52"></rect><rect fill="#0e1b26" height="56" rx="6" stroke="#38bdf8" stroke-width="2" width="60" x="150" y="52"></rect><rect fill="#0e1b26" height="56" rx="6" stroke="#38bdf8" stroke-width="2" width="60" x="210" y="52"></rect>
+<text fill="#bfe6ff" font-size="18" x="150" y="140">0,4172</text>
+<path d="M290,80 L400,80" fill="none" marker-end="url(#m34-ah2)" stroke="#c084fc" stroke-width="2"></path>
+<text fill="#e9d5ff" font-size="15" x="345" y="64">quantize</text>
+<text fill="#c084fc" font-size="17" font-weight="600" x="490" y="36">int8 · 1 byte</text>
+<rect fill="#221640" height="56" rx="6" stroke="#a855f7" stroke-width="2.5" width="60" x="460" y="52"></rect>
+<text fill="#e9d5ff" font-size="18" x="490" y="140">53</text>
+<text fill="#e9d5ff" font-size="16" x="320" y="190">integer = round(value ÷ scale) + zero point</text>
+<text fill="#a8a8b3" font-size="15" x="320" y="218">e.g., scale 0.0079 and zero point 0 → 0.4172 ÷ 0.0079 ≈ 53</text>
+<text fill="#c084fc" font-size="16" font-weight="600" x="320" y="256">400 KB model in float32 → about 100 KB in int8</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> each weight goes from taking up four boxes (bytes) to taking up one. The scale and zero point are stored in the model so it can be converted back when needed. The example numbers are illustrative.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-4-t2-p2"><strong>Flash</strong> is the memory that stores the program and model even when the power is off. <strong>RAM</strong> is working memory, cleared when the device is turned off; this is where intermediate inference calculations are stored (the “arena”). <strong>PSRAM</strong> is extra, slower RAM soldered next to the chip on some boards, such as the XIAO ESP32-S3 Sense.</p>
+</div>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3 text-purple-400">Task</th><th class="text-left p-3 text-purple-400">Typical model size (int8)</th><th class="text-left p-3 text-purple-400">Fits on the S3?</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">IMU gesture</td><td class="p-3">a few to tens of KB</td><td class="p-3">Yes, with room to spare</td></tr>
+<tr><td class="p-3">Voice keyword</td><td class="p-3">tens of KB</td><td class="p-3">Yes</td></tr>
+<tr><td class="p-3">Person yes/no, 96×96 grayscale</td><td class="p-3">a few hundred KB</td><td class="p-3">Yes, preferably with PSRAM</td></tr>
+<tr><td class="p-3">YOLO26n, 640 px</td><td class="p-3">a few MB</td><td class="p-3">No: use the Pi 5</td></tr>
+</tbody>
+</table>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t2-p3">When a TinyML project fails, it’s almost always because of memory: the model doesn’t fit in flash, or the arena doesn’t fit in RAM. Understanding that int8 is the standard format and knowing the approximate size of each task helps you choose the board and model before spending an afternoon compiling.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">TinyML</div><div class="text-xs text-neutral-400">AI on a microcontroller</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Quantization</div><div class="text-xs text-neutral-400">float32 → int8</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Arena</div><div class="text-xs text-neutral-400">RAM for calculations</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">PSRAM</div><div class="text-xs text-neutral-400">Extra board RAM</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-3-4#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🧪 Edge Impulse: from data to Arduino sketch</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t3-p1">O <strong class="text-purple-400">Edge Impulse</strong> is a web platform with a free plan for personal projects. You send in sensor data, label it, choose processing and neural network blocks with a few clicks, train in the cloud, and download the result as an <strong class="text-neutral-100">Arduino library in .zip format</strong>, already quantized. You don’t write the network; you only write the sketch that reads the sensor and calls the classifier.</p>
+<figure class="fig mb-3">
+<svg aria-label="The Edge Impulse workflow in five steps: collect sensor data, label it, design the impulse with a window, processing, and classifier, train and test, then export it as an Arduino library that runs on the ESP32-S3." class="w-full h-auto" role="img" viewbox="0 0 640 250">
+<defs>
+<pattern height="32" id="m34-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m34-ah3" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+<filter height="180%" id="m34-glow3" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs>
+<rect fill="url(#m34-grid3)" height="250" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#1a1230" height="80" rx="12" stroke="#c084fc" stroke-width="2" width="110" x="10" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="65" y="84">1 collect</text><text fill="#e9d5ff" font-size="14" x="65" y="108">sensor → PC</text>
+<rect fill="#1a1230" height="80" rx="12" stroke="#c084fc" stroke-width="2" width="110" x="136" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="191" y="84">2 label</text><text fill="#e9d5ff" font-size="14" x="191" y="108">class name</text>
+<rect fill="#1a1230" height="80" rx="12" stroke="#c084fc" stroke-width="2" width="110" x="262" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="317" y="84">3 impulse</text><text fill="#e9d5ff" font-size="14" x="317" y="108">window + blocks</text>
+<rect fill="#1a1230" height="80" rx="12" stroke="#c084fc" stroke-width="2" width="110" x="388" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="443" y="84">4 train</text><text fill="#e9d5ff" font-size="14" x="443" y="108">and test</text>
+<g filter="url(#m34-glow3)"><rect fill="#221640" height="80" rx="12" stroke="#a855f7" stroke-width="2.5" width="116" x="514" y="50"></rect></g><text fill="#c084fc" font-size="17" font-weight="600" x="572" y="84">5 export</text><text fill="#e9d5ff" font-size="14" x="572" y="108">library .zip</text>
+</g>
+<g fill="none" opacity="0.7" stroke="#c084fc" stroke-width="1.8"><path d="M120,90 L130,90" marker-end="url(#m34-ah3)"></path><path d="M246,90 L256,90" marker-end="url(#m34-ah3)"></path><path d="M372,90 L382,90" marker-end="url(#m34-ah3)"></path><path d="M498,90 L508,90" marker-end="url(#m34-ah3)"></path></g>
+<path d="M572,134 C572,210 65,210 65,138" fill="none" opacity="0.8" stroke="#38bdf8" stroke-dasharray="7 7" stroke-width="2"></path>
+<text fill="#7dd3fc" font-family="Inter,sans-serif" font-size="15" text-anchor="middle" x="320" y="232">test failed? go back and collect more examples of the class it confused</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> the five boxes are the Edge Impulse project tabs, in the order you move through them. The cyan loop shows what happens in practice: the first model almost always confuses two classes, and the solution is to collect more data, not change the network.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-4">Step by step</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Create the project and install the tool</h4><p class="text-neutral-300 text-sm">Create an account at edgeimpulse.com and start a new project. On your PC, install Node.js, then the official CLI with <span class="font-mono text-xs">npm install -g edge-impulse-cli</span> (check the current instructions in the documentation).</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Send the data over serial</h4><p class="text-neutral-300 text-sm">Flash a sketch to the ESP32-S3 that prints readings separated by commas (the one from topic 5). Run <span class="font-mono text-xs">edge-impulse-data-forwarder</span>, sign in, and name the axes. The board will appear in the data collection tab.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Design the impulse and train</h4><p class="text-neutral-300 text-sm">Choose the window size, a processing block (for an IMU, “Spectral Analysis”), and a classifier. Train the model, check the confusion matrix, and run the test using the data set aside for it.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">4</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Export and install the library</h4><p class="text-neutral-300 text-sm">Under “Deployment,” choose “Arduino library” with int8 optimization and download the .zip. In Arduino IDE 2.x: Sketch → Include Library → Add .ZIP Library. The generated header uses your project name: <span class="font-mono text-xs">&lt;your_project&gt;_inferencing.h</span>.</p></div></div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 The first compile takes a while</h3>
+<p class="text-neutral-300 text-sm">The Edge Impulse library includes the entire inference engine as source code, so the first compile on the ESP32 takes several minutes. That’s normal. Later compiles use the IDE’s cache and are much faster.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t3-p2">It’s the shortest path from “I have a sensor” to “I have a classifier running on the board.” In the classroom, students collect their own data and immediately see the effect of poor data or imbalanced classes—the most important lesson in any AI project.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Impulse</div><div class="text-xs text-neutral-400">window + blocks</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Label</div><div class="text-xs text-neutral-400">the correct answer</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Data forwarder</div><div class="text-xs text-neutral-400">serial → Edge Impulse</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Confusion matrix</div><div class="text-xs text-neutral-400">which classes get confused with which</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-3-4#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">⚙️ TensorFlow Lite Micro / LiteRT on the ESP32-S3</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t4-p1">Behind many TinyML projects is <strong class="text-purple-400">TensorFlow Lite Micro</strong> (TFLM), Google’s inference engine for microcontrollers. In 2024, TensorFlow Lite was renamed <strong class="text-neutral-100">LiteRT</strong>; you’ll see both names. Espressif maintains the <strong class="text-neutral-100">esp-tflite-micro</strong> component for ESP-IDF, with ready-to-use examples (<span class="font-mono text-xs">hello_world</span>, <span class="font-mono text-xs">micro_speech</span>, <span class="font-mono text-xs">person_detection</span>) and <strong class="text-neutral-100">ESP-NN</strong>, which uses the S3’s vector instructions to speed up network layers.</p>
+<figure class="fig mb-3">
+<svg aria-label="How TensorFlow Lite Micro runs: the .tflite model becomes a C array in flash; the operator resolver lists the layers used; the interpreter reserves the arena in RAM, receives the input, runs Invoke, and returns the output; ESP-NN accelerates the layers on the ESP32-S3." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs>
+<pattern height="32" id="m34-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m34-ah4" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+<filter height="180%" id="m34-glow4" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs>
+<rect fill="url(#m34-grid4)" height="300" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0e1b26" height="70" rx="12" stroke="#38bdf8" stroke-width="2" width="180" x="20" y="30"></rect><text fill="#7dd3fc" font-size="17" font-weight="600" x="110" y="60">.tflite model</text><text fill="#bfe6ff" font-size="14" x="110" y="84">C array in flash</text>
+<rect fill="#0e1b26" height="70" rx="12" stroke="#38bdf8" stroke-width="2" width="180" x="20" y="130"></rect><text fill="#7dd3fc" font-size="17" font-weight="600" x="110" y="160">op resolver</text><text fill="#bfe6ff" font-size="14" x="110" y="184">layers used</text>
+<g filter="url(#m34-glow4)"><rect fill="#221640" height="110" rx="14" stroke="#a855f7" stroke-width="2.5" width="160" x="250" y="60"></rect></g>
+<text fill="#c084fc" font-size="18" font-weight="600" x="330" y="100">interpreter</text><text fill="#e9d5ff" font-size="15" x="330" y="126">Invoke()</text><text fill="#e9d5ff" font-size="14" x="330" y="150">arena in RAM</text>
+<rect fill="#1a1230" height="60" rx="12" stroke="#c084fc" stroke-width="2" width="160" x="460" y="30"></rect><text fill="#e9d5ff" font-size="16" x="540" y="66">int8 input</text>
+<rect fill="#1a1230" height="60" rx="12" stroke="#c084fc" stroke-width="2" width="160" x="460" y="140"></rect><text fill="#e9d5ff" font-size="16" x="540" y="176">output: scores</text>
+<rect fill="#1a1230" height="56" rx="12" stroke="#c084fc" stroke-dasharray="5 4" stroke-width="2" width="160" x="250" y="220"></rect><text fill="#c084fc" font-size="16" x="330" y="254">ESP-NN (S3)</text>
+</g>
+<g fill="none" opacity="0.7" stroke="#c084fc" stroke-width="1.8">
+<path d="M200,70 L243,95" marker-end="url(#m34-ah4)"></path><path d="M200,165 L243,140" marker-end="url(#m34-ah4)"></path>
+<path d="M460,60 L417,90" marker-end="url(#m34-ah4)"></path><path d="M410,140 L453,165" marker-end="url(#m34-ah4)"></path><path d="M330,214 L330,178" marker-end="url(#m34-ah4)"></path>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> on the left is what you prepare once (the model and the list of layers). In the center, the interpreter performs calculations in a fixed area of RAM. On the right is the cycle for each inference: write the input, call <span class="font-mono">Invoke()</span>, read the output. The dashed line below indicates ESP-NN acceleration, which kicks in automatically on the S3.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-4">The five steps in every TFLM program</h3>
+<div class="space-y-3 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">1</span></div><p class="text-neutral-300 text-sm pt-1.5"><span class="font-mono text-xs text-purple-400">tflite::GetModel(g_model)</span> loads the model converted to a C array (with <span class="font-mono text-xs">xxd -i</span>).</p></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">2</span></div><p class="text-neutral-300 text-sm pt-1.5"><span class="font-mono text-xs text-purple-400">MicroMutableOpResolver</span> registers only the layers used (convolution, fully connected, softmax), saving flash.</p></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">3</span></div><p class="text-neutral-300 text-sm pt-1.5"><span class="font-mono text-xs text-purple-400">MicroInterpreter</span> takes the model, resolver, and arena; <span class="font-mono text-xs">AllocateTensors()</span> reports if the arena is too small.</p></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">4</span></div><p class="text-neutral-300 text-sm pt-1.5">You fill <span class="font-mono text-xs text-purple-400">interpreter.input(0)</span> with data already converted to int8, then call <span class="font-mono text-xs">Invoke()</span>.</p></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">5</span></div><p class="text-neutral-300 text-sm pt-1.5">Read <span class="font-mono text-xs text-purple-400">interpreter.output(0)</span>: one score per class. The highest score is the answer.</p></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-4-t4-p2"><strong class="text-neutral-100">Goal:</strong> compile and flash the official example <span class="font-mono text-xs">hello_world</span> (a network that learns the sine curve) on the ESP32-S3. Requires ESP-IDF 5.x to be installed and the ESP-IDF terminal to be open.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal (ESP-IDF)</span></div>
+<pre><code><span class="c"># 1. baixar o componente com os exemplos</span>
+git clone https://github.com/espressif/esp-tflite-micro.git
+cd esp-tflite-micro/examples/hello_world
+
+<span class="c"># 2. escolher o chip e compilar</span>
+idf.py set-target esp32s3
+idf.py build
+
+<span class="c"># 3. gravar e abrir o monitor (troque a porta pela sua)</span>
+idf.py -p /dev/ttyACM0 flash monitor
+<span class="c"># no Windows a porta é algo como COM5; para sair do monitor: Ctrl+]</span></code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>The monitor shows lines with an x value and the predicted y, rising and falling like a sine wave.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Did it work? Repeat with <span class="font-mono text-xs">examples/person_detection</span>; it requires a board with a camera.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"idf.py: command not found": the terminal has not loaded the ESP-IDF environment. Open the "ESP-IDF Terminal" or run the ESP-IDF export script.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t4-p3">Edge Impulse handles most cases, but when you train your own network with TensorFlow or want to control every byte of memory, TFLM is the tool to use. Understanding how the interpreter works also helps explain error messages from any TinyML library, including Edge Impulse.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">LiteRT</div><div class="text-xs text-neutral-400">new name for TF Lite</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">esp-tflite-micro</div><div class="text-xs text-neutral-400">ESP-IDF component</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Invoke()</div><div class="text-xs text-neutral-400">runs an inference</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">ESP-NN</div><div class="text-xs text-neutral-400">acceleration on the S3</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-3-4#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">👋 Example: recognize a gesture with the IMU</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t5-p1">Use the MPU-6050 from module 2.2 connected to the ESP32-S3 and teach it three classes: <strong class="text-neutral-100">stopped</strong>, <strong class="text-neutral-100">shake</strong> e <strong class="text-neutral-100">circle</strong>. The model does not look at a single reading, but at a <strong class="text-purple-400">window</strong>: for example, 2 seconds of acceleration on all three axes, read 100 times per second. You need two sketches: one to collect data and another to classify it.</p>
+<figure class="fig mb-3">
+<svg aria-label="Sliding window: three acceleration curves, x, y, and z, over time; a 2-second window with 200 readings per axis is sliced out and passed to the classifier, which returns the scores still 0,03, shake 0,91, and circle 0,06." class="w-full h-auto" role="img" viewbox="0 0 640 270">
+<defs>
+<pattern height="32" id="m34-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m34-ah5" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+</defs>
+<rect fill="url(#m34-grid5)" height="270" width="640"></rect>
+<rect fill="#221640" height="170" opacity="0.6" rx="10" stroke="#a855f7" stroke-width="2" width="190" x="150" y="30"></rect>
+<g fill="none" stroke-width="2">
+<path d="M50,70 L160,70 L175,45 L195,95 L215,45 L235,95 L255,45 L275,95 L295,45 L315,95 L330,70 L420,70" stroke="#c084fc"></path>
+<path d="M50,120 L160,120 L178,100 L198,140 L218,100 L238,140 L258,100 L278,140 L298,100 L318,140 L330,120 L420,120" stroke="#38bdf8"></path>
+<path d="M50,170 L160,170 L185,162 L210,178 L235,162 L260,178 L285,162 L310,178 L330,170 L420,170" opacity="0.8" stroke="#e9d5ff"></path>
+</g>
+<g font-family="Inter,sans-serif">
+<text fill="#c084fc" font-size="15" x="24" y="58">ax</text><text fill="#7dd3fc" font-size="15" x="24" y="108">ay</text><text fill="#e9d5ff" font-size="15" x="24" y="158">az</text>
+<text fill="#c084fc" font-size="15" text-anchor="middle" x="245" y="226">window: 2 s × 100 Hz = 200 × 3</text>
+<path d="M425,115 L462,115" fill="none" marker-end="url(#m34-ah5)" stroke="#c084fc" stroke-width="2"></path>
+<rect fill="#1a1230" height="150" rx="12" stroke="#c084fc" stroke-width="2" width="160" x="470" y="40"></rect>
+<text fill="#c084fc" font-size="16" font-weight="600" text-anchor="middle" x="550" y="70">scores</text>
+<text fill="#a8a8b3" font-size="15" x="485" y="104">still 0.03</text>
+<text fill="#e9d5ff" font-size="15" font-weight="600" x="485" y="134">shake 0.91</text>
+<text fill="#a8a8b3" font-size="15" x="485" y="164">circle 0.06</text>
+<text fill="#7dd3fc" font-size="14" text-anchor="middle" x="320" y="258">the window moves forward in time and the classifier runs again</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> The three lines are the accelerometer axes. The rectangle is the window the model sees all at once. On the right is the output: a score from 0 to 1 for each class, adding up to 1. Accept the result only if the highest score exceeds a threshold (0.8 in the sketch).</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-4-t5-p2"><strong class="text-neutral-100">Goal (data collection):</strong> print the acceleration in m/s², 100 times per second, in the format that <span class="font-mono text-xs">edge-impulse-data-forwarder</span> understands (comma-separated values, one line per reading).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">coleta-imu.ino</span></div>
+<pre><code><span class="c">// Collect data from the MPU-6050 for Edge Impulse (ESP32-S3, esp32 3.x package)</span>
+<span class="c">// Output: "ax,ay,az" in m/s², 100 lines per second, 115200 baud.</span>
+<span class="k">#include</span> &lt;Wire.h&gt;
+
+<span class="k">const int</span> PINO_SDA = 8;           <span class="c">// replace with your board's I2C pins</span>
+<span class="k">const int</span> PINO_SCL = 9;
+<span class="k">const uint8_t</span> MPU = 0x68;        <span class="c">// MPU-6050 address (AD0 to GND)</span>
+<span class="k">const unsigned long</span> PERIODO_US = 10000; <span class="c">// 10 ms = 100 Hz</span>
+<span class="k">unsigned long</span> proxima = 0;
+
+<span class="k">void</span> escreveRegistro(<span class="k">uint8_t</span> reg, <span class="k">uint8_t</span> valor) {
+  Wire.beginTransmission(MPU); Wire.write(reg); Wire.write(valor); Wire.endTransmission();
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  Wire.begin(PINO_SDA, PINO_SCL);
+  Wire.setClock(400000);
+  escreveRegistro(0x6B, 0x00);      <span class="c">// wake up the sensor</span>
+  escreveRegistro(0x1C, 0x00);      <span class="c">// ±2 g range: 16384 per g</span>
+  proxima = micros();
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">if</span> ((<span class="k">long</span>)(micros() - proxima) &lt; 0) <span class="k">return</span>;  <span class="c">// wait for the next 10 ms tick</span>
+  proxima += PERIODO_US;
+  Wire.beginTransmission(MPU); Wire.write(0x3B); Wire.endTransmission(<span class="k">false</span>);
+  Wire.requestFrom(MPU, (<span class="k">uint8_t</span>)6);
+  <span class="k">if</span> (Wire.available() &lt; 6) <span class="k">return</span>;
+  int16_t bruto[3];
+  <span class="k">for</span> (<span class="k">int</span> i = 0; i &lt; 3; i++) { <span class="k">uint8_t</span> alto = Wire.read(), baixo = Wire.read(); bruto[i] = (int16_t)((alto &lt;&lt; 8) | baixo); }
+  <span class="k">const float</span> G = 9.80665f / 16384.0f;  <span class="c">// counts → m/s²</span>
+  Serial.printf(<span class="s">"%.3f,%.3f,%.3f\n"</span>, bruto[0] * G, bruto[1] * G, bruto[2] * G);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Sitting on the table, one axis reads about 9.8 and the others close to 0.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Close the Serial Monitor and run <span class="font-mono text-xs">edge-impulse-data-forwarder</span>: it detects about 100 Hz and 3 axes. Record at least 3 minutes per class.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>All zeros? Check SDA/SCL and whether the sensor responds at address 0x68.</span></li>
+</ul>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-4-t5-p3"><strong class="text-neutral-100">Goal (classification):</strong> with the exported library installed, fill the window with readings at the same rate used for training, call the classifier, and turn on the LED when the "shake" gesture scores above 0.8. Replace the name of <span class="font-mono text-xs">#include</span> with your project's header and the labels with the ones you created.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">gesto-imu.ino</span></div>
+<pre><code><span class="c">// Classify gestures with the library exported by Edge Impulse (ESP32-S3)</span>
+<span class="k">#include</span> &lt;Wire.h&gt;
+<span class="k">#include</span> &lt;seu_projeto_inferencing.h&gt;  <span class="c">// replace with the generated header: &lt;seu_projeto&gt;_inferencing.h</span>
+
+<span class="k">const int</span> PINO_SDA = 8, PINO_SCL = 9, PINO_LED = 2;
+<span class="k">const uint8_t</span> MPU = 0x68;
+<span class="k">const float</span> LIMITE = 0.80f;
+<span class="k">static float</span> janela[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE];  <span class="c">// 200 readings × 3 axes</span>
+
+<span class="k">void</span> escreveRegistro(<span class="k">uint8_t</span> reg, <span class="k">uint8_t</span> valor) {
+  Wire.beginTransmission(MPU); Wire.write(reg); Wire.write(valor); Wire.endTransmission();
+}
+
+<span class="k">void</span> leAceleracao(<span class="k">float</span> *a) {
+  Wire.beginTransmission(MPU); Wire.write(0x3B); Wire.endTransmission(<span class="k">false</span>);
+  Wire.requestFrom(MPU, (<span class="k">uint8_t</span>)6);
+  <span class="k">const float</span> G = 9.80665f / 16384.0f;
+  <span class="k">for</span> (<span class="k">int</span> i = 0; i &lt; 3; i++) { <span class="k">uint8_t</span> alto = Wire.read(), baixo = Wire.read(); a[i] = (int16_t)((alto &lt;&lt; 8) | baixo) * G; }
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_LED, OUTPUT);
+  Wire.begin(PINO_SDA, PINO_SCL); Wire.setClock(400000);
+  escreveRegistro(0x6B, 0x00); escreveRegistro(0x1C, 0x00);
+  Serial.printf(<span class="s">"Model ready: %d classes, window of %d values\n"</span>, EI_CLASSIFIER_LABEL_COUNT, EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE);
+}
+
+<span class="k">void</span> loop() {
+  <span class="c">// 1) fill the window at the same rate used for training</span>
+  <span class="k">for</span> (size_t i = 0; i &lt; EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE; i += EI_CLASSIFIER_RAW_SAMPLES_PER_FRAME) {
+    <span class="k">unsigned long</span> t0 = micros();
+    leAceleracao(&amp;janela[i]);
+    <span class="k">while</span> (micros() - t0 &lt; (<span class="k">unsigned long</span>)(EI_CLASSIFIER_INTERVAL_MS * 1000)) {}
+  }
+  <span class="c">// 2) run the classifier</span>
+  signal_t sinal;
+  numpy::signal_from_buffer(janela, EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE, &amp;sinal);
+  ei_impulse_result_t resultado = { 0 };
+  <span class="k">if</span> (run_classifier(&amp;sinal, &amp;resultado, <span class="k">false</span>) != EI_IMPULSE_OK) { Serial.println(<span class="s">"classifier error"</span>); <span class="k">return</span>; }
+  <span class="c">// 3) show the scores and decide</span>
+  <span class="k">bool</span> chacoalhou = <span class="k">false</span>;
+  <span class="k">for</span> (size_t i = 0; i &lt; EI_CLASSIFIER_LABEL_COUNT; i++) {
+    Serial.printf(<span class="s">"%s: %.2f  "</span>, resultado.classification[i].label, resultado.classification[i].value);
+    <span class="k">if</span> (strcmp(resultado.classification[i].label, <span class="s">"chacoalhar"</span>) == 0 &amp;&amp; resultado.classification[i].value &gt; LIMITE) chacoalhou = <span class="k">true</span>;
+  }
+  Serial.printf(<span class="s">"| %d ms\n"</span>, resultado.timing.dsp + resultado.timing.classification);
+  digitalWrite(PINO_LED, chacoalhou ? HIGH : LOW);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Every 2 seconds, a line appears with the three scores and the inference time in milliseconds.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Shake the board: the "shake" score goes above 0.8 and the LED turns on.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Compilation error in <span class="font-mono text-xs">#include</span>? The header name does not match the installed library.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t5-p4">The same approach works for detecting when the robot has tipped over, when a wheel is wobbling, or when someone has picked up the robot. These reactions need to happen locally and quickly, without waiting for the Pi.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Window</div><div class="text-xs text-neutral-400">time segment being analyzed</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Fixed frequency</div><div class="text-xs text-neutral-400">same during training and on the board</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">run_classifier</div><div class="text-xs text-neutral-400">calls the model</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Threshold</div><div class="text-xs text-neutral-400">accepts only a high score</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-3-4#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🎙️ Example: voice keyword or person detection with the camera</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t6-p1">Boards such as the <strong class="text-neutral-100">XIAO ESP32-S3 Sense</strong> come with a microphone and camera. With them, you can run the two classic esp-tflite-micro examples: the <span class="font-mono text-xs">micro_speech</span>, which recognizes the English words "yes" and "no", and the <span class="font-mono text-xs">person_detection</span>, which gives an "is there a person" score for a 96×96-pixel grayscale image. For Portuguese words, train your keyword model in Edge Impulse using recordings from your class.</p>
+<figure class="fig mb-3">
+<svg aria-label="Two workflows: 1 second of audio becomes a spectrogram, and the model responds yes, no, silence, or unknown; a camera image reduced to 96 by 96 in grayscale becomes a person score and a no-person score." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs>
+<pattern height="32" id="m34-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m34-ah6" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+</defs>
+<rect fill="url(#m34-grid6)" height="280" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<text fill="#c084fc" font-size="16" font-weight="600" text-anchor="start" x="20" y="34">VOICE</text>
+<rect fill="#1a1230" height="70" rx="10" stroke="#c084fc" stroke-width="2" width="150" x="20" y="48"></rect>
+<path d="M35,83 l10,-18 l10,36 l10,-30 l10,24 l10,-14 l10,8 l10,-20 l10,26 l10,-12 l10,0" fill="none" stroke="#e9d5ff" stroke-width="2"></path>
+<rect fill="#1a1230" height="70" rx="10" stroke="#c084fc" stroke-width="2" width="160" x="225" y="48"></rect>
+<g opacity="0.85"><rect fill="#a855f7" height="46" opacity="0.4" width="16" x="240" y="60"></rect><rect fill="#a855f7" height="46" opacity="0.8" width="16" x="260" y="60"></rect><rect fill="#a855f7" height="46" opacity="0.6" width="16" x="280" y="60"></rect><rect fill="#a855f7" height="46" opacity="0.9" width="16" x="300" y="60"></rect><rect fill="#a855f7" height="46" opacity="0.3" width="16" x="320" y="60"></rect><rect fill="#a855f7" height="46" opacity="0.5" width="16" x="340" y="60"></rect><rect fill="#a855f7" height="46" opacity="0.2" width="12" x="360" y="60"></rect></g>
+<rect fill="#221640" height="70" rx="10" stroke="#a855f7" stroke-width="2.5" width="180" x="440" y="48"></rect>
+<text fill="#e9d5ff" font-size="15" x="530" y="78">yes · no</text><text fill="#a8a8b3" font-size="14" x="530" y="102">silence · other</text>
+<text fill="#e9d5ff" font-size="14" x="95" y="140">1 s of audio</text><text fill="#e9d5ff" font-size="14" x="305" y="140">spectrogram</text>
+<text fill="#7dd3fc" font-size="16" font-weight="600" text-anchor="start" x="20" y="182">CAMERA</text>
+<rect fill="#0e1b26" height="62" rx="10" stroke="#38bdf8" stroke-width="2" width="150" x="20" y="196"></rect><text fill="#bfe6ff" font-size="15" x="95" y="232">QVGA frame</text>
+<rect fill="#0e1b26" height="62" rx="10" stroke="#38bdf8" stroke-width="2" width="160" x="225" y="196"></rect><text fill="#bfe6ff" font-size="15" x="305" y="232">96×96 grayscale</text>
+<rect fill="#0e1b26" height="62" rx="10" stroke="#38bdf8" stroke-width="2" width="180" x="440" y="196"></rect><text fill="#bfe6ff" font-size="15" x="530" y="222">person 0.87</text><text fill="#a8a8b3" font-size="14" x="530" y="244">no person 0.13</text>
+</g>
+<g fill="none" opacity="0.7" stroke="#c084fc" stroke-width="1.8"><path d="M170,83 L218,83" marker-end="url(#m34-ah6)"></path><path d="M385,83 L433,83" marker-end="url(#m34-ah6)"></path><path d="M170,227 L218,227" marker-end="url(#m34-ah6)"></path><path d="M385,227 L433,227" marker-end="url(#m34-ah6)"></path></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> in both workflows, the microcontroller first <strong>shrinks</strong> the input (sound becomes a frequency map; the image becomes 96×96 grayscale) and only then calls the model. This preprocessing is half the work and must match what was used during training.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Right expectations</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>A few short words that are clearly different from one another ("forward", "stop").</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>"Is there a person?" from one or two meters away, in good light.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Record voices from several people with the motor noise on.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Wrong expectations</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Transcribing sentences: that is Whisper, on the Pi or PC (Track 5).</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Saying where the person is and who they are: the model only answers yes or no.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Training only with your voice and expecting it to work for the whole class.</span></li>
+</ul>
+</div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-4-t6-p2"><strong class="text-neutral-100">Goal:</strong> flash the official person detector to an ESP32-S3 board with a camera and PSRAM. Each board’s camera pins are listed in the example’s configuration file; check its README to see if your board is already listed.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal (ESP-IDF)</span></div>
+<pre><code>cd esp-tflite-micro/examples/person_detection
+idf.py set-target esp32s3
+idf.py menuconfig      <span class="c"># check the board/camera and whether PSRAM is enabled</span>
+idf.py build
+idf.py -p /dev/ttyACM0 flash monitor</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>The monitor prints the scores for "person" and "no person" with each image; point the camera at yourself and the first score goes up.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Camera failed to start? The configured pins don’t match your board, or PSRAM is turned off.</span></li>
+</ul>
+</div>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-4-t6-p3">A <strong>spectrogram</strong> It’s a “picture” of sound: the horizontal axis is time, the vertical axis is frequency, and the color shows intensity. Keyword models treat this map as if it were a small image. <strong>Keyword</strong> (keyword spotting) means recognizing a word from a short list, not understanding speech.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-4-t6-p4">A spoken “stop” that the ESP32 understands on its own is a safety lock that doesn’t depend on Wi-Fi or the Pi. And an inexpensive person detector can wake the Pi only when someone is in front of it, saving battery. In module 3.5, you’ll connect these two worlds with a serial wire.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Keyword</div><div class="text-xs text-neutral-400">short list of words</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Spectrogram</div><div class="text-xs text-neutral-400">sound as an image</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">person_detection</div><div class="text-xs text-neutral-400">person: yes or no</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Preprocessing</div><div class="text-xs text-neutral-400">same as during training</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">AI next to the sensor</strong><span class="text-neutral-400">: less delay, less power, and nothing leaves the robot; the tradeoff is a small model.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">int8 is the standard</strong><span class="text-neutral-400">: quantization makes the model 4 times smaller and faster.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Edge Impulse</strong><span class="text-neutral-400">: collect, label, train, and export as an Arduino library.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">TFLM / LiteRT</strong><span class="text-neutral-400">: model, resolver, interpreter, arena, and Invoke(); esp-tflite-micro on the S3.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Set the right expectations</strong><span class="text-neutral-400">: gestures, a few words, and “is there a person?” are within reach; full object detection stays on the Pi.</span></div></div>
+</div>
+<h3 class="font-semibold text-purple-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.edgeimpulse.com/" rel="noopener" target="_blank">Edge Impulse documentation</a> <span class="text-neutral-500">— data forwarder, Arduino deployment</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/espressif/esp-tflite-micro" rel="noopener" target="_blank">esp-tflite-micro (Espressif)</a> <span class="text-neutral-500">— hello_world, micro_speech, person_detection examples</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://ai.google.dev/edge/litert/microcontrollers/overview" rel="noopener" target="_blank">LiteRT for microcontrollers (Google)</a> <span class="text-neutral-500">— TensorFlow Lite Micro</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/get-started/" rel="noopener" target="_blank">ESP-IDF: getting started with the ESP32-S3</a> <span class="text-neutral-500">— set up the environment</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/" rel="noopener" target="_blank">XIAO ESP32-S3 Sense (Seeed Studio)</a> <span class="text-neutral-500">— camera and microphone pins</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-purple-400 mb-1">Next module</h3>
+<p class="text-neutral-300">3.5 · Raspberry Pi talks to the ESP32: the Pi decides, the ESP32 acts, connected by a serial wire with a protocol and a safe stop.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-3-3.html">← Previous: 3.3 Detect objects with YOLO26</a>
+<a class="inline-flex items-center px-5 py-3 bg-purple-700 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors" href="modulo-3-5.html">Next: 3.5 Pi talks to the ESP32 →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

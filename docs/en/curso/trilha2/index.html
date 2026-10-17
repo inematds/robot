@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Track 2 · Autonomous Robot | Robotics from Zero to Expert</title>
+<meta content="Track 2 of the robotics course: phone control (Wi-Fi and BLE), IMU and encoders, PID, multitasking with FreeRTOS, telemetry, and the ESP32 PID line follower project (API 3.x)." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha2/index.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha2/index.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha2/index.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha2/index.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha2/index.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha2/index.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="index.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha2/index.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T2 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a aria-current="page" class="nav-trail text-blue-400 bg-blue-500/10" href="index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-track="2" id="conteudo">
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400"><a class="hover:text-blue-400" href="../../index.html">Home</a><span aria-hidden="true">/</span><span class="text-blue-400">Track 2</span></div>
+</nav>
+<!-- HEADER da trilha -->
+<header class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full mb-4">LEARNING PATH 2 · INTERMEDIATE</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">🧭 Autonomous Robot</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">The Track 1 rover gets phone control, a sense of position, and a real control brain. You’ll set up Wi-Fi and BLE, measure rotation and distance with an IMU and encoders, master PID, run several tasks at once, log everything in graphs, and finish with a <strong class="text-blue-400">PID line follower</strong> that you tune by looking at the data.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">6</div><div class="text-xs text-neutral-400">Modules</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">36</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Intermediate</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">ESP32 + IMU</div><div class="text-xs text-neutral-400">Robot base</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Track 2 progress" class="inema-ring" data-inema-meter="trilha:2"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="trilha:2"><strong data-inema-meter-frac="">0 of 0</strong> topics read in this track</div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+<!-- HERO SVG da trilha: do controle remoto ao autônomo -->
+<figure class="fig mb-3">
+<svg aria-label="The path through Track 2: a control loop at the center (measure, decide, act), supported by six modules: phone, IMU and encoders, PID, multitasking, telemetry, and finally the line follower." class="w-full h-auto" role="img" viewbox="0 0 720 270">
+<defs><pattern height="32" id="t2-grid" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.12" r="1.3"></circle></pattern><lineargradient id="t2-grad" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#60a5fa"></stop><stop offset="1" stop-color="#3b82f6"></stop></lineargradient><filter height="180%" id="t2-glow" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#t2-grid)" height="270" width="720"></rect>
+<path d="M66,130 C120,70 150,70 186,110 S260,160 302,120 S380,70 418,110 S500,160 534,120 S610,80 650,110" fill="none" opacity="0.7" stroke="#38bdf8" stroke-dasharray="7 7" stroke-width="2"></path>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<g class="rb-a"><circle cx="66" cy="130" fill="#0e1622" r="38" stroke="#60a5fa" stroke-width="2"></circle><text fill="#60a5fa" font-size="17" font-weight="600" x="66" y="124">2.1</text><text fill="#dbeafe" font-size="15" x="66" y="144">phone</text></g>
+<g class="rb-a"><circle cx="186" cy="110" fill="#0e1622" r="38" stroke="#60a5fa" stroke-width="2"></circle><text fill="#60a5fa" font-size="17" font-weight="600" x="186" y="104">2.2</text><text fill="#dbeafe" font-size="15" x="186" y="124">position</text></g>
+<g class="rb-a"><circle cx="302" cy="120" fill="#0e1622" r="38" stroke="#60a5fa" stroke-width="2"></circle><text fill="#60a5fa" font-size="17" font-weight="600" x="302" y="114">2.3</text><text fill="#dbeafe" font-size="15" x="302" y="134">PID</text></g>
+<circle cx="418" cy="110" fill="#0e1b26" r="38" stroke="#38bdf8" stroke-width="2"></circle><text fill="#7dd3fc" font-size="17" font-weight="600" x="418" y="104">2.4</text><text fill="#bfe6ff" font-size="15" x="418" y="124">tasks</text>
+<circle cx="534" cy="120" fill="#0e1b26" r="38" stroke="#38bdf8" stroke-width="2"></circle><text fill="#7dd3fc" font-size="17" font-weight="600" x="534" y="114">2.5</text><text fill="#bfe6ff" font-size="15" x="534" y="134">data</text>
+<g filter="url(#t2-glow)"><circle cx="650" cy="110" fill="#0e1622" r="44" stroke="url(#t2-grad)" stroke-width="2.5"></circle></g>
+<text fill="#60a5fa" font-size="16" font-weight="700" x="650" y="104">2.6</text><text fill="#dbeafe" font-size="14" x="650" y="124">follower</text>
+<text fill="#bfdbfe" font-size="17" x="186" y="200">blue: command, measure, control</text>
+<text fill="#7dd3fc" font-size="17" x="500" y="200">cyan: organize and visualize</text>
+<text fill="#a8a8b3" font-size="14" x="360" y="246">each module works on its own; 2.3 (PID) is the most reusable</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-10 px-1"><strong class="text-blue-400">How to read this map:</strong> the first three steps (blue) give the robot remote control, an idea of where it is, and the ability to reach a target without oscillating. The next two (cyan) organize the code and show what happens inside. The final one, highlighted, brings everything together in the line follower. Already know Wi-Fi? Start with 2.2.</p>
+<!-- O QUE VOCÊ MONTA -->
+<section class="mb-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="md:col-span-2 bg-dark-800 rounded-xl border border-blue-500/30 p-5 sm:p-6">
+<h2 class="text-xl font-bold mb-3">🏁 What you’ll build in this track</h2>
+<p class="text-neutral-300 text-sm mb-3">The same rover from Track 1, now with wheel encoders, an IMU, and a line sensor bar underneath. Along the way, you’ll build a joystick controller in your phone’s browser, a tilt meter, the robot’s position in x, y, and θ, two wheels that move at the same speed, a data logger on a microSD card, and a live dashboard. At the end, the robot follows a black line through sharp turns and intersections, racing against the clock.</p>
+<ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Complete ESP32 code using the 3.x API</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>PID you can test on a simulated motor</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Safe stop when the signal drops</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>A direct foundation for micro-ROS in Track 4</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 sm:p-6">
+<h2 class="text-lg font-semibold text-primary mb-2">💡 Before you start</h2>
+<p class="text-neutral-300 text-sm">You need the rover from 1.6 up and running and know how to use the Serial Monitor. PID (2.3) and non-blocking code (2.4) run in Wokwi; the IMU and encoders require the kit components listed below.</p>
+</div>
+</section>
+<!-- MAPA DA TRILHA (obrigatório, #12) — lado direito = TIPO -->
+<section class="mb-12">
+<h2 class="text-2xl font-bold mb-6">Track map</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-blue-500/30 p-5 transition-all" href="#modulo-2-1"><div class="flex items-center justify-between mb-2"><span class="text-blue-400 font-bold text-sm">2.1</span><span class="text-xs text-neutral-500">Practice</span></div><h3 class="font-semibold mb-1 group-hover:text-blue-400 transition-colors">📱 Phone control: Wi-Fi and BLE</h3><p class="text-xs text-neutral-400">Joystick in the browser, stop if the signal drops</p></a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-blue-500/30 p-5 transition-all" href="#modulo-2-2"><div class="flex items-center justify-between mb-2"><span class="text-blue-400 font-bold text-sm">2.2</span><span class="text-xs text-neutral-500">Foundation</span></div><h3 class="font-semibold mb-1 group-hover:text-blue-400 transition-colors">🧭 IMU and encoders: know where you are</h3><p class="text-xs text-neutral-400">How far you turned, how far you traveled, where you are</p></a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-blue-500/30 p-5 transition-all" href="#modulo-2-3"><div class="flex items-center justify-between mb-2"><span class="text-blue-400 font-bold text-sm">2.3</span><span class="text-xs text-neutral-500">Foundation</span></div><h3 class="font-semibold mb-1 group-hover:text-blue-400 transition-colors">🎯 PID control in practice</h3><p class="text-xs text-neutral-400">Reach the target and stay there</p></a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-blue-500/30 p-5 transition-all" href="#modulo-2-4"><div class="flex items-center justify-between mb-2"><span class="text-blue-400 font-bold text-sm">2.4</span><span class="text-xs text-neutral-500">Practice</span></div><h3 class="font-semibold mb-1 group-hover:text-blue-400 transition-colors">🧵 Several tasks at once</h3><p class="text-xs text-neutral-400">Goodbye delay(), hello FreeRTOS</p></a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-blue-500/30 p-5 transition-all" href="#modulo-2-5"><div class="flex items-center justify-between mb-2"><span class="text-blue-400 font-bold text-sm">2.5</span><span class="text-xs text-neutral-500">Practice</span></div><h3 class="font-semibold mb-1 group-hover:text-blue-400 transition-colors">📈 Telemetry and data logging</h3><p class="text-xs text-neutral-400">See inside the robot as it moves</p></a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-blue-500/30 p-5 transition-all" href="#modulo-2-6"><div class="flex items-center justify-between mb-2"><span class="text-blue-400 font-bold text-sm">2.6</span><span class="text-xs text-neutral-500">Project</span></div><h3 class="font-semibold mb-1 group-hover:text-blue-400 transition-colors">🏁 Project: PID line follower</h3><p class="text-xs text-neutral-400">Sharp turns against the clock</p></a>
+</div>
+</section>
+<h2 class="text-2xl font-bold mb-6">Detailed content</h2>
+<!-- MÓDULO 2.1 -->
+<div class="module-card bg-dark-800 rounded-xl border border-dark-600 mb-6" id="modulo-2-1" style="scroll-margin-top:5rem">
+<div class="p-5 sm:p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2"><span class="text-blue-400 font-bold">2.1</span><div class="flex items-center gap-3"><span class="text-xs text-neutral-500">Practice</span><div aria-label="Module 2.1 progress" class="inema-ring" data-inema-meter="modulo:2-1" style="--ring-size:2.4rem"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div></div></div>
+<h3 class="text-2xl font-bold mb-2">📱 Phone control: Wi-Fi and BLE</h3>
+<p class="text-neutral-400 text-sm">Wi-Fi in station and access point modes, a page with buttons, low-latency WebSocket, BLE with a generic app, a command watchdog, and a browser joystick for driving the rover.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<div class="topic-item"><button aria-controls="t21-1" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span><span class="font-medium">Wi-Fi: station and access point modes</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t21-1"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">The two ways the ESP32 can use Wi-Fi: join your home network or create its own, with a sketch that tries one and falls back to the other.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">All wireless control and telemetry start here; choosing the right mode prevents a robot that won’t connect at a science fair.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">STA · AP · IP address · 2.4 GHz.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t21-2" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span><span class="font-medium">Web server on the ESP32 (page with buttons)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t21-2"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">The 3.x WebServer library serving a page with five buttons that send commands to the robot.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Any phone becomes a controller, with no app to install, and the same server can later adjust parameters.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Route · GET request · handleClient · fetch.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t21-3" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span><span class="font-medium">WebSocket: low-latency control</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t21-3"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">A channel that stays open between the browser and the ESP32, carrying short commands in both directions.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">A joystick and continuous telemetry need low latency; HTTP opens and closes a connection for every command.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Latency · open channel · two-way · WebSockets library.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t21-4" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span><span class="font-medium">BLE: control from your phone’s app</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t21-4"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Low-energy Bluetooth with the BLE library built into the esp32 package: one service, one characteristic, and a generic app.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Works without any network and uses the same pattern as wireless controllers and sensors.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Service · characteristic · UUID · advertising.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t21-5" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span><span class="font-medium">Security: password and stop if the connection is lost</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t21-5"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Password on the robot’s network and a command watchdog: if no new message arrives for 300 ms, the robot stops on its own.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">The signal drops; a robot that keeps going with its last “forward” command will crash. Fail-safe behavior is a rule for every real robot.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Watchdog · timeout · fail-safe · maximum speed on the robot.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t21-6" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span><span class="font-medium">Browser joystick for the rover</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t21-6"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Complete sketch: access point, joystick page, WebSocket, differential mixing, and watchdog, driving the real rover.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Every autonomous robot needs this manual mode for testing and recovery.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Differential mixing · pointer events · raw string · 10 sends per second.</p></div></div></div></div>
+</div>
+<div class="p-4 bg-dark-700/30 flex flex-wrap justify-start gap-3"><button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-700 rounded-lg transition-colors" onclick="openModal('modal-2-1')" type="button">View in Modal</button><a class="px-4 py-2 text-sm bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition-colors" href="modulo-2-1.html">View Full</a></div>
+</div>
+<!-- MÓDULO 2.2 -->
+<div class="module-card bg-dark-800 rounded-xl border border-dark-600 mb-6" id="modulo-2-2" style="scroll-margin-top:5rem">
+<div class="p-5 sm:p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2"><span class="text-blue-400 font-bold">2.2</span><div class="flex items-center gap-3"><span class="text-xs text-neutral-500">Foundation</span><div aria-label="Module 2.2 progress" class="inema-ring" data-inema-meter="modulo:2-2" style="--ring-size:2.4rem"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div></div></div>
+<h3 class="text-2xl font-bold mb-2">🧭 IMU and encoders: know where you are</h3>
+<p class="text-neutral-400 text-sm">Accelerometer and gyroscope, the MPU-6050 read directly through its registers, the complementary filter, quadrature encoders, and odometry in x, y, and θ, including the errors that accumulate.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<div class="topic-item"><button aria-controls="t22-1" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span><span class="font-medium">What an IMU measures (accelerometer and gyroscope)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t22-1"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">The chip that senses gravity and rotation on three axes, and the strength and weakness of each sensor.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Turning exactly 90°, sensing a ramp, and detecting a fall all depend on it.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">g · °/s · integration · drift · MPU-6050 vs. ICM-20948.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t22-2" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span><span class="font-medium">Reading the MPU-6050 over I2C</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t22-2"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Four wires and a sketch that wakes the sensor and reads 14 bytes of acceleration and gyroscope data, with no extra library.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">The same approach works for almost any I2C sensor you use later.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Register · address 0x68 · burst read · unit conversion.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t22-3" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span><span class="font-medium">Angle with a complementary filter</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t22-3"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Combine the gyroscope (fast, drifts) and accelerometer (slow, noisy) to get a stable tilt reading, with three curves in the Serial Plotter.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">This is the simplest form of sensor fusion and a first step toward the Kalman filter.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">atan2 · gyroscope offset · α = 0,98 · fixed dt.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t22-4" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span><span class="font-medium">Encoders: counting wheel rotations</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t22-4"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">A disk or magnet that generates pulses; two quadrature channels give you direction; an interrupt counts every pulse.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">The wheel’s actual speed is the PID input and the basis for odometry.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Pulses per revolution · quadrature · ISR with IRAM_ATTR · volatile.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t22-5" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span><span class="font-medium">Odometry: from pulses to position (x, y, θ)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t22-5"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Five lines of calculations add up how far each wheel has traveled and turn that into position and direction.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Returning to base and moving to a point require knowing where you are; this is what micro-ROS publishes in Track 4.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Pose · meters per pulse · distance between wheels · radians.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t22-6" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span><span class="font-medium">Errors that add up and how to manage them</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t22-6"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Why the estimated position drifts from the real one, and a four-step calibration that reduces the error.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Shows when odometry is enough and when the robot needs a line, camera, or LiDAR to correct itself.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Accumulated error · systematic error · slippage · external reference.</p></div></div></div></div>
+</div>
+<div class="p-4 bg-dark-700/30 flex flex-wrap justify-start gap-3"><button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-700 rounded-lg transition-colors" onclick="openModal('modal-2-2')" type="button">View in Modal</button><a class="px-4 py-2 text-sm bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition-colors" href="modulo-2-2.html">View Full</a></div>
+</div>
+<!-- MÓDULO 2.3 -->
+<div class="module-card bg-dark-800 rounded-xl border border-dark-600 mb-6" id="modulo-2-3" style="scroll-margin-top:5rem">
+<div class="p-5 sm:p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2"><span class="text-blue-400 font-bold">2.3</span><div class="flex items-center gap-3"><span class="text-xs text-neutral-500">Foundation</span><div aria-label="Module 2.3 progress" class="inema-ring" data-inema-meter="modulo:2-3" style="--ring-size:2.4rem"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div></div></div>
+<h3 class="text-2xl font-bold mb-2">🎯 PID control in practice</h3>
+<p class="text-neutral-400 text-sm">Why on/off control oscillates, the role of P, I, and D, a complete PID tested on a simulated motor, a method for tuning, anti-windup, and keeping two wheels at the same speed.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<div class="topic-item"><button aria-controls="t23-1" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span><span class="font-medium">Why on/off control isn’t enough</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t23-1"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">The back-and-forth motion of a system that only knows “all or nothing,” and the idea of correcting in proportion to the error.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">This is the problem PID solves in cars, drones, 3D printers, and robot arms.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Target · measurement · error · closed loop.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t23-2" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span><span class="font-medium">P, I, and D explained with a car on a track</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t23-2"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Proportional steering, correcting for constant wind, and braking before you overshoot: the three letters explained with an analogy and three curves.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Once you understand what each gain does, you can tune by reading the graph instead of guessing.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Kp · Ki · Kd · overshoot · steady-state error.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t23-3" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span><span class="font-medium">PID in code (fixed-time loop)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t23-3"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">A complete PID at 100 Hz controlling a simulated motor, with gains adjustable through the Serial Monitor, running in Wokwi.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">This is the structure you can reuse for the line follower and every control system you build later.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Fixed period · micros() · simulated plant · Serial Plotter.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t23-4" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span><span class="font-medium">Step-by-step tuning (Ziegler-Nichols and by hand)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t23-4"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">The P → I → D order for manual tuning, and the Ziegler-Nichols table based on the critical gain.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">A poorly tuned PID oscillates and heats up the motor; with a method, a few tests are enough.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Ku · Tu · one gain at a time · test on the floor.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t23-5" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span><span class="font-medium">Windup, saturation, and derivative filtering</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t23-5"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">The three pitfalls of real-world PID and the four lines of code that fix them.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">This is the difference between a PID that works in simulation and one that works on the robot.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Saturation · anti-windup · derivative of the measurement · low-pass filter.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t23-6" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span><span class="font-medium">Keeping both wheels at the same speed with PID</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t23-6"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">One PI controller per wheel, the same RPM target, and each reading its own encoder: the rover drives straight.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">A stable foundation for the line follower and for ROS 2 /cmd_vel.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">One PID per wheel · measured RPM · PI is enough · reset the integral when stopping.</p></div></div></div></div>
+</div>
+<div class="p-4 bg-dark-700/30 flex flex-wrap justify-start gap-3"><button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-700 rounded-lg transition-colors" onclick="openModal('modal-2-3')" type="button">View in Modal</button><a class="px-4 py-2 text-sm bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition-colors" href="modulo-2-3.html">View Full</a></div>
+</div>
+<!-- MÓDULO 2.4 -->
+<div class="module-card bg-dark-800 rounded-xl border border-dark-600 mb-6" id="modulo-2-4" style="scroll-margin-top:5rem">
+<div class="p-5 sm:p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2"><span class="text-blue-400 font-bold">2.4</span><div class="flex items-center gap-3"><span class="text-xs text-neutral-500">Practice</span><div aria-label="Module 2.4 progress" class="inema-ring" data-inema-meter="modulo:2-4" style="--ring-size:2.4rem"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div></div></div>
+<h3 class="text-2xl font-bold mb-2">🧵 Several tasks at once</h3>
+<p class="text-neutral-400 text-sm">Why delay() stops the robot, non-blocking tasks with millis(), state machines, FreeRTOS tasks on both cores, queues and semaphores, and code organized into files and classes.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<div class="topic-item"><button aria-controls="t24-1" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span><span class="font-medium">Why delay() stops the robot</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t24-1"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">What happens to sensors, PID, and communication while the program is paused in a delay().</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">A robot that is “blind” for half a second hits an obstacle before it notices it.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Blocking code · response time · main loop.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t24-2" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span><span class="font-medium">millis() and non-blocking tasks</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t24-2"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Give each task its own clock: read a sensor every 20 ms, blink an LED every 500 ms, and send telemetry every 100 ms.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">This is the simplest way to do several things “at the same time” in a single loop.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Periodic task · millis() rollover · cooperative scheduler.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t24-3" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span><span class="font-medium">A real state machine</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t24-3"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Draw the states, events, and transitions before writing the code, with entry and exit actions.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Complex behavior without nested if statements; easy to test and change.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">State · event · transition · enum class.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t24-4" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span><span class="font-medium">FreeRTOS on the ESP32: tasks and cores</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t24-4"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">The real-time operating system that already runs inside the ESP32: create tasks with priorities and choose which core each one runs on.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Motor control stays on schedule even while Wi-Fi and telemetry are using the processor.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Task · priority · core · vTaskDelayUntil.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t24-5" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span><span class="font-medium">Queues and semaphores: tasks communicating</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t24-5"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">How one task safely passes data to another without both changing the same variable at the same time.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Prevents the hardest errors to track down: corrupted values that show up once an hour.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Queue · mutex · semaphore · race condition.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t24-6" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span><span class="font-medium">Organizing code into files and classes</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t24-6"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Separate motors, sensors, and control into .h/.cpp tabs and small classes within the sketch.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">The line follower from 2.6 and the robot from Track 3 can grow without turning into a thousand-line file.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Class · header file (.h) · single responsibility · reusability.</p></div></div></div></div>
+</div>
+<div class="p-4 bg-dark-700/30 flex flex-wrap justify-start gap-3"><button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-700 rounded-lg transition-colors" onclick="openModal('modal-2-4')" type="button">View in Modal</button><a class="px-4 py-2 text-sm bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition-colors" href="modulo-2-4.html">View Full</a></div>
+</div>
+<!-- MÓDULO 2.5 -->
+<div class="module-card bg-dark-800 rounded-xl border border-dark-600 mb-6" id="modulo-2-5" style="scroll-margin-top:5rem">
+<div class="p-5 sm:p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2"><span class="text-blue-400 font-bold">2.5</span><div class="flex items-center gap-3"><span class="text-xs text-neutral-500">Practice</span><div aria-label="Module 2.5 progress" class="inema-ring" data-inema-meter="modulo:2-5" style="--ring-size:2.4rem"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div></div></div>
+<h3 class="text-2xl font-bold mb-2">📈 Telemetry and data logging</h3>
+<p class="text-neutral-400 text-sm">What to measure and how often, a live graph in the Serial Plotter, logging to a CSV file on the microSD card, MQTT over the network, a dashboard in a browser or in Node-RED/Grafana, and analysis in Python.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<div class="topic-item"><button aria-controls="t25-1" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span><span class="font-medium">What to measure and how often</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t25-1"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Choose the variables that explain the robot’s behavior and the right rate for each one.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Measuring everything overwhelms the processor; measuring too little doesn’t explain the failure.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Sampling rate · timestamp · state variable.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t25-2" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span><span class="font-medium">Live graph in the Serial Plotter</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t25-2"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">The "name:value" format that Arduino IDE 2 turns into curves, with several variables displayed together.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">It’s the fastest tool for tuning PID and finding noise.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Label · scale · time window.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t25-3" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span><span class="font-medium">Log to a microSD card (CSV)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t25-3"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Record data in a comma-separated text file, without a cable, while the robot moves for real.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">A robot far from the computer still needs to report what happened.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">SPI · CSV file · flush · FAT32 card.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t25-4" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span><span class="font-medium">MQTT: publish telemetry over the network</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t25-4"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">The lightweight protocol for publishing and subscribing to messages by topic, with a broker on the PC or Raspberry Pi.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Multiple robots and dashboards communicate over the same channel; ROS 2 expands on this idea.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Broker · topic · publish · subscribe.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t25-5" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span><span class="font-medium">Dashboard in a browser or in Node-RED/Grafana</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t25-5"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">View telemetry in real time: a page served by the ESP32 itself or a dashboard built in Node-RED or Grafana.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Seeing the robot "from the inside" helps you debug and present the project.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Dashboard · time series · WebSocket · indicator.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t25-6" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span><span class="font-medium">Analyze the log in Python (pandas + chart)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t25-6"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Open the CSV on your computer, calculate averages and errors, and plot before-and-after results.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Use the numbers to decide whether the adjustment improved the robot, not just your impression.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">pandas · DataFrame · matplotlib · before-and-after comparison.</p></div></div></div></div>
+</div>
+<div class="p-4 bg-dark-700/30 flex flex-wrap justify-start gap-3"><button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-700 rounded-lg transition-colors" onclick="openModal('modal-2-5')" type="button">View in Modal</button><a class="px-4 py-2 text-sm bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition-colors" href="modulo-2-5.html">View Full</a></div>
+</div>
+<!-- MÓDULO 2.6 -->
+<div class="module-card bg-dark-800 rounded-xl border border-dark-600 mb-6" id="modulo-2-6" style="scroll-margin-top:5rem">
+<div class="p-5 sm:p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2"><span class="text-blue-400 font-bold">2.6</span><div class="flex items-center gap-3"><span class="text-xs text-neutral-500">Project</span><div aria-label="Module 2.6 progress" class="inema-ring" data-inema-meter="modulo:2-6" style="--ring-size:2.4rem"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div></div></div>
+<h3 class="text-2xl font-bold mb-2">🏁 Project: PID line follower</h3>
+<p class="text-neutral-400 text-sm">Track and sensor bar, line error calculated with a weighted average, steering PID applied to the base speed, automatic calibration, telemetry-based tuning, and challenges against the clock.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<div class="topic-item"><button aria-controls="t26-1" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span><span class="font-medium">The track and sensor bar</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t26-1"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Build a track with black electrical tape and position the 5-sensor IR bar at the right height.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Sensor height and spacing determine half of a line follower’s performance.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">TCRT5000 / QTR · sensor height · track contrast.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t26-2" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span><span class="font-medium">Calculate the line error (weighted average)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t26-2"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Turn five readings into a single number: the line’s position relative to the center of the robot.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">A continuous error, rather than "left/right," is what makes a smooth PID possible.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Weighted average · line position · line lost.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t26-3" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span><span class="font-medium">Steering PID added to the base speed</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t26-3"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Add the PID correction to one wheel and subtract it from the other, on top of a base speed.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">This is the architecture used by almost every competition line follower.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Base speed · correction · per-wheel saturation.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t26-4" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span><span class="font-medium">Automatic sensor calibration</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t26-4"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">The robot turns over the line during the first few seconds and learns the minimum and maximum for each sensor.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Ambient light and track conditions vary from place to place; calibrating on the spot saves you from rewriting the code.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Minimum and maximum · normalization · EEPROM/Preferences.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t26-5" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span><span class="font-medium">Telemetry-based tuning (before/after)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t26-5"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">Record the line error for one lap, change one gain, record it again, and compare the graphs.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Turn "it seems better" into "the average error dropped by half."</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Average error · lap time · one adjustment at a time.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t26-6" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span><span class="font-medium">Challenges: sharp turns, intersections, stopwatch</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t26-6"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-blue-400 font-semibold">What it is:</span><p class="text-neutral-300 text-sm">More difficult tracks, recognizing intersections and a lost line, and timing the lap.</p></div><div><span class="text-blue-400 font-semibold">Why learn this:</span><p class="text-neutral-300 text-sm">Prepares you for competitions such as OBR and for the vision-based robot in Track 3.</p></div><div><span class="text-blue-400 font-semibold">Key concepts:</span><p class="text-neutral-300 text-sm">Adaptive speed · last-error memory · timed lap.</p></div></div></div></div>
+</div>
+<div class="p-4 bg-dark-700/30 flex flex-wrap justify-start gap-3"><button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-700 rounded-lg transition-colors" onclick="openModal('modal-2-6')" type="button">View in Modal</button><a class="px-4 py-2 text-sm bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition-colors" href="modulo-2-6.html">View Full</a></div>
+</div>
+<!-- MAPA DE PINOS DA TRILHA -->
+<section class="mt-12 mb-12" id="pinos" style="scroll-margin-top:5rem">
+<h2 class="text-2xl font-bold mb-2">📌 Track pin map</h2>
+<p class="text-neutral-400 mb-5">All of Track 2 uses the same map. It differs slightly from the Track 1 rover: the right motor moves from pins 33/32/4 to 14/16/17, and the driver’s STBY is connected directly to 3V3. This frees up ADC1 pins for the line sensors and pins 18/19 for the encoders or microSD.</p>
+<div class="overflow-x-auto bg-dark-800 rounded-xl border border-dark-600 mb-5">
+<table class="w-full text-sm"><thead class="bg-dark-700"><tr><th class="text-left p-3">Part</th><th class="text-left p-3">ESP32 pin</th><th class="text-left p-3">Modules</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">Left motor (TB6612FNG)</td><td class="p-3 font-mono text-xs">PWMA 25, AIN1 26, AIN2 27</td><td class="p-3">2.1, 2.3, 2.4, 2.6</td></tr>
+<tr><td class="p-3">Right motor</td><td class="p-3 font-mono text-xs">PWMB 14, BIN1 16, BIN2 17</td><td class="p-3">2.1, 2.3, 2.4, 2.6</td></tr>
+<tr><td class="p-3">Driver STBY</td><td class="p-3 font-mono text-xs">3V3</td><td class="p-3">all</td></tr>
+<tr><td class="p-3">Encoders</td><td class="p-3 font-mono text-xs">left 18/19, right 34/35</td><td class="p-3">2.2, 2.3</td></tr>
+<tr><td class="p-3">HC-SR04</td><td class="p-3 font-mono text-xs">TRIG 13, ECHO 4 (divider to 3.3 V)</td><td class="p-3">2.4</td></tr>
+<tr><td class="p-3">microSD</td><td class="p-3 font-mono text-xs">CS 5, SCK 18, MISO 19, MOSI 23</td><td class="p-3">2.5, 2.6</td></tr>
+<tr><td class="p-3">Line sensors</td><td class="p-3 font-mono text-xs">36, 39, 34, 35, 32 (ADC1 only)</td><td class="p-3">2.6</td></tr>
+</tbody></table>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5"><h3 class="font-bold text-red-400 mb-2">✗ What can’t be connected at the same time</h3><p class="text-sm text-neutral-300">The encoders and microSD share pins 18 and 19, and the right encoder uses 34/35, which are also line sensor pins. So each project connects only what it uses: the PID project in 2.3 uses encoders without microSD; the line follower in 2.6 uses sensors and microSD without encoders.</p></div>
+</section>
+<!-- KIT DA TRILHA -->
+<section class="mt-12 mb-12" id="kit" style="scroll-margin-top:5rem">
+<h2 class="text-2xl font-bold mb-2">🧰 Trail kit</h2>
+<p class="text-neutral-400 text-sm mb-6">Parts to add to the Track 1 rover. Approximate range of <strong class="text-neutral-200">R$ 150 a R$ 350</strong> for the extra set (Oct/2026; check before buying: prices vary by store, shipping, and exchange rate).</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="text-blue-400 font-semibold mb-1">🧭 IMU</div><p class="text-sm text-neutral-300">MPU-6050 module (GY-521), the cheapest and best-documented option. Alternative with a compass: ICM-20948 (9-axis), more expensive.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="text-blue-400 font-semibold mb-1">⚙️ Motors with encoders</div><p class="text-sm text-neutral-300">Pair of N20 motors with magnetic encoders (two channels) and wheels, or the T1 TT motors with encoder disks and optical sensors.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="text-blue-400 font-semibold mb-1">〰️ Line sensors</div><p class="text-sm text-neutral-300">Bar with 5 infrared sensors (TCRT5000) or a QTR bar, with analog output, for the line follower in 2.6.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="text-blue-400 font-semibold mb-1">💾 Logging</div><p class="text-sm text-neutral-300">microSD card reader module (SPI, 3.3 V) and an 8 to 32 GB card formatted as FAT32.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="text-blue-400 font-semibold mb-1">🖥️ Optional</div><p class="text-sm text-neutral-300">SSD1306 OLED display (I2C, 0.96") to show status, gains, and lap time on the robot itself.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="text-blue-400 font-semibold mb-1">🏁 Track</div><p class="text-sm text-neutral-300">19 mm black electrical tape on white poster board, light MDF, or a smooth floor.</p></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-5"><h3 class="font-bold text-blue-400 mb-2">✓ Worth it</h3><p class="text-sm text-neutral-300">Two-channel encoders (they tell you the direction of rotation) and firm rubber wheels, which slip less and make odometry more reliable.</p></div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5"><h3 class="font-bold text-red-400 mb-2">✗ Don’t buy these for this trail</h3><p class="text-sm text-neutral-300">Single-bit digital line sensors (they only say “line: yes/no”) and 5 V IMU modules without a regulator.</p></div>
+</div>
+</section>
+<!-- Navegação entre trilhas (botões à esquerda) -->
+<div class="flex flex-wrap justify-start gap-3 mt-10">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="../../index.html">← Course home</a>
+<a class="inline-flex items-center px-5 py-3 bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors" href="modulo-2-1.html">Start with module 2.1 →</a>
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="../trilha3/index.html">Next track: Vision and AI →</a>
+</div>
+</div>
+</main>
+<!-- MODAIS (iframe com a página completa do módulo — #7) -->
+<div class="modal hidden fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-2-1" onclick="if(event.target === this) closeModal()"><div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600"><div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0"><div class="flex items-center gap-3"><span class="text-blue-400 font-bold">2.1</span><span class="font-semibold">Control from your phone: Wi-Fi and BLE</span></div><button aria-label="Close" class="text-neutral-400 hover:text-neutral-100 text-2xl leading-none" onclick="closeModal()" type="button">×</button></div><iframe class="flex-1 w-full rounded-b-xl" data-src="modulo-2-1.html" title="Module 2.1"></iframe></div></div>
+<div class="modal hidden fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-2-2" onclick="if(event.target === this) closeModal()"><div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600"><div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0"><div class="flex items-center gap-3"><span class="text-blue-400 font-bold">2.2</span><span class="font-semibold">IMU and encoders: knowing where you are</span></div><button aria-label="Close" class="text-neutral-400 hover:text-neutral-100 text-2xl leading-none" onclick="closeModal()" type="button">×</button></div><iframe class="flex-1 w-full rounded-b-xl" data-src="modulo-2-2.html" title="Module 2.2"></iframe></div></div>
+<div class="modal hidden fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-2-3" onclick="if(event.target === this) closeModal()"><div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600"><div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0"><div class="flex items-center gap-3"><span class="text-blue-400 font-bold">2.3</span><span class="font-semibold">PID control in practice</span></div><button aria-label="Close" class="text-neutral-400 hover:text-neutral-100 text-2xl leading-none" onclick="closeModal()" type="button">×</button></div><iframe class="flex-1 w-full rounded-b-xl" data-src="modulo-2-3.html" title="Module 2.3"></iframe></div></div>
+<div class="modal hidden fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-2-4" onclick="if(event.target === this) closeModal()"><div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600"><div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0"><div class="flex items-center gap-3"><span class="text-blue-400 font-bold">2.4</span><span class="font-semibold">Multiple tasks at once</span></div><button aria-label="Close" class="text-neutral-400 hover:text-neutral-100 text-2xl leading-none" onclick="closeModal()" type="button">×</button></div><iframe class="flex-1 w-full rounded-b-xl" data-src="modulo-2-4.html" title="Module 2.4"></iframe></div></div>
+<div class="modal hidden fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-2-5" onclick="if(event.target === this) closeModal()"><div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600"><div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0"><div class="flex items-center gap-3"><span class="text-blue-400 font-bold">2.5</span><span class="font-semibold">Telemetry and data logging</span></div><button aria-label="Close" class="text-neutral-400 hover:text-neutral-100 text-2xl leading-none" onclick="closeModal()" type="button">×</button></div><iframe class="flex-1 w-full rounded-b-xl" data-src="modulo-2-5.html" title="Module 2.5"></iframe></div></div>
+<div class="modal hidden fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-2-6" onclick="if(event.target === this) closeModal()"><div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600"><div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0"><div class="flex items-center gap-3"><span class="text-blue-400 font-bold">2.6</span><span class="font-semibold">Project: PID line follower</span></div><button aria-label="Close" class="text-neutral-400 hover:text-neutral-100 text-2xl leading-none" onclick="closeModal()" type="button">×</button></div><iframe class="flex-1 w-full rounded-b-xl" data-src="modulo-2-6.html" title="Module 2.6"></iframe></div></div>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic com um aberto por card, tema, modal com iframe preguiçoso) -->
+<script>
+function toggleTopic(button) {
+  var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'), card = button.closest('.module-card');
+  if (card) card.querySelectorAll('.topic-explanation.active').forEach(function (o) { if (o !== exp) { o.classList.remove('active'); var b = o.closest('.topic-item').querySelector('button[aria-controls]'); if (b) b.setAttribute('aria-expanded', 'false'); } });
+  var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+}
+function openModal(id) { var m = document.getElementById(id); if (!m) return; var f = m.querySelector('iframe[data-src]'); if (f && !f.getAttribute('src')) f.setAttribute('src', f.getAttribute('data-src')); m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init(); }
+</script>
+</body>
+</html>

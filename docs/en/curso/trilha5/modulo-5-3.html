@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 5.3 · SO-101 Arm and LeRobot | Robotics from Zero to Expert</title>
+<meta content="SO-101 arm with LeRobot: Feetech STS3215 servos, IDs and calibration, virtual environment installation, leader/follower teleoperation, cameras, and safety with a moving arm." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha5/modulo-5-3.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha5/modulo-5-3.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha5/modulo-5-3.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha5/modulo-5-3.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha5/modulo-5-3.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha5/modulo-5-3.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-5-3.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha5/modulo-5-3.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T5 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a aria-current="page" class="nav-trail text-teal-400 bg-teal-500/10" href="index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="5-3" data-inema-track="5" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-teal-400" href="../../index.html">Home</a><span aria-hidden="true">/</span>
+<a class="hover:text-teal-400" href="index.html">Track 5</a><span aria-hidden="true">/</span>
+<span class="text-teal-400">Module 5.3</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-teal-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-teal-500/20 text-teal-400 text-xs font-semibold rounded-full mb-4">MODULE 5.3 · HANDS-ON</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🦾 SO-101 arm and LeRobot</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">O <strong class="text-neutral-100">SO-101</strong> is an open arm made from 3D-printed parts and Feetech STS3215 servos. It comes as a pair: one <strong class="text-neutral-100">leader</strong> that you move by hand and one <strong class="text-neutral-100">follower</strong> that copies. In this module, you configure the servos, calibrate them, install Hugging Face’s <strong class="text-teal-400">LeRobot</strong> and perform your first teleoperation, with cameras and safety rules.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">Advanced</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">Practice</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">SO-101 pair</div><div class="text-xs text-neutral-400">Hardware</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 5.3 progress" class="inema-ring" data-inema-meter="modulo:5-3"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:5-3"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-1">1. SO-101 and LeRobot</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-2">2. IDs and calibration</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-3">3. Install LeRobot</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-4">4. Teleoperation</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-5">5. Cameras and workspace</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-6">6. Safety</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5 mb-10">
+<h3 class="font-bold text-red-400 mb-2">⚠️ Before turning on the arm</h3>
+<p class="text-neutral-300 text-sm">A servo arm can pinch a finger, knock over a cup, and hit anyone nearby. Work at a clear table with a radius greater than the arm’s reach, keep a switch for the servo power supply within reach, and keep children and animals out of the area. Topic 6 goes into the routine in detail.</p>
+</div>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-5-3#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🤝 The SO-101 arm and the LeRobot project</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-3-t1-p1">O <strong class="text-teal-400">LeRobot</strong> is an open library from Hugging Face, built with Python and PyTorch. It brings together everything you need to teach a robot by demonstration: control motors, read cameras, record episodes, train policies, and run them on the real arm. The <strong class="text-neutral-100">SO-101</strong> is the project’s reference arm: six servos on each arm, parts you can print or buy ready-made, and hobby-level cost. With the leader/follower pair, you demonstrate the task by moving the leader, and the follower repeats it.</p>
+<div class="bg-dark-800 border border-teal-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-teal-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m5-3-t1-p2">Each joint that rotates is a <strong>degree of freedom</strong>: the SO-101 has five joints plus the gripper. The <strong>serial bus servo</strong> (the STS3215) is a motor with gearing, a position sensor, and a small controller inside; several share the same wires, and each one responds only to its own number (ID). <strong>Teleoperation</strong> means controlling the robot remotely, here using the leader arm. A <strong>policy</strong> is the trained program that decides how to move based on the cameras (module 5.4).</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="SO-101 pair: on the left, the leader arm, which you move by hand; on the right, the follower arm, which copies its pose. Both have five joints and a gripper, and connect to the computer over USB." class="w-full h-auto" role="img" viewbox="0 0 640 320">
+<defs><pattern height="32" id="m53-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.12" r="1.3"></circle></pattern><marker id="m53-ah1" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#2dd4bf"></path></marker><filter height="180%" id="m53-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs><rect fill="url(#m53-grid1)" height="320" width="640"></rect><g fill="none" stroke-linecap="round"><path d="M110,250 L110,200 L160,130 L230,120 L250,150" opacity="0.85" stroke="#38bdf8" stroke-width="10"></path>
+<g filter="url(#m53-glow1)"><path d="M470,250 L470,200 L520,130 L590,120 L610,150" stroke="#2dd4bf" stroke-width="12"></path></g></g><rect fill="#0e1b26" height="20" rx="4" stroke="#38bdf8" stroke-width="2" width="80" x="70" y="250"></rect><rect fill="#0b2421" height="20" rx="4" stroke="#2dd4bf" stroke-width="2" width="80" x="430" y="250"></rect>
+<g fill="#0c0c10" stroke-width="2.5"><circle cx="110" cy="230" r="9" stroke="#38bdf8"></circle><circle cx="110" cy="200" r="9" stroke="#38bdf8"></circle><circle cx="160" cy="130" r="9" stroke="#38bdf8"></circle><circle cx="230" cy="120" r="9" stroke="#38bdf8"></circle><circle cx="244" cy="137" r="7" stroke="#38bdf8"></circle><circle cx="470" cy="230" r="9" stroke="#2dd4bf"></circle><circle cx="470" cy="200" r="9" stroke="#2dd4bf"></circle><circle cx="520" cy="130" r="9" stroke="#2dd4bf"></circle><circle cx="590" cy="120" r="9" stroke="#2dd4bf"></circle><circle cx="604" cy="137" r="7" stroke="#2dd4bf"></circle></g>
+<g font-family="Inter,sans-serif" text-anchor="middle"><text fill="#7dd3fc" font-size="18" font-weight="600" x="150" y="40">LEADER</text><text fill="#bfe6ff" font-size="15" x="150" y="62">you move by hand</text><text fill="#2dd4bf" font-size="18" font-weight="600" x="520" y="40">FOLLOWER</text><text fill="#ccfbf1" font-size="15" x="520" y="62">copies the pose</text><rect fill="#0b2421" height="46" rx="10" stroke="#2dd4bf" stroke-width="2" width="110" x="265" y="230"></rect><text fill="#ccfbf1" font-size="15" x="320" y="259">computer</text>
+<text fill="#a8a8b3" font-size="14" x="320" y="306">6 STS3215 servos on each arm, one USB cable each</text></g><g fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M150,262 L258,253" marker-end="url(#m53-ah1)"></path><path d="M375,253 L423,260" marker-end="url(#m53-ah1)"></path></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> The circles are the joints (five plus the gripper at the end). The cyan arm is the leader: you hold it, and it only measures positions. The teal arm, shown glowing, is the follower: it has motors and copies the pose. The computer in between reads one and sends commands to the other, dozens of times per second.</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🖨️ Parts</div><p class="text-sm text-neutral-400">Print files are available in the SO-101 repository; kits with the parts ready-made are also available. Standard PLA works.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">⚙️ Servos</div><p class="text-sm text-neutral-400">STS3215 servos on both arms. On the leader, some joints use different gear ratios to make them easier to move: follow the parts list.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🔌 Adapter board</div><p class="text-sm text-neutral-400">One per arm: it converts the computer’s USB connection to the servos’ serial bus and connects to the power supply.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🔋 Power supply</div><p class="text-sm text-neutral-400">STS3215 servos come in versions for different voltages. Check your servos’ voltage before connecting the kit’s power supply.</p></div>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-3-t1-p3">The SO-101 and LeRobot combination is currently the shortest and cheapest path from “I have an arm” to “the arm has learned a task.” Everything you do here (ports, IDs, calibration) is the foundation for modules 5.4, 5.5, and 5.6.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Degrees of freedom</div><div class="text-xs text-neutral-400">each rotating joint</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Leader / follower</div><div class="text-xs text-neutral-400">you move it, it copies</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">STS3215</div><div class="text-xs text-neutral-400">serial servo with sensor</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">LeRobot</div><div class="text-xs text-neutral-400">from motor to policy</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-5-3#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🔧 Assemble, configure IDs, and calibrate the servos</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-3-t2-p1">Every STS3215 comes from the factory with the same ID. Since the six servos on an arm share the same wires, each one needs a <strong class="text-teal-400">different ID</strong> before final assembly: from 1 at the base to 6 at the gripper. Once assembled, <strong class="text-teal-400">calibration</strong> teaches the software where the midpoint and limits of each joint are, so the leader and follower speak the same position “language.”</p>
+<figure class="fig mb-3">
+<svg aria-label="Serial bus: the computer connects over USB to the adapter board, which powers and communicates with six daisy-chained servos, IDs 1 to 6: base, shoulder, elbow, wrist, wrist rotation, and gripper." class="w-full h-auto" role="img" viewbox="0 0 640 250">
+<defs><pattern height="32" id="m53-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.12" r="1.3"></circle></pattern></defs><rect fill="url(#m53-grid2)" height="250" width="640"></rect><path d="M110,100 L610,100" opacity="0.8" stroke="#2dd4bf" stroke-width="3"></path><g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0e1b26" height="60" rx="10" stroke="#38bdf8" stroke-width="2" width="95" x="15" y="70"></rect><text fill="#bfe6ff" font-size="15" x="62" y="98">board</text><text fill="#7dd3fc" font-size="14" x="62" y="118">USB + power supply</text><g class="rb-a"><rect fill="#0b2421" height="44" rx="8" stroke="#2dd4bf" stroke-width="2" width="66" x="130" y="78"></rect><text fill="#2dd4bf" font-size="17" font-weight="700" x="163" y="106">1</text></g><g class="rb-a"><rect fill="#0b2421" height="44" rx="8" stroke="#2dd4bf" stroke-width="2" width="66" x="210" y="78"></rect><text fill="#2dd4bf" font-size="17" font-weight="700" x="243" y="106">2</text></g><g class="rb-a"><rect fill="#0b2421" height="44" rx="8" stroke="#2dd4bf" stroke-width="2" width="66" x="290" y="78"></rect><text fill="#2dd4bf" font-size="17" font-weight="700" x="323" y="106">3</text></g>
+<rect fill="#0b2421" height="44" rx="8" stroke="#2dd4bf" stroke-width="2" width="66" x="370" y="78"></rect><text fill="#2dd4bf" font-size="17" font-weight="700" x="403" y="106">4</text><rect fill="#0b2421" height="44" rx="8" stroke="#2dd4bf" stroke-width="2" width="66" x="450" y="78"></rect><text fill="#2dd4bf" font-size="17" font-weight="700" x="483" y="106">5</text><rect fill="#0b2421" height="44" rx="8" stroke="#2dd4bf" stroke-width="2" width="66" x="530" y="78"></rect><text fill="#2dd4bf" font-size="17" font-weight="700" x="563" y="106">6</text><text fill="#ccfbf1" font-size="14" x="163" y="150">base</text><text fill="#ccfbf1" font-size="14" x="243" y="150">shoulder</text><text fill="#ccfbf1" font-size="14" x="323" y="150">elbow</text>
+<text fill="#ccfbf1" font-size="14" x="403" y="150">wrist</text><text fill="#ccfbf1" font-size="14" x="483" y="150">turn</text><text fill="#ccfbf1" font-size="14" x="563" y="150">gripper</text><text fill="#7dd3fc" font-size="15" x="320" y="196">same wires for all: each servo only responds to its own ID</text><text fill="#a8a8b3" font-size="14" x="320" y="222">configure one servo at a time, by itself on the cable</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> The teal line is the bus: one data wire, plus power, that runs through all the servos in a chain. The number in each box is the ID; below it is the corresponding joint. If two servos have the same ID, both respond together and the arm goes haywire. That’s why you configure them one at a time.</p>
+<div class="bg-dark-800 border border-teal-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-teal-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m5-3-t2-p2">The commands below use LeRobot, which you’ll install in topic 3. If you haven’t installed it yet, read this topic to understand the order, complete topic 3, then come back. The <strong>port</strong> is the name the system gives each arm’s USB cable: <span class="font-mono text-xs">/dev/ttyACM0</span> on Linux, <span class="font-mono text-xs">/dev/tty.usbmodem...</span> on macOS, <span class="font-mono text-xs">COM5</span> on Windows.</p>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-4">Step by step</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Find each arm’s port</h4><p class="text-neutral-300 text-sm"><span class="font-mono text-xs">lerobot-find-port</span> asks you to disconnect the cable and shows which port disappeared. Repeat for the other arm and write down both ports.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Set the IDs, one servo at a time</h4><p class="text-neutral-300 text-sm"><span class="font-mono text-xs">lerobot-setup-motors</span> asks you to connect just one servo to the cable, sets its ID, then moves on to the next, starting with the gripper. Mark each servo with a pen.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Assemble the arms</h4><p class="text-neutral-300 text-sm">Follow the official SO-101 assembly guide, joint by joint, with the IDs in the right positions. Don’t overtighten screws in printed plastic.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">4</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Calibrate the follower and leader</h4><p class="text-neutral-300 text-sm"><span class="font-mono text-xs">lerobot-calibrate</span> asks you to place the arm at the midpoint of its range, then move each joint from one limit to the other. Follow the on-screen instructions; the result is saved under the <span class="font-mono text-xs">id</span> you assign to the arm.</p></div></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-3-t2-p3"><strong class="text-neutral-100">Goal:</strong> the commands for steps 1, 2, and 4, using the syntax that worked in the INEMA robotica-real2sim guide with LeRobot 0.6.1 (Oct 2026). Flags vary between versions: check <span class="font-mono text-xs">--help</span> and the current documentation.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal</span></div>
+<pre><code>source ~/lerobot-env/bin/activate        <span class="c"># the environment from topic 3</span>
+lerobot-find-port                       <span class="c"># disconnect and reconnect when prompted: this shows the port</span>
+
+<span class="c"># servo IDs (one servo at a time on the cable; follow the on-screen instructions)</span>
+lerobot-setup-motors --robot.type=so101_follower --robot.port=/dev/ttyACM0
+lerobot-setup-motors --teleop.type=so101_leader  --teleop.port=/dev/ttyACM1
+
+<span class="c"># calibration (arm assembled; id names the calibration file)</span>
+lerobot-calibrate --robot.type=so101_follower --robot.port=/dev/ttyACM0 --robot.id=seguidor
+lerobot-calibrate --teleop.type=so101_leader  --teleop.port=/dev/ttyACM1 --teleop.id=lider</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span><span class="font-mono text-xs">lerobot-find-port</span> shows a different port for each arm.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Calibration completes without errors and reports where it saved the file for the <span class="font-mono text-xs">follower</span> and the <span class="font-mono text-xs">leader</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>“Permission denied” on the port (Linux)? See topic 3: your user needs to be in the <span class="font-mono text-xs">dialout</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Servo “not found”? Loose cable, power supply off, or a repeated ID.</span></li>
+</ul>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Calibrating a joint: an arc shows its physical range between the minimum and maximum limits, with the midpoint marked; calibration records these three values for both the leader and follower." class="w-full h-auto" role="img" viewbox="0 0 640 250">
+<defs><pattern height="32" id="m53-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.12" r="1.3"></circle></pattern></defs><rect fill="url(#m53-grid3)" height="250" width="640"></rect><path d="M140,190 A150,150 0 0 1 440,190" fill="none" stroke="#272730" stroke-linecap="round" stroke-width="16"></path><path d="M165,140 A150,150 0 0 1 415,140" fill="none" opacity="0.85" stroke="#2dd4bf" stroke-linecap="round" stroke-width="16"></path>
+<line stroke="#38bdf8" stroke-dasharray="6 5" stroke-width="3" x1="290" x2="290" y1="190" y2="52"></line><circle cx="290" cy="190" fill="#0b2421" r="12" stroke="#2dd4bf" stroke-width="2.5"></circle><g font-family="Inter,sans-serif" text-anchor="middle"><text fill="#ccfbf1" font-size="15" x="100" y="178">minimum</text><text fill="#ccfbf1" font-size="15" x="482" y="178">maximum</text>
+<text fill="#7dd3fc" font-size="15" x="290" y="36">midpoint</text><text fill="#a8a8b3" font-size="14" x="290" y="226">gray: the servo’s range · teal: the range allowed by the parts</text><text fill="#99f6e4" font-size="15" x="545" y="96">records:</text><text fill="#ccfbf1" font-size="14" x="545" y="120">minimum</text><text fill="#ccfbf1" font-size="14" x="545" y="142">midpoint</text><text fill="#ccfbf1" font-size="14" x="545" y="164">maximum</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> The gray arc shows how far the servo can turn; teal shows the range allowed by the assembly before one part hits another. Calibration measures the teal range and the midpoint (cyan line). That way, “50% of the elbow” means the same pose on the leader and follower, even if their servos were assembled at different angles.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-3-t2-p4">Almost every arm problem where it “shakes,” “moves the wrong way,” or “doesn’t copy properly” comes from a swapped ID or poor calibration. Taking your time with this step saves hours of troubleshooting during the training in module 5.4.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Servo ID</div><div class="text-xs text-neutral-400">1 base … 6 gripper</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Power rail</div><div class="text-xs text-neutral-400">same wires for all</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Calibration</div><div class="text-xs text-neutral-400">minimum, midpoint, maximum</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">--robot.id</div><div class="text-xs text-neutral-400">name of the saved file</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-5-3#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🐍 Install LeRobot (Python)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-3-t3-p1">LeRobot is installed with <span class="font-mono text-xs">pip</span>, inside its own <strong class="text-teal-400">virtual environment</strong> (it includes PyTorch, which is large and has its own version requirements). The <span class="font-mono text-xs">feetech</span> extra installs support for the SO-101 servos; you’ll need additional extras for training in 5.4. The official documentation also covers installation with conda and <span class="font-mono text-xs">ffmpeg</span> (used to record video of the episodes). The names of extras and the required Python version can change: check the installation page before you begin.</p>
+<p class="text-sm text-neutral-300 mb-3"><strong class="text-neutral-100">Goal:</strong> create the environment, install LeRobot with Feetech servo support, and grant access to the USB port.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal (Linux / Pi / macOS)</span></div>
+<pre><code>python3 -m venv ~/lerobot-env
+source ~/lerobot-env/bin/activate
+pip install --upgrade pip
+pip install "lerobot[feetech]"           <span class="c"># check the current documentation for the version and extras</span>
+pip show lerobot                        <span class="c"># shows the installed version</span>
+lerobot-find-port --help                <span class="c"># the lerobot-* commands should be available</span>
+
+<span class="c"># Linux: permission to use USB ports without sudo (log out and back in afterward)</span>
+sudo usermod -aG dialout $USER</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span><span class="font-mono text-xs">pip show lerobot</span> shows "Name: lerobot" and a version number; write it down with your project.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span><span class="font-mono text-xs">lerobot-find-port --help</span> prints the usage instructions, without "command not found".</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"command not found"? The environment isn't active: run the <span class="font-mono text-xs">source</span> again in each new terminal.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-5">
+<h4 class="font-bold text-teal-400 mb-3">✓ Do</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>A dedicated environment for LeRobot, separate from 5.1 and 5.2.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Write down the version that worked and pin it (<span class="font-mono text-xs">lerobot==X.Y.Z</span>).</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Read the <span class="font-mono text-xs">--help</span> for each command before copying it from a tutorial.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Don't</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span><span class="font-mono text-xs">sudo pip install</span> in the system Python.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Updating LeRobot in the middle of a project without testing first.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Copying commands from old videos: the flags have already changed names.</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 See also (INEMA projects)</h3>
+<p class="text-neutral-300 text-sm">The guide <a class="text-sky-400 hover:text-sky-300 underline" href="https://inematds.github.io/robotica-so101/guia/" rel="noopener" target="_blank">robotica-so101</a> builds the SO-101 twin in simulation, and <a class="text-sky-400 hover:text-sky-300 underline" href="https://inematds.github.io/robotica-real2sim/guia/" rel="noopener" target="_blank">robotica-real2sim</a> turns a photo of the table into a scene for training the robot, with a chapter about the real arm. The commands in this module were checked against these guides.</p>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-3-t3-p2">AI libraries for robots change quickly. Knowing how to isolate the installation, check the version, and read the <span class="font-mono text-xs">--help</span> is what makes the difference between a project that runs again six months from now and one that breaks with the first update.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">venv</div><div class="text-xs text-neutral-400">isolated installation</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">extras [feetech]</div><div class="text-xs text-neutral-400">servo support</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">dialout</div><div class="text-xs text-neutral-400">USB port access</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Pin version</div><div class="text-xs text-neutral-400">reproducible project</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-5-3#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🎮 Leader/follower teleoperation</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-3-t4-p1">During teleoperation, the computer repeats a short loop: it reads the six joint positions of the leader, converts them using the calibration, and sends those same positions as targets to the follower. This is what will happen when recording demonstrations in module 5.4, except nothing is saved. So before recording, practice your movements here: smooth, without jerks, and always within the clear area.</p>
+<figure class="fig mb-3">
+<svg aria-label="Teleoperation loop: read the leader’s positions, convert them using the calibration, send them as targets to the follower, and repeat several dozen times per second." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs><pattern height="32" id="m53-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.12" r="1.3"></circle></pattern><marker id="m53-ah4" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#2dd4bf"></path></marker><marker id="m53-ah4c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs><rect fill="url(#m53-grid4)" height="260" width="640"></rect><g font-family="Inter,sans-serif" text-anchor="middle"><rect fill="#0e1b26" height="80" rx="12" stroke="#38bdf8" stroke-width="2" width="150" x="20" y="70"></rect><text fill="#bfe6ff" font-size="16" x="95" y="104">read leader</text><text fill="#7dd3fc" font-size="14" x="95" y="128">6 positions</text>
+<rect fill="#0b2421" height="80" rx="12" stroke="#2dd4bf" stroke-width="2" width="150" x="245" y="70"></rect><text fill="#ccfbf1" font-size="16" x="320" y="104">convert</text><text fill="#99f6e4" font-size="14" x="320" y="128">using the calibration</text><rect fill="#0e2b28" height="80" rx="12" stroke="#2dd4bf" stroke-width="2.5" width="150" x="470" y="70"></rect><text fill="#2dd4bf" font-size="16" font-weight="600" x="545" y="104">move follower</text><text fill="#99f6e4" font-size="14" x="545" y="128">6 targets</text><text fill="#a8a8b3" font-size="14" x="320" y="40">one cycle takes a few milliseconds</text><text fill="#7dd3fc" font-size="15" x="320" y="236">repeats dozens of times per second</text>
+</g><g fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M170,110 L238,110" marker-end="url(#m53-ah4)"></path><path d="M395,110 L463,110" marker-end="url(#m53-ah4)"></path></g><path d="M545,152 C545,215 95,215 95,159" fill="none" marker-end="url(#m53-ah4c)" stroke="#38bdf8" stroke-dasharray="7 6" stroke-width="2"></path>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> follow the teal arrows from left to right and return along the dashed cyan arrow: it's a continuous loop while the command is running. If the follower seems "delayed," the loop is slow (cable, busy computer, or demanding camera); if it moves in the wrong direction, the problem is in the middle box: the calibration.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-3-t4-p2"><strong class="text-neutral-100">Goal:</strong> your first teleoperation, without cameras. Use the ports and the <span class="font-mono text-xs">id</span> from topic 2. Before pressing Enter, put the leader in a pose similar to the follower's: at startup, the follower moves to the leader's pose.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal</span></div>
+<pre><code>lerobot-teleoperate \
+  --robot.type=so101_follower --robot.port=/dev/ttyACM0 --robot.id=seguidor \
+  --teleop.type=so101_leader  --teleop.port=/dev/ttyACM1 --teleop.id=lider
+<span class="c"># Ctrl+C ends the program (it doesn't replace the hardware stop switch: see topic 6)</span></code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Moving the leader slowly, the follower copies each joint, including the gripper, with no visible delay.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Five minutes of use without shaking or servos getting hot to the touch.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>A mirrored joint or one with a lot of play? Recalibrate it before continuing.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-5">
+<h4 class="font-bold text-teal-400 mb-3">✓ Good teleoperation</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Move the leader slowly, as if the follower were fragile.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Watch the follower, not the leader.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Repeat the same task several times in the same way.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Poor teleoperation</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Quick jerks: the follower knocks into things and the servo heats up.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Hold the gripper closed against a hard object for a long time.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Keep moving the arm to its limits.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-3-t4-p3">The policy in module 5.4 learns to imitate exactly what you do during teleoperation, including jerks and hesitations. A calm, consistent hand here is worth more than a larger model later.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Control loop</div><div class="text-xs text-neutral-400">read, convert, move</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Target position</div><div class="text-xs text-neutral-400">where the servo moves to</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Starting pose</div><div class="text-xs text-neutral-400">leader similar to follower</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Demonstration</div><div class="text-xs text-neutral-400">what the policy imitates</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-5-3#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">📷 Cameras and workspace</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-3-t5-p1">The policies in module 5.4 see through the cameras, so the setup needs to stay stable: <strong class="text-neutral-100">fixed cameras</strong>, <strong class="text-neutral-100">consistent lighting</strong> e <strong class="text-neutral-100">simple background</strong>. A common setup uses two USB cameras: one in front (or overhead), which sees the whole table, and another on the wrist or nearby, which gets a close-up of the gripper. Anything that changes between recording and use (the lamp, the tablecloth, the camera angle) can confuse the policy.</p>
+<figure class="fig mb-3">
+<svg aria-label="Top-down view of the workspace: the arm at the edge of the table, its semicircular reach, objects within that area, one camera in front and another at the side, a clear zone around it, and the power switch within reach." class="w-full h-auto" role="img" viewbox="0 0 640 310">
+<defs><pattern height="32" id="m53-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.12" r="1.3"></circle></pattern><filter height="180%" id="m53-glow5" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m53-grid5)" height="310" width="640"></rect><rect fill="#101016" height="250" rx="12" stroke="#f87171" stroke-dasharray="8 6" stroke-width="2" width="440" x="60" y="30"></rect><rect fill="#0b2421" height="190" rx="8" stroke="#2dd4bf" stroke-width="1.5" width="360" x="100" y="60"></rect><path d="M150,250 A130,130 0 0 1 410,250" fill="#0e2b28" opacity="0.9" stroke="#2dd4bf" stroke-width="2"></path>
+<g filter="url(#m53-glow5)"><rect fill="#13261d" height="22" rx="4" stroke="#2dd4bf" stroke-width="2.5" width="36" x="262" y="232"></rect></g><circle cx="230" cy="180" fill="#0e1b26" r="12" stroke="#38bdf8" stroke-width="2"></circle><rect fill="#0e1b26" height="26" rx="4" stroke="#38bdf8" stroke-width="2" width="26" x="318" y="160"></rect><g font-family="Inter,sans-serif" text-anchor="middle"><polygon fill="#38bdf8" points="280,58 268,40 292,40"></polygon><text fill="#7dd3fc" font-size="14" x="280" y="22">front camera</text>
+<polygon fill="#38bdf8" points="458,160 478,148 478,172"></polygon><text fill="#7dd3fc" font-size="14" x="545" y="150">camera</text><text fill="#7dd3fc" font-size="14" x="545" y="168">side</text><text fill="#99f6e4" font-size="14" x="280" y="140">arm's reach</text><text fill="#ccfbf1" font-size="14" x="280" y="272">industrial</text><text fill="#fecaca" font-size="14" x="565" y="250">clear area</text><text fill="#fecaca" font-size="14" x="565" y="268">(no people)</text>
+<circle cx="560" cy="60" fill="#3b0f10" r="18" stroke="#f87171" stroke-width="2.5"></circle><text fill="#fecaca" font-size="14" x="560" y="98">hardware stop switch</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> Seen from above, the arm (highlighted) sits at the edge of the table; the semicircle shows how far it can reach, and the task objects sit within it. The two cyan cameras face this area. The dashed red outline marks the clear area, and the hardware stop switch sits outside it, near you.</p>
+<p class="text-sm text-neutral-300 mb-3"><strong class="text-neutral-100">Goal:</strong> find the index of each camera and teleoperate while viewing its image alongside the joint positions.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal</span></div>
+<pre><code>lerobot-find-cameras opencv           <span class="c"># lists the cameras and saves a photo from each (check the index)</span>
+
+lerobot-teleoperate \
+  --robot.type=so101_follower --robot.port=/dev/ttyACM0 --robot.id=seguidor \
+  --robot.cameras="{ frente: {type: opencv, index_or_path: 0, width: 640, height: 480, fps: 30}}" \
+  --teleop.type=so101_leader --teleop.port=/dev/ttyACM1 --teleop.id=lider \
+  --display_data=true</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-teal-400">How to check:</strong> opens a window showing the "front" camera image and the joint positions in real time while you teleoperate. For the second camera, add another entry to the dictionary (for example <span class="font-mono">lateral: {type: opencv, index_or_path: 2, ...}</span>) with the index that <span class="font-mono">find-cameras</span> showed. Syntax checked against LeRobot 0.6.1; check your version.</p>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Mark everything with tape</h3>
+<p class="text-neutral-300 text-sm">Put tape on the table to mark the arm's base, each camera's base, and the objects' starting positions. Take a photo of the setup. When you record in module 5.4 (or someone moves things on the workbench), you can put everything back in the same place in a minute.</p>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-3-t5-p2">In learning by demonstration, the camera is the main sensor. A repeatable workspace makes the difference between a policy that gets it right almost every time and one that only works on the afternoon it was recorded.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Fixed camera</div><div class="text-xs text-neutral-400">same angle every time</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">index_or_path</div><div class="text-xs text-neutral-400">which camera to use</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Reach</div><div class="text-xs text-neutral-400">where the arm can reach</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Consistent lighting</div><div class="text-xs text-neutral-400">same scene for the AI</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-5-3#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🛑 Safety with a moving arm</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-3-t6-p1">The SO-101 is small, but strong enough to pinch a finger in its gripper, knock a glass of water onto a laptop, or hit someone in the face if they lean over the table. The risks increase when a trained policy, rather than your hand, is in control (module 5.4): it may make a move you did not expect. The rule is the one from module 5.1: <strong class="text-neutral-100">the stop does not depend on software</strong>. A switch in series with the servos’ power supply, within reach, cuts power immediately. When power is cut, the arm loses its support and falls onto the table, so keep anything fragile out from underneath it.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-4">Before each session</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Clear the area</h4><p class="text-neutral-300 text-sm">Keep only task objects within reach; liquids, tools, and the laptop stay off the arm’s table.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Test the power switch</h4><p class="text-neutral-300 text-sm">Turn it on, off, and on again before running any command. Tell anyone nearby where it is.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Start slowly</h4><p class="text-neutral-300 text-sm">For the first few seconds of each run, keep your hand near the switch and watch the follower. Run a new policy first with no objects on the table.</p></div></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-5">
+<h4 class="font-bold text-teal-400 mb-3">✓ Do</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Secure the arm’s base to the table (clamp or screw).</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Wear safety glasses when the gripper handles rigid objects.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Turn off the power supply when you finish and when handling cables.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>In class, allow one student at a time inside the area; everyone else stays behind the line.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Don't</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Rely on Ctrl+C as an emergency stop.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Put your hand between the parts while the power supply is on.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Leave the arm on without anyone watching it.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Use a power supply with a voltage different from your servos’ rated voltage.</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-dark-800 border border-teal-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-teal-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m5-3-t6-p2"><strong>Torque</strong> is the servo’s turning force. With torque on, the joint holds its position and resists being pushed; with torque off, it moves freely. A <strong>pinch point</strong> is any place where two parts move closer together (the gripper, the bending elbow): that is where fingers can get hurt.</p>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-3-t6-p3">The safety habits you build with a small arm are the same ones used in industry with large arms: marked areas, a physical stop, and a test before operation. Anyone taking the arm to a school or fair needs these habits from day one.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Power switch</div><div class="text-xs text-neutral-400">physical stop</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Torque</div><div class="text-xs text-neutral-400">force that holds the joint</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Pinch point</div><div class="text-xs text-neutral-400">where a finger can get caught</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Clear area</div><div class="text-xs text-neutral-400">beyond the reach</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-teal-900/30 via-dark-800 to-dark-800 rounded-xl border border-teal-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">SO-101 + LeRobot</strong><span class="text-neutral-400">: leader/follower pair with STS3215 servos and Hugging Face’s open-source library.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">IDs and calibration</strong><span class="text-neutral-400">: one servo at a time, 1 at the base through 6 at the gripper; minimum, midpoint, and maximum for each joint.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Isolated installation</strong><span class="text-neutral-400">: venv, feetech extra, version recorded, flags checked with --help.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Teleoperation and cameras</strong><span class="text-neutral-400">: smooth movements, fixed cameras, consistent lighting, and marked positions.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Physical stop</strong><span class="text-neutral-400">: power switch within reach, clear area, nothing fragile under the arm.</span></div></div>
+</div>
+<h3 class="font-semibold text-teal-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://huggingface.co/docs/lerobot" rel="noopener" target="_blank">LeRobot documentation</a> <span class="text-neutral-500">— installation, SO-101, current commands</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/huggingface/lerobot" rel="noopener" target="_blank">LeRobot on GitHub</a> <span class="text-neutral-500">— code, versions, and change notes</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/TheRobotStudio/SO-ARM100" rel="noopener" target="_blank">SO-ARM100 / SO-101 (TheRobotStudio)</a> <span class="text-neutral-500">— print files and parts list</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://inematds.github.io/robotica-so101/guia/" rel="noopener" target="_blank">See also: robotica-so101 (INEMA)</a> <span class="text-neutral-500">— SO-101 digital twin in simulation</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://inematds.github.io/robotica-real2sim/guia/" rel="noopener" target="_blank">See also: robotica-real2sim (INEMA)</a> <span class="text-neutral-500">— turn a photo of the table into a simulation that trains the robot</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-teal-400 mb-1">Next module</h3>
+<p class="text-neutral-300">5.4 · Learning by demonstration: record episodes, train ACT, and watch the arm repeat the task on its own.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-5-2.html">← Previous: 5.2 Local voice</a>
+<a class="inline-flex items-center px-5 py-3 bg-teal-700 text-white rounded-lg font-semibold hover:bg-teal-600 transition-colors" href="modulo-5-4.html">Next: 5.4 Learning by demonstration →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

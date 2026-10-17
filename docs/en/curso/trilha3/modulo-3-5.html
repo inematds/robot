@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 3.5 · Raspberry Pi talks to the ESP32 | Robotics from Zero to Expert</title>
+<meta content="Pi 5 thinks, ESP32 acts: 3.3 V UART, text-line protocol with checksum, ESP32 sketch (API 3.x) that safely receives commands, Python with pyserial and safe stopping on timeout." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha3/modulo-3-5.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha3/modulo-3-5.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha3/modulo-3-5.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha3/modulo-3-5.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha3/modulo-3-5.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha3/modulo-3-5.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-3-5.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha3/modulo-3-5.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T3 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a aria-current="page" class="nav-trail text-purple-400 bg-purple-500/10" href="index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="3-5" data-inema-track="3" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-purple-400" href="../../index.html">Home</a><span aria-hidden="true">/</span>
+<a class="hover:text-purple-400" href="index.html">Learning Path 3</a><span aria-hidden="true">/</span>
+<span class="text-purple-400">Module 3.5</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MODULE 3.5 · HANDS-ON</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🔌 Raspberry Pi talks to the ESP32</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">The Pi 5 sees and decides; the ESP32 turns the motors and handles safety. In this module, you connect the two with <strong class="text-neutral-100">three wires (UART)</strong>, create a <strong class="text-purple-400">text-line protocol with a checksum</strong> and make sure the robot <strong class="text-neutral-100">stops on its own</strong> if communication drops.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Intermediate</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Practice</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Pi 5 + ESP32</div><div class="text-xs text-neutral-400">Hardware</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 3.5 progress" class="inema-ring" data-inema-meter="modulo:3-5"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:3-5"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-1">1. Pi thinks, ESP32 acts</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-2">2. UART at 3,3 V</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-3">3. Simple protocol</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-4">4. ESP32 side</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-5">5. Pi side (pyserial)</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-6">6. Failures and safe stop</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-3-5#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🤝 Split the work: Pi thinks, ESP32 acts</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-5-t1-p1">The Raspberry Pi runs Linux, which is great for cameras, OpenCV, and YOLO26, but it can’t guarantee timing: a background update can delay your program by hundreds of milliseconds. The ESP32 runs a simple, predictable loop, ideal for generating PWM, reading encoders, and <strong class="text-neutral-100">stopping the motors at the right time</strong>. The classic split is: the Pi sends <strong class="text-purple-400">intentions</strong> (“go 60% to the left”) a few dozen times per second, and the ESP32 carries them out and keeps the robot safe.</p>
+<figure class="fig mb-3">
+<svg aria-label="Two-layer architecture: the Raspberry Pi 5 with a camera makes decisions and sends motor commands over UART about 20 times per second; the ESP32 runs the PWM, reads sensors, applies limits and stops everything if commands stop arriving; the ESP32 sends back responses and status." class="w-full h-auto" role="img" viewbox="0 0 640 290">
+<defs>
+<filter height="180%" id="m35-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+<pattern height="32" id="m35-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m35-ah1" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+<marker id="m35-ah1c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs>
+<rect fill="url(#m35-grid1)" height="290" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<g filter="url(#m35-glow1)"><rect fill="#221640" height="190" rx="14" stroke="#a855f7" stroke-width="2.5" width="220" x="20" y="40"></rect></g>
+<text fill="#c084fc" font-size="20" font-weight="600" x="130" y="76">RASPBERRY PI 5</text><text fill="#e9d5ff" font-size="15" x="130" y="108">camera and vision</text><text fill="#e9d5ff" font-size="15" x="130" y="134">decides what to do</text><text fill="#e9d5ff" font-size="15" x="130" y="160">Linux: variable timing</text><text fill="#c084fc" font-size="15" x="130" y="200">“what”</text>
+<rect fill="#0e1b26" height="190" rx="14" stroke="#38bdf8" stroke-width="2" width="220" x="400" y="40"></rect>
+<text fill="#7dd3fc" font-size="20" font-weight="600" x="510" y="76">ESP32</text><text fill="#bfe6ff" font-size="15" x="510" y="108">PWM and H-bridge</text><text fill="#bfe6ff" font-size="15" x="510" y="134">limits and timeout</text><text fill="#bfe6ff" font-size="15" x="510" y="160">predictable loop</text><text fill="#7dd3fc" font-size="15" x="510" y="200">“how” and “when to stop”</text>
+<text fill="#e9d5ff" font-size="15" x="320" y="94">commands</text><text fill="#a8a8b3" font-size="14" x="320" y="114">~20 per second</text>
+<text fill="#bfe6ff" font-size="15" x="320" y="186">responses</text>
+<text fill="#a8a8b3" font-size="14" x="320" y="268">three wires: TX, RX, and GND</text>
+</g>
+<path d="M244,130 L392,130" fill="none" marker-end="url(#m35-ah1)" stroke="#c084fc" stroke-width="2"></path>
+<path d="M396,160 L248,160" fill="none" marker-end="url(#m35-ah1c)" stroke="#38bdf8" stroke-dasharray="6 5" stroke-width="2"></path>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> The purple arrow carries intentions from the Pi to the ESP32; the dashed cyan arrow brings back confirmation. The golden rule is in the box on the right: whoever controls the motor is the one who decides to stop. If the Pi freezes, the ESP32 doesn't wait around.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Do</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>The Pi sends the desired speed; the ESP32 limits and applies it.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>The ESP32 stops the motors if commands stop arriving.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Collision sensor connected directly to the ESP32, which brakes without asking.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Don't</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Generate the motor PWM in Python on the Pi.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Send “turn on the motor” once and trust that an “turn it off” command will arrive.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Power the Pi from the same line as the motors, without a regulator.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-5-t1-p2">This division appears in almost every serious robot, from a vacuum cleaner to a warehouse robot. In Track 4 it stays the same: the Pi runs ROS 2 and the ESP32 communicates with it through micro-ROS. Only the protocol changes.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">High level</div><div class="text-xs text-neutral-400">decides (Pi)</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Low level</div><div class="text-xs text-neutral-400">executes (ESP32)</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Real time</div><div class="text-xs text-neutral-400">response on time</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Intent</div><div class="text-xs text-neutral-400">what, not how</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-3-5#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🧵 UART between Pi and ESP32 (3.3 V levels)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-5-t2-p1"><strong>UART</strong> is the serial port: one wire to send (<strong>TX</strong>), one to receive (<strong>RX</strong>) and GND as the reference. Both sides agree on the speed in <strong>baud</strong> (bits per second); we use 115200. One side's TX connects to the other side's RX, crossed over. The Serial Monitor you've been using since module 1.3 is a UART connection through the USB cable.</p>
+</div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-5-t2-p2">The Pi 5 and ESP32 use <strong class="text-neutral-100">3.3 V logic</strong>, so the wires connect directly, with no converter. On the Pi, use physical pins 8 (GPIO14, TXD) and 10 (GPIO15, RXD); on the ESP32, use <strong class="text-purple-400">UART2</strong> on GPIO16 (RX) and GPIO17 (TX), leaving UART0 free for USB and boot messages. Another, simpler option is to connect the ESP32 to the Pi with its USB cable (it appears as <span class="font-mono text-xs">/dev/ttyACM0</span> or <span class="font-mono text-xs">/dev/ttyUSB0</span>); the protocol and code are the same.</p>
+<figure class="fig mb-3">
+<svg aria-label="UART wiring: Pi pin 8, GPIO14 TXD, connects to ESP32 GPIO16 RX2; Pi pin 10, GPIO15 RXD, receives from ESP32 GPIO17 TX2; Pi pin 6 GND connects to ESP32 GND. The data wires cross." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs><pattern height="32" id="m35-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m35-grid2)" height="280" width="640"></rect>
+<g font-family="Inter,sans-serif">
+<rect fill="#1a1230" height="200" rx="14" stroke="#c084fc" stroke-width="2" width="200" x="20" y="30"></rect>
+<text fill="#c084fc" font-size="18" font-weight="600" text-anchor="middle" x="120" y="62">Pi 5 (40 pins)</text>
+<text fill="#e9d5ff" font-size="15" x="40" y="106">pin 8 · GPIO14 TX</text><text fill="#e9d5ff" font-size="15" x="40" y="156">pin 10 · GPIO15 RX</text><text fill="#a8a8b3" font-size="15" x="40" y="206">pin 6 · GND</text>
+<rect fill="#0e1b26" height="200" rx="14" stroke="#38bdf8" stroke-width="2" width="200" x="420" y="30"></rect>
+<text fill="#7dd3fc" font-size="18" font-weight="600" text-anchor="middle" x="520" y="62">ESP32</text>
+<text fill="#bfe6ff" font-size="15" x="440" y="106">GPIO16 · RX2</text><text fill="#bfe6ff" font-size="15" x="440" y="156">GPIO17 · TX2</text><text fill="#a8a8b3" font-size="15" x="440" y="206">GND</text>
+</g>
+<g fill="none" stroke-width="3">
+<path d="M220,101 L420,101" stroke="#c084fc"></path>
+<path d="M420,151 L220,151" stroke="#38bdf8"></path>
+<path d="M220,201 L420,201" stroke="#a8a8b3" stroke-dasharray="6 5"></path>
+</g>
+<g font-family="Inter,sans-serif" font-size="14" text-anchor="middle"><text fill="#e9d5ff" x="320" y="92">Pi sends → ESP32 listens</text><text fill="#bfe6ff" x="320" y="142">ESP32 sends → Pi listens</text><text fill="#a8a8b3" x="320" y="192">shared reference</text>
+<text fill="#c084fc" x="320" y="262">3.3 V on both sides: direct connection</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> Each line is a wire. The purple wire carries what the Pi transmits to the ESP32's input; the cyan wire carries data in the opposite direction. The dashed GND wire is required: without it, the two sides don't agree on what 0 V means, and characters arrive garbled.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-4">Step by step on the Pi</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Enable the serial port</h4><p class="text-neutral-300 text-sm"><span class="font-mono text-xs">sudo raspi-config</span> → Interface Options → Serial Port. “Login shell over serial?” <strong>No</strong>. “Serial port hardware enabled?” <strong>Yes</strong>. Restart.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Give your user permission</h4><p class="text-neutral-300 text-sm"><span class="font-mono text-xs">sudo usermod -aG dialout $USER</span>, then log out and back in. Check that <span class="font-mono text-xs">ls -l /dev/serial0</span> exists.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Loopback test</h4><p class="text-neutral-300 text-sm">Before connecting the ESP32, place a jumper between pins 8 and 10 on the Pi and run the test below. Anything sent through TX should come back through RX.</p></div></div>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">Pi terminal</span></div>
+<pre><code>python3 -m venv --system-site-packages ~/robo-venv   <span class="c"># only if you haven't already created it in module 3.1</span>
+source ~/robo-venv/bin/activate
+pip install pyserial
+python -c <span class="s">"import serial; s=serial.Serial('/dev/serial0',115200,timeout=1); s.write(b'ola\n'); print(s.readline())"</span></code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-purple-400">How to check:</strong> With the jumper, the output is <span class="font-mono">b'ola\n'</span>. Without the jumper, it prints <span class="font-mono">b''</span> after 1 second. “Permission denied” means step 2 hasn't taken effect yet: log out and back in to your session.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-5-t2-p3">UART is the simplest and easiest-to-debug way for two boards to communicate: you can read everything with a Serial Monitor. Testing the Pi on its own with loopback helps you tell a wiring problem from a code problem.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">TX → RX</div><div class="text-xs text-neutral-400">crossed wires</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Baud</div><div class="text-xs text-neutral-400">115200 on both sides</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">/dev/serial0</div><div class="text-xs text-neutral-400">Pi UART</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Loopback</div><div class="text-xs text-neutral-400">TX connected to RX</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-3-5#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">📨 Simple message protocol</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-5-t3-p1">Bytes arrive over the wire as a stream; the <strong class="text-purple-400">protocol</strong> is the agreement that tells you where each message starts and ends and how to tell whether it arrived intact. We'll use <strong class="text-neutral-100">one line of text per message</strong>, like GPS (NMEA): it starts with <span class="font-mono text-xs">$</span>, contains the command, a <span class="font-mono text-xs">*</span>, two checksum digits, and ends with a newline. Text is readable in the Serial Monitor and easy to generate in any language.</p>
+<figure class="fig mb-3">
+<svg aria-label="Anatomy of a message: the dollar sign marks the start; M,120,-80 is the body containing the motor command and left and right speeds; the asterisk separates them; 5B is the XOR checksum of the body in hexadecimal; a newline marks the end." class="w-full h-auto" role="img" viewbox="0 0 640 240">
+<defs><pattern height="32" id="m35-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m35-grid3)" height="240" width="640"></rect>
+<g font-family="JetBrains Mono,monospace" font-size="24" text-anchor="middle">
+<rect fill="#0e1b26" height="64" rx="10" stroke="#38bdf8" stroke-width="2" width="60" x="20" y="50"></rect><text fill="#7dd3fc" x="50" y="91">$</text>
+<rect fill="#221640" height="64" rx="10" stroke="#a855f7" stroke-width="2.5" width="260" x="90" y="50"></rect><text fill="#e9d5ff" x="220" y="91">M,120,-80</text>
+<rect fill="#0e1b26" height="64" rx="10" stroke="#38bdf8" stroke-width="2" width="60" x="360" y="50"></rect><text fill="#7dd3fc" x="390" y="91">*</text>
+<rect fill="#1a1230" height="64" rx="10" stroke="#c084fc" stroke-width="2" width="90" x="430" y="50"></rect><text fill="#c084fc" x="475" y="91">5B</text>
+<rect fill="#0e1b26" height="64" rx="10" stroke="#38bdf8" stroke-width="2" width="90" x="530" y="50"></rect><text fill="#7dd3fc" x="575" y="91">\n</text>
+</g>
+<g font-family="Inter,sans-serif" font-size="15" text-anchor="middle">
+<text fill="#bfe6ff" x="50" y="146">start</text><text fill="#e9d5ff" x="220" y="146">body: command and values</text><text fill="#bfe6ff" x="390" y="146">separator</text><text fill="#c084fc" x="475" y="146">checksum</text><text fill="#bfe6ff" x="575" y="146">end</text>
+<text fill="#e9d5ff" x="320" y="196">checksum = XOR of all body bytes, in hexadecimal</text>
+<text fill="#a8a8b3" font-size="14" x="320" y="222">one byte changed in transit changes the XOR, and the message is discarded</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> Only the purple body carries information; the cyan boxes are framing. The Pi calculates the checksum, sends it along, and the ESP32 recalculates it. If the two numbers don't match, the ESP32 returns an error and ignores the command.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3 text-purple-400">Message</th><th class="text-left p-3 text-purple-400">Direction</th><th class="text-left p-3 text-purple-400">Meaning</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3 font-mono text-xs">$M,esq,dir*HH</td><td class="p-3">Pi → ESP32</td><td class="p-3">speed for each side, from −255 to 255</td></tr>
+<tr><td class="p-3 font-mono text-xs">$S*53</td><td class="p-3">Pi → ESP32</td><td class="p-3">stop now</td></tr>
+<tr><td class="p-3 font-mono text-xs">$P*50</td><td class="p-3">Pi → ESP32</td><td class="p-3">ping: are you there?</td></tr>
+<tr><td class="p-3 font-mono text-xs">$OK,M*65</td><td class="p-3">ESP32 → Pi</td><td class="p-3">command accepted</td></tr>
+<tr><td class="p-3 font-mono text-xs">$ERR,motivo*HH</td><td class="p-3">ESP32 → Pi</td><td class="p-3">CHK, FORMATO, ARG, CMD, LONGA or TIMEOUT</td></tr>
+</tbody>
+</table>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Short text line</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>You can read and type it in the Serial Monitor.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Fits in a 40-byte buffer, with no extra library.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Short JSON (<span class="font-mono text-xs">{"m":[120,-80]}</span>) also works, with ArduinoJson.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Avoid</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Message without an end marker: you never know where it ends.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Accepting commands without a checksum on a robot with a motor.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Long, frequent messages: 115200 baud is about 11,000 bytes per second.</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-5-t3-p2"><strong>Checksum</strong> is a number calculated from the message and sent along with it. The <strong>XOR</strong> compares bits: it returns 1 when they differ and 0 when they're the same. XOR-ing all the bytes means any changed byte changes the result. It doesn't protect against everything, but it catches most wire noise.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-5-t3-p3">A motor that receives “M,1200” instead of “M,120” because of a duplicated byte means a robot crashing into a wall. Framing, a checksum, and explicit responses turn a noisy wire into a reliable channel, and the same idea is used in industrial protocols.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Framing</div><div class="text-xs text-neutral-400">$ … \n</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">XOR checksum</div><div class="text-xs text-neutral-400">detects a changed byte</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Response</div><div class="text-xs text-neutral-400">OK or ERR</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Valid range</div><div class="text-xs text-neutral-400">−255 a 255</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-3-5#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🛡️ ESP32 side: safely receiving commands</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-5-t4-p1">The sketch joins characters until it reaches a newline, discards lines that are too long, checks the frame and checksum, limits the speeds, and applies them to the H-bridge <strong class="text-neutral-100">TB6612FNG</strong> of module 1.5 with the PWM 3.x API. The most important part is the last lines of the <span class="font-mono text-xs">loop()</span>: if no valid motor command arrives within <strong class="text-purple-400">300 ms</strong>, the motors stop.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-5-t4-p2"><strong class="text-neutral-100">Goal:</strong> ESP32 that follows the protocol from topic 3 and stops on its own when no commands arrive. Pins for an ESP32 DevKit; on an ESP32-S3, replace them with free pins on your board.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">receptor-pi.ino</span></div>
+<pre><code><span class="c">// Receives commands from the Raspberry Pi over UART2 and moves the motors (ESP32, esp32 3.x package)</span>
+<span class="c">// Protocol: "$M,esq,dir*HH\n"  "$S*53\n"  "$P*50\n"   (HH = XOR of the body in hexadecimal)</span>
+<span class="k">const int</span> PINO_RX = 16, PINO_TX = 17;        <span class="c">// RX (GPIO16) receives from Pi pin 8; TX (GPIO17) goes to pin 10</span>
+<span class="k">const int</span> PWMA = 25, AIN1 = 26, AIN2 = 27;    <span class="c">// TB6612FNG: left motor</span>
+<span class="k">const int</span> PWMB = 33, BIN1 = 32, BIN2 = 4;     <span class="c">// right motor (same pins as the rover in Trail 1)</span>
+<span class="k">const int</span> STBY = 13;                         <span class="c">// HIGH = H-bridge enabled</span>
+<span class="k">const unsigned long</span> TIMEOUT_MS = 300;         <span class="c">// no motor command for 300 ms: stop</span>
+<span class="k">const int</span> MAX_LINHA = 40;
+
+<span class="k">char</span> linha[MAX_LINHA + 1];
+<span class="k">int</span> tam = 0;
+<span class="k">bool</span> descartando = <span class="k">false</span>, andando = <span class="k">false</span>;
+<span class="k">unsigned long</span> ultimoComando = 0;
+
+<span class="k">uint8_t</span> xorDe(<span class="k">const char</span> *s, <span class="k">int</span> n) { <span class="k">uint8_t</span> x = 0; <span class="k">for</span> (<span class="k">int</span> i = 0; i &lt; n; i++) x ^= (<span class="k">uint8_t</span>)s[i]; <span class="k">return</span> x; }
+
+<span class="k">void</span> responde(<span class="k">const char</span> *corpo) {           <span class="c">// sends "$corpo*HH\n" to the Pi</span>
+  <span class="k">char</span> buf[56];
+  snprintf(buf, <span class="k">sizeof</span>(buf), <span class="s">"$%s*%02X\n"</span>, corpo, xorDe(corpo, strlen(corpo)));
+  Serial2.print(buf);
+}
+
+<span class="k">void</span> motor(<span class="k">int</span> pwm, <span class="k">int</span> in1, <span class="k">int</span> in2, <span class="k">int</span> v) {
+  v = constrain(v, -255, 255);
+  digitalWrite(in1, v &gt; 0 ? HIGH : LOW);
+  digitalWrite(in2, v &lt; 0 ? HIGH : LOW);
+  ledcWrite(pwm, abs(v));                      <span class="c">// API 3.x: ledcWrite takes the pin</span>
+}
+<span class="k">void</span> mover(<span class="k">int</span> esq, <span class="k">int</span> dir) { motor(PWMA, AIN1, AIN2, esq); motor(PWMB, BIN1, BIN2, dir); }
+<span class="k">void</span> parar() { mover(0, 0); andando = <span class="k">false</span>; }
+
+<span class="k">void</span> trata(<span class="k">char</span> *l) {                         <span class="c">// l = "$M,120,-80*5B" (without the \n)</span>
+  <span class="k">char</span> *estrela = strrchr(l, <span class="s">'*'</span>);
+  <span class="k">if</span> (l[0] != <span class="s">'$'</span> || estrela == NULL || strlen(estrela) != 3) { responde(<span class="s">"ERR,FORMATO"</span>); <span class="k">return</span>; }
+  <span class="k">char</span> *corpo = l + 1;
+  <span class="k">int</span> n = estrela - corpo;
+  <span class="k">if</span> (xorDe(corpo, n) != (<span class="k">uint8_t</span>)strtol(estrela + 1, NULL, 16)) { responde(<span class="s">"ERR,CHK"</span>); <span class="k">return</span>; }
+  *estrela = <span class="s">'\0'</span>;                             <span class="c">// cuts off the checksum: only the body remains</span>
+  <span class="k">if</span> (corpo[0] == <span class="s">'M'</span> &amp;&amp; corpo[1] == <span class="s">','</span>) {
+    <span class="k">int</span> esq, dir;
+    <span class="k">if</span> (sscanf(corpo + 2, <span class="s">"%d,%d"</span>, &amp;esq, &amp;dir) != 2) { responde(<span class="s">"ERR,ARG"</span>); <span class="k">return</span>; }
+    mover(esq, dir); andando = <span class="k">true</span>; ultimoComando = millis();
+    responde(<span class="s">"OK,M"</span>);
+  } <span class="k">else if</span> (strcmp(corpo, <span class="s">"S"</span>) == 0) { parar(); responde(<span class="s">"OK,S"</span>); }
+  <span class="k">else if</span> (strcmp(corpo, <span class="s">"P"</span>) == 0) { responde(<span class="s">"OK,P"</span>); }
+  <span class="k">else</span> responde(<span class="s">"ERR,CMD"</span>);
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);                        <span class="c">// USB: messages for you</span>
+  Serial2.begin(115200, SERIAL_8N1, PINO_RX, PINO_TX); <span class="c">// UART2 with explicit pins</span>
+  <span class="k">int</span> saidas[] = { AIN1, AIN2, BIN1, BIN2, STBY };
+  <span class="k">for</span> (<span class="k">int</span> p : saidas) pinMode(p, OUTPUT);
+  ledcAttach(PWMA, 20000, 8);                  <span class="c">// 20 kHz, 8 bits (0 to 255)</span>
+  ledcAttach(PWMB, 20000, 8);
+  parar();
+  digitalWrite(STBY, HIGH);
+  responde(<span class="s">"OK,BOOT"</span>);                         <span class="c">// tells the Pi it (re)started</span>
+  Serial.println(<span class="s">"Ready: waiting for commands on UART2"</span>);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">while</span> (Serial2.available()) {
+    <span class="k">char</span> c = Serial2.read();
+    <span class="k">if</span> (c == <span class="s">'\r'</span>) <span class="k">continue</span>;
+    <span class="k">if</span> (c == <span class="s">'\n'</span>) {
+      linha[tam] = <span class="s">'\0'</span>;
+      <span class="k">if</span> (descartando) responde(<span class="s">"ERR,LONGA"</span>); <span class="k">else if</span> (tam &gt; 0) trata(linha);
+      tam = 0; descartando = <span class="k">false</span>;
+    } <span class="k">else if</span> (tam &lt; MAX_LINHA) linha[tam++] = c;
+    <span class="k">else</span> descartando = <span class="k">true</span>;                    <span class="c">// line is too long: discard everything until \n</span>
+  }
+  <span class="k">if</span> (andando &amp;&amp; millis() - ultimoComando &gt; TIMEOUT_MS) {   <span class="c">// safe stop</span>
+    parar();
+    responde(<span class="s">"ERR,TIMEOUT"</span>);
+    Serial.println(<span class="s">"No commands: motors stopped"</span>);
+  }
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check (before connecting to the Pi)</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Wheels off the ground. The Serial Monitor (USB) shows "Ready: waiting for commands on UART2".</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>With a 3.3 V USB-to-serial adapter connected to GPIO16/17, send <span class="font-mono text-xs">$M,150,150*4D</span>: the wheels turn and, 300 ms later, stop on their own with "No commands".</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Send <span class="font-mono text-xs">$M,150,150*00</span>: the response is <span class="font-mono text-xs">$ERR,CHK</span> and nothing moves.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-5-t4-p3">This sketch is the robot's "firmware" for the rest of the trail. Everything decided on the Pi, including by AI, passes through this filter: only commands with the right format, the right checksum, and values within range get through. That's how you prevent a model that makes mistakes from turning into an out-of-control motor.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Serial2.begin</div><div class="text-xs text-neutral-400">baud, format, RX, TX</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Limited buffer</div><div class="text-xs text-neutral-400">no endless lines</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">constrain</div><div class="text-xs text-neutral-400">limits the speed</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Timeout</div><div class="text-xs text-neutral-400">stops after 300 ms</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-3-5#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🐍 Pi side: Python with pyserial</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-5-t5-p1">On the Pi, a class <span class="font-mono text-xs">Link</span> hides the details: it builds the frame, calculates the checksum, sends it, reads the response, and checks its checksum. The demo at the end of the file sends the robot forward, turns, and reverses, <strong class="text-neutral-100">repeating the command 20 times per second</strong>, which keeps the ESP32 moving. In module 3.6, the object follower imports this same class.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-5-t5-p2"><strong class="text-neutral-100">Goal:</strong> control the ESP32 from the Pi using the protocol from topic 3. Save it as <span class="font-mono text-xs">link_esp32.py</span> and run it inside the virtual environment with <span class="font-mono text-xs">python link_esp32.py</span>. If you use the USB cable instead of the wires, change the port to <span class="font-mono text-xs">/dev/ttyACM0</span> (or <span class="font-mono text-xs">/dev/ttyUSB0</span>).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">link_esp32.py</span></div>
+<pre><code><span class="c">#!/usr/bin/env python3</span>
+<span class="c">"""Serial link Pi -&gt; ESP32 (module 3.5 protocol). Requires: pip install pyserial"""</span>
+<span class="k">import</span> time
+<span class="k">import</span> serial
+
+PORTA = <span class="s">"/dev/serial0"</span>   <span class="c"># UART on pins 8/10; use "/dev/ttyACM0" with the USB cable</span>
+BAUD = 115200
+
+
+<span class="k">def</span> checksum(corpo):
+    x = 0
+    <span class="k">for</span> b <span class="k">in</span> corpo.encode(<span class="s">"ascii"</span>):
+        x ^= b
+    <span class="k">return</span> f<span class="s">"{x:02X}"</span>
+
+
+<span class="k">class</span> Link:
+    <span class="k">def</span> __init__(self, porta=PORTA, baud=BAUD):
+        self.porta, self.baud, self.ser = porta, baud, None
+        self.abrir()
+
+    <span class="k">def</span> abrir(self):
+        self.ser = serial.Serial(self.porta, self.baud, timeout=0.05)
+        self.ser.reset_input_buffer()
+
+    <span class="k">def</span> ler_resposta(self):
+        bruto = self.ser.readline().decode(<span class="s">"ascii"</span>, errors=<span class="s">"replace"</span>).strip()
+        <span class="k">if not</span> bruto.startswith(<span class="s">"$"</span>) <span class="k">or</span> <span class="s">"*"</span> <span class="k">not in</span> bruto:
+            <span class="k">return None</span>
+        corpo, chk = bruto[1:].rsplit(<span class="s">"*"</span>, 1)
+        <span class="k">return</span> corpo <span class="k">if</span> chk.upper() == checksum(corpo) <span class="k">else None</span>
+
+    <span class="k">def</span> enviar(self, corpo):
+        <span class="k">try</span>:
+            self.ser.write(f<span class="s">"${corpo}*{checksum(corpo)}\n"</span>.encode(<span class="s">"ascii"</span>))
+            <span class="k">return</span> self.ler_resposta()
+        <span class="k">except</span> (serial.SerialException, OSError) <span class="k">as</span> e:
+            print(<span class="s">"link dropped:"</span>, e, <span class="s">"- trying to reopen"</span>)
+            time.sleep(0.5)
+            <span class="k">try</span>:
+                self.ser.close()
+                self.abrir()
+            <span class="k">except</span> (serial.SerialException, OSError):
+                <span class="k">pass</span>
+            <span class="k">return None</span>
+
+    <span class="k">def</span> motores(self, esq, drt):
+        esq = max(-255, min(255, int(esq)))
+        drt = max(-255, min(255, int(drt)))
+        <span class="k">return</span> self.enviar(f<span class="s">"M,{esq},{drt}"</span>)
+
+    <span class="k">def</span> parar(self):
+        <span class="k">return</span> self.enviar(<span class="s">"S"</span>)
+
+    <span class="k">def</span> ping(self):
+        <span class="k">return</span> self.enviar(<span class="s">"P"</span>)
+
+    <span class="k">def</span> fechar(self):
+        <span class="k">try</span>:
+            self.parar()
+        <span class="k">finally</span>:
+            self.ser.close()
+
+
+<span class="k">if</span> __name__ == <span class="s">"__main__"</span>:
+    link = Link()
+    <span class="k">try</span>:
+        print(<span class="s">"ping -&gt;"</span>, link.ping())
+        <span class="k">for</span> nome, esq, drt, segundos <span class="k">in</span> [(<span class="s">"frente"</span>, 150, 150, 1.0), (<span class="s">"gira"</span>, 120, -120, 0.8), (<span class="s">"re"</span>, -150, -150, 1.0)]:
+            print(nome)
+            fim = time.monotonic() + segundos
+            <span class="k">while</span> time.monotonic() &lt; fim:
+                r = link.motores(esq, drt)   <span class="c"># repeating at 20 Hz keeps the ESP32 moving</span>
+                <span class="k">if</span> r != <span class="s">"OK,M"</span>:
+                    print(<span class="s">"resposta:"</span>, r)
+                time.sleep(0.05)
+        print(<span class="s">"stop -&gt;"</span>, link.parar())
+    <span class="k">except</span> KeyboardInterrupt:
+        print(<span class="s">"interrompido"</span>)
+    <span class="k">finally</span>:
+        link.fechar()                        <span class="c"># always send "S" on exit</span></code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>The terminal displays <span class="font-mono text-xs">ping -&gt; OK,P</span>, then "forward", "turn", "reverse" and <span class="font-mono text-xs">stop -&gt; OK,S</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>With the wheels off the ground, they follow the sequence and stop at the end.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span><span class="font-mono text-xs">ping -&gt; None</span>? Check that TX/RX are crossed, GND is shared, and the ESP32 is running the sketch from topic 4.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Test without a robot</h3>
+<p class="text-neutral-300 text-sm">Even without motors connected, you can still test everything: with the ESP32 alone on the breadboard, the USB Serial Monitor shows "No commands: motors stopped" when you interrupt Python with Ctrl+C in the middle of a movement.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-5-t5-p3">Keeping "how to talk to the board" in a small class leaves the rest of the code clean: the object follower only calls <span class="font-mono text-xs">link.motores(esq, dir)</span>. E o <span class="font-mono text-xs">try/finally</span> ensures that "S" is sent on exit, even when the program crashes.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">pyserial</div><div class="text-xs text-neutral-400">serial in Python</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">read timeout</div><div class="text-xs text-neutral-400">doesn't block while waiting</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">20 Hz</div><div class="text-xs text-neutral-400">repeated command</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">try/finally</div><div class="text-xs text-neutral-400">stops on exit</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-3-5#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🚨 Failures: lost link, reset, safe stop</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-5-t6-p1">Think of everything that could go wrong: a wire comes loose, Python freezes, the Pi restarts, or the ESP32 restarts because the voltage drops when the motor starts. In every case, the right response is the same: <strong class="text-purple-400">the robot stays stopped</strong> until it receives a valid command again. The ESP32 already does this with the timeout and starts stopped when powered on; the Pi detects a reset from the <span class="font-mono text-xs">OK,BOOT</span> message or from consecutive <span class="font-mono text-xs">None</span> responses.</p>
+<figure class="fig mb-3">
+<svg aria-label="ESP32 state machine: at startup it enters STOPPED; a valid M command moves it to MOVING; while MOVING, new M commands keep it in that state; an S command, or 300 milliseconds without an M, returns it to STOPPED; messages with errors are ignored." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs>
+<pattern height="32" id="m35-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m35-ah6" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+<marker id="m35-ah6c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+<filter height="180%" id="m35-glow6" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs>
+<rect fill="url(#m35-grid6)" height="280" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<text fill="#a8a8b3" font-size="15" x="60" y="130">power on /</text><text fill="#a8a8b3" font-size="15" x="60" y="150">reset</text>
+<g filter="url(#m35-glow6)"><rect fill="#0e1b26" height="80" rx="40" stroke="#38bdf8" stroke-width="2.5" width="160" x="130" y="95"></rect></g>
+<text fill="#7dd3fc" font-size="19" font-weight="600" x="210" y="142">STOPPED</text>
+<rect fill="#221640" height="80" rx="40" stroke="#a855f7" stroke-width="2" width="160" x="420" y="95"></rect>
+<text fill="#c084fc" font-size="19" font-weight="600" x="500" y="142">MOVING</text>
+<text fill="#e9d5ff" font-size="15" x="355" y="62">valid M</text>
+<text fill="#bfe6ff" font-size="15" x="355" y="232">S or 300 ms without M</text>
+<text fill="#e9d5ff" font-size="14" x="500" y="40">valid M: renews the timeout</text>
+<text fill="#a8a8b3" font-size="14" x="210" y="252">ERR: ignore and respond</text>
+</g>
+<g fill="none" stroke-width="2">
+<path d="M88,135 L122,135" marker-end="url(#m35-ah6)" stroke="#a8a8b3"></path>
+<path d="M270,98 C320,70 390,70 432,98" marker-end="url(#m35-ah6)" stroke="#c084fc"></path>
+<path d="M440,172 C390,208 320,208 272,172" marker-end="url(#m35-ah6c)" stroke="#38bdf8" stroke-dasharray="6 5"></path>
+<path d="M470,96 C460,52 540,52 530,90" marker-end="url(#m35-ah6)" stroke="#c084fc"></path>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> each box is an ESP32 state, and each arrow shows what causes the state to change. Notice that there is only one way to reach MOVING (a valid M command) and two ways to return to STOPPED. The initial state, after any reset, is always STOPPED.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Deliberate test</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Disconnect the Pi's TX wire while the robot is moving (wheels off the ground): it stops within 300 ms.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Kill Python with <span class="font-mono text-xs">kill -9</span>: finally won't run, but the timeout stops it.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Press the ESP32's EN button: it returns to the stopped state and reports OK,BOOT.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Have a physical switch that cuts power to the motors.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Pitfalls</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Long timeout (2 s) on a fast robot: it travels meters "blind".</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Ping renewing the motor timeout: if the Pi freezes midway, the robot would keep moving.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Automatically resume the last command after a reset.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Motor and ESP32 on the same battery with no capacitor: each startup resets the board.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-5-t6-p2">A robot that works when everything goes right is half the job; the other half is making sure it behaves well when something goes wrong. This pattern (a command with an expiration time, a safe initial state, an independent physical stop) is the same one used in industrial robots and returns in Track 5 with the robotic arm.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Command watchdog</div><div class="text-xs text-neutral-400">command with an expiration time</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Safe state</div><div class="text-xs text-neutral-400">stopped at startup</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">OK,BOOT</div><div class="text-xs text-neutral-400">reset warning</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Physical cutoff</div><div class="text-xs text-neutral-400">battery switch</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Pi decides, ESP32 executes and protects</strong><span class="text-neutral-400">: intentions at about 20 Hz, PWM and limits on the microcontroller.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">3.3 V UART</strong><span class="text-neutral-400">: Pi pins 8/10/6 to ESP32 GPIO16/17/GND, TX to RX, no converter.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Protocol</strong><span class="text-neutral-400">: $body*HH\n with XOR checksum and OK/ERR response.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Defensive firmware</strong><span class="text-neutral-400">: limited buffer, checksum, constrain and 300 ms timeout.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Fail safe</strong><span class="text-neutral-400">: a loose wire, stalled Python process or reset leaves the motors off.</span></div></div>
+</div>
+<h3 class="font-semibold text-purple-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/serial.html" rel="noopener" target="_blank">Arduino-ESP32: Serial (UART)</a> <span class="text-neutral-500">— Serial2.begin pins and parameters</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://pyserial.readthedocs.io/" rel="noopener" target="_blank">pyserial documentation</a> <span class="text-neutral-500">— Serial, timeout, readline</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.raspberrypi.com/documentation/computers/configuration.html#configure-uarts" rel="noopener" target="_blank">Raspberry Pi UARTs</a> <span class="text-neutral-500">— serial0, raspi-config and config.txt</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://pinout.xyz/" rel="noopener" target="_blank">pinout.xyz</a> <span class="text-neutral-500">— Pi 40-pin map</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-purple-400 mb-1">Next module</h3>
+<p class="text-neutral-300">3.6 · Project: object-following robot. Camera, detection, error and PID, using this link to move the wheels.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-3-4.html">← Previous: 3.4 AI on the microcontroller</a>
+<a class="inline-flex items-center px-5 py-3 bg-purple-700 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors" href="modulo-3-6.html">Next: 3.6 Object-following robot →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Módulo 3.6 · Proyecto: robot que sigue un objeto | Robótica de cero a experto</title>
+<meta content="Proyecto de la Ruta 3: Raspberry Pi 5 con cámara detecta un objeto de color (OpenCV) o una persona (YOLO26), calcula el error y le indica al ESP32 que gire los motores con control PID de giro y distancia." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Primeros pasos",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "Qué es un robot y su kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Electrónica esencial",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: el primer programa",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensores: el robot percibe",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motores y energía",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Proyecto: rover que esquiva obstáculos",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Robot autónomo",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control desde el celular: Wi-Fi y BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU y encoders: saber dónde está",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "Control PID en la práctica",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Varias tareas al mismo tiempo",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetría y registro de datos",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Proyecto: seguidor de línea con PID",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Visión e IA integrada",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 y Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Cámara y OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detectar objetos con YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "IA dentro del microcontrolador",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi se comunica con el ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Proyecto: robot que sigue un objeto",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 y navegación",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 sin miedo",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describir y simular el robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS en el ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR y mapas (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navegación con Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Proyecto: robot que mapea y navega",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "IA moderna y brazo robótico",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "Modelo de lenguaje como cerebro",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Voz local: escuchar y hablar",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "Brazo SO-101 y LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Aprender por demostración",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simular antes de hacerlo en la realidad",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Proyecto final: robot asistente",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "Para el docente",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "Cómo impartir este curso",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha3/modulo-3-6.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha3/modulo-3-6.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha3/modulo-3-6.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha3/modulo-3-6.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha3/modulo-3-6.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha3/modulo-3-6.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="../../../en/curso/trilha3/modulo-3-6.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">EN</a><a href="modulo-3-6.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">ES</a></div>
+<a class="skip" href="#conteudo">Saltar al contenido</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T3 ativa -->
+<nav aria-label="Navegación principal" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robótica desde cero hasta experto — inicio" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeros pasos</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autónomo</span></a>
+<a aria-current="page" class="nav-trail text-purple-400 bg-purple-500/10" href="index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visión e IA</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Docente</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="Mi recorrido" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Mi recorrido</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Apariencia" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Apariencia</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Oscuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Enfoque</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fuente</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Lectura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamaño</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Ancho</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estrecho</button><button data-inema-set-linewidth="68" type="button">Mediano</button><button data-inema-set-linewidth="75" type="button">Ancho</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Interlineado</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Cómodo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento morado" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento ámbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/oscuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="3-6" data-inema-track="3" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Ruta de navegación" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-purple-400" href="../../index.html">Inicio</a><span aria-hidden="true">/</span>
+<a class="hover:text-purple-400" href="index.html">Ruta 3</a><span aria-hidden="true">/</span>
+<span class="text-purple-400">Módulo 3.6</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MÓDULO 3.6 · PROYECTO</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🎯 Proyecto: robot que sigue un objeto</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Todo lo de la trilha en un solo robot: la cámara del Pi 5 encuentra el objetivo (una pelota de color con OpenCV o una persona con <strong class="text-neutral-100">YOLO26</strong>), el programa transforma la posición en <strong class="text-purple-400">error</strong>, o <strong class="text-neutral-100">PID</strong> transforma el error en la velocidad de cada rueda, y el ESP32 del módulo 3.5 lo ejecuta con parada segura.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">6</div><div class="text-xs text-neutral-400">Temas</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Avanzado</div><div class="text-xs text-neutral-400">Nivel</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Proyecto</div><div class="text-xs text-neutral-400">Tipo</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Rover + Pi 5</div><div class="text-xs text-neutral-400">Hardware</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progreso del módulo 3.6" class="inema-ring" data-inema-meter="modulo:3-6"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:3-6"><strong data-inema-meter-frac="">0 de 0</strong> temas leídos · <span data-inema-section-counter="">Sección 1 de 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Índice de la página" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">En este módulo</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-1">1. El plan</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-2">2. Montaje en el chasis</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-3">3. Objeto de color</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-4">4. Persona con YOLO26</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-5">5. PID de giro y distancia</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-6">6. Pruebas y mejoras</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Contenido detallado</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-3-6#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🗺️ El plan: cámara → detección → error → motores</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-6-t1-p1">El robot quiere dos cosas: mantener el objetivo <strong class="text-neutral-100">en el centro de la imagen</strong> y a una <strong class="text-neutral-100">distancia fija</strong>. La cámara no mide la distancia, pero el tamaño aparente del objeto sirve: cerca ocupa muchos píxeles y lejos ocupa pocos. Entonces, cada cuadro se convierte en dos números de error, y cada error controla un movimiento: el error horizontal indica <strong class="text-purple-400">girar</strong>, el error de tamaño indica <strong class="text-purple-400">avanzar o retroceder</strong>.</p>
+<figure class="fig mb-3">
+<svg aria-label="Ciclo del proyecto: la cámara captura el cuadro; la detección encuentra el centro y el tamaño del objetivo; el cálculo genera el error de giro y el error de distancia; el control genera las velocidades de las ruedas izquierda y derecha; el ESP32 mueve los motores; el robot se mueve y la cámara vuelve a mirar." class="w-full h-auto" role="img" viewbox="0 0 640 270">
+<defs>
+<pattern height="32" id="m36-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m36-ah1" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker>
+<marker id="m36-ah1c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+<filter height="180%" id="m36-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs>
+<rect fill="url(#m36-grid1)" height="270" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#1a1230" height="90" rx="12" stroke="#c084fc" stroke-width="2" width="110" x="10" y="50"></rect><text fill="#c084fc" font-size="16" font-weight="600" x="65" y="88">cámara</text><text fill="#e9d5ff" font-size="14" x="65" y="112">cuadro</text>
+<rect fill="#1a1230" height="90" rx="12" stroke="#c084fc" stroke-width="2" width="110" x="136" y="50"></rect><text fill="#c084fc" font-size="16" font-weight="600" x="191" y="88">detección</text><text fill="#e9d5ff" font-size="14" x="191" y="112">centro, tamaño</text>
+<g filter="url(#m36-glow1)"><rect fill="#221640" height="90" rx="12" stroke="#a855f7" stroke-width="2.5" width="110" x="262" y="50"></rect></g><text fill="#c084fc" font-size="16" font-weight="600" x="317" y="88">error</text><text fill="#e9d5ff" font-size="14" x="317" y="112">giro, distancia</text>
+<rect fill="#1a1230" height="90" rx="12" stroke="#c084fc" stroke-width="2" width="110" x="388" y="50"></rect><text fill="#c084fc" font-size="16" font-weight="600" x="443" y="88">PID</text><text fill="#e9d5ff" font-size="14" x="443" y="112">izq., der.</text>
+<rect fill="#0e1b26" height="90" rx="12" stroke="#38bdf8" stroke-width="2" width="116" x="514" y="50"></rect><text fill="#7dd3fc" font-size="16" font-weight="600" x="572" y="88">ESP32</text><text fill="#bfe6ff" font-size="14" x="572" y="112">motores</text>
+<text fill="#a8a8b3" font-size="14" x="250" y="30">Raspberry Pi 5</text><text fill="#7dd3fc" font-size="14" x="572" y="30">UART</text>
+<text fill="#7dd3fc" font-size="15" x="320" y="248">el robot se mueve, el objetivo cambia de lugar en la imagen y todo vuelve a empezar</text>
+</g>
+<g fill="none" opacity="0.7" stroke="#c084fc" stroke-width="1.8"><path d="M120,95 L130,95" marker-end="url(#m36-ah1)"></path><path d="M246,95 L256,95" marker-end="url(#m36-ah1)"></path><path d="M372,95 L382,95" marker-end="url(#m36-ah1)"></path><path d="M498,95 L508,95" marker-end="url(#m36-ah1)"></path></g>
+<path d="M572,144 C572,215 65,215 65,148" fill="none" marker-end="url(#m36-ah1c)" opacity="0.8" stroke="#38bdf8" stroke-dasharray="7 7" stroke-width="2"></path>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Cómo leer:</strong> las cuatro cajas moradas se ejecutan en el Pi, una vez por cuadro; la cian es el ESP32. El énfasis está en el error porque ahí es donde la imagen se convierte en un número. Si algo falla, averigua en qué caja: la detección no encuentra el objetivo, el error tiene el signo invertido o el motor no responde.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-6-t1-p2"><strong>Error normalizado</strong> es el error dividido por la mitad del ancho de la imagen, para que quede entre −1 (objetivo en el borde izquierdo) y +1 (borde derecho), con 0 en el centro. Así, las ganancias del control no cambian si cambias la resolución. <strong>Ganancia</strong> es el número por el que se multiplica el error para convertirlo en velocidad.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-6-t1-p3">Seguir con la cámara es el mismo ciclo sentir-pensar-actuar del módulo 1.1, solo que ahora el sensor es una imagen y el «pensar» incluye visión artificial. Este esquema (detector → error → controlador → actuador) sirve para una cámara de seguridad que sigue a alguien, un dron que sigue un objetivo y un brazo que apunta.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Error de giro</div><div class="text-xs text-neutral-400">centro del objetivo − centro</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Error de distancia</div><div class="text-xs text-neutral-400">tamaño objetivo − actual</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Normalizar</div><div class="text-xs text-neutral-400">error entre −1 y 1</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Diferencial</div><div class="text-xs text-neutral-400">gira con ruedas a distintas velocidades</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-3-6#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🔧 Montaje del Pi + ESP32 en el chasis</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-6-t2-p1">Parte del rover de la Trilha 1 (chasis, motores, TB6612FNG y ESP32). Agrega: el Pi 5 con enfriador activo, la Camera Module 3 en la parte delantera y una <strong class="text-neutral-100">fuente de alimentación separada para el Pi</strong>. El Pi 5 necesita 5 V con hasta 5 A (la fuente oficial es de 27 W); en el robot, usa un regulador buck de 5 V y 5 A conectado a un pack 2S (dos 18650) con BMS. Los motores usan su propia batería, y todas las GND se conectan entre sí.</p>
+<figure class="fig mb-3">
+<svg aria-label="Vista superior del robot: cámara centrada al frente; Raspberry Pi 5 en medio con cooler; ESP32 y puente H atrás, cerca de los motores; batería de los motores y batería de la Pi con regulador de 5 V separadas; cable UART entre Pi y ESP32; interruptor de corte en la batería de los motores." class="w-full h-auto" role="img" viewbox="0 0 640 330">
+<defs><pattern height="32" id="m36-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m36-grid2)" height="330" width="640"></rect>
+<rect fill="#13131b" height="280" rx="28" stroke="#a8a8b3" stroke-width="2" width="340" x="150" y="30"></rect>
+<rect fill="#26262f" height="80" rx="6" stroke="#a8a8b3" stroke-width="2" width="30" x="118" y="200"></rect><rect fill="#26262f" height="80" rx="6" stroke="#a8a8b3" stroke-width="2" width="30" x="492" y="200"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0e1b26" height="36" rx="8" stroke="#38bdf8" stroke-width="2" width="70" x="285" y="38"></rect><text fill="#7dd3fc" font-size="14" x="320" y="62">cámara</text>
+<rect fill="#221640" height="80" rx="10" stroke="#a855f7" stroke-width="2.5" width="140" x="250" y="92"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="320" y="128">Pi 5</text><text fill="#e9d5ff" font-size="14" x="320" y="152">+ cooler</text>
+<rect fill="#0e1b26" height="50" rx="8" stroke="#38bdf8" stroke-width="2" width="120" x="170" y="190"></rect><text fill="#bfe6ff" font-size="15" x="230" y="220">ESP32</text>
+<rect fill="#0e1b26" height="44" rx="8" stroke="#38bdf8" stroke-width="2" width="120" x="170" y="250"></rect><text fill="#bfe6ff" font-size="14" x="230" y="277">TB6612FNG</text>
+<rect fill="#1a1230" height="50" rx="8" stroke="#c084fc" stroke-width="2" width="125" x="350" y="190"></rect><text fill="#e9d5ff" font-size="14" x="412" y="212">batería 2S</text><text fill="#e9d5ff" font-size="14" x="412" y="230">+ buck 5 V</text>
+<rect fill="#26201a" height="44" rx="8" stroke="#fbbf24" stroke-width="2" width="125" x="350" y="250"></rect><text fill="#fde68a" font-size="14" x="412" y="277">bat. motores</text>
+<text fill="#a8a8b3" font-size="14" x="575" y="60">frente ↑</text>
+<text fill="#a8a8b3" font-size="14" x="70" y="244">ruedas</text>
+</g>
+<g fill="none" stroke-width="2"><path d="M290,200 C310,190 300,180 300,172" stroke="#c084fc" stroke-dasharray="5 4"></path><path d="M380,190 L360,172" stroke="#c084fc"></path><path d="M350,272 L290,272" stroke="#fbbf24"></path></g>
+<g font-family="Inter,sans-serif" font-size="14"><text fill="#e9d5ff" text-anchor="middle" x="560" y="150">UART</text><text fill="#e9d5ff" text-anchor="middle" x="560" y="170">línea discontinua</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Cómo leer:</strong> la cámara va centrada al frente, porque el código asume que el centro de la imagen es el frente del robot. El morado alimenta el Pi; el ámbar alimenta solo el puente H. Separar las dos fuentes evita que el pico de corriente del motor reinicie el Pi. La línea discontinua es el cable UART del módulo 3.5.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-4">Paso a paso</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Prueba cada parte en la mesa de trabajo</h4><p class="text-neutral-300 text-sm">Pi con cámara (módulo 3.2), ESP32 con el receptor (3.5) y el <span class="font-mono text-xs">link_esp32.py</span> con las ruedas girando en el aire. Ensambla solo lo que ya haya funcionado por separado.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Fíjalo dejando espacio para que circule el aire</h4><p class="text-neutral-300 text-sm">Pi sobre separadores (una segunda placa de acrílico o MDF ayuda), con el cooler despejado. La cámara va en una pieza firme, a la altura del objetivo y ligeramente inclinada hacia abajo.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Conecta la alimentación y las señales</h4><p class="text-neutral-300 text-sm">Buck ajustado y medido con multímetro (5,1 V) antes de conectarlo al Pi. Tres cables UART con GND común. Interruptor de corte en la batería de los motores, al alcance de la mano.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">4</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Accede de forma inalámbrica</h4><p class="text-neutral-300 text-sm">Pi conectado al Wi-Fi y SSH del módulo 3.1. Ejecuta los programas por SSH, con el robot sobre un soporte y las ruedas en el aire, la primera vez.</p></div></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Hazlo</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Mide la salida del buck antes de conectar el Pi.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Sujeta el cable plano de la cámara para que no se doble ni se suelte.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Apaga el Pi con <span class="font-mono text-xs">sudo poweroff</span> antes de cortar la alimentación.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ No lo hagas</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Alimenta el Pi desde los 5 V del ESP32 o de un módulo L298N.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Conecta la batería directamente al pin de 5 V del Pi sin regulador.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>No cubras el cooler: el Pi 5 reduce la velocidad cuando se calienta y bajan los FPS.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-6-t2-p2">La mitad de los «bugs» de robots con Pi se deben a la alimentación: reinicios aleatorios, tarjeta corrupta, cámara que desaparece. Montar con fuentes separadas, GND común y medir antes de encender elimina estos problemas antes de que abras el código.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Buck 5 V / 5 A</div><div class="text-xs text-neutral-400">alimentación del Pi</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Fuentes separadas</div><div class="text-xs text-neutral-400">el motor no reinicia el Pi</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Cámara centrada</div><div class="text-xs text-neutral-400">centro = frente</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Interruptor de corte</div><div class="text-xs text-neutral-400">parada física</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-3-6#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🔵 Seguir un objeto de color (OpenCV)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-6-t3-p1">Empieza por la versión más sencilla: una pelota de color intenso (azul, por ejemplo), detectada mediante la máscara HSV y el contorno más grande, exactamente como en el módulo 3.2. A 320×240, el Pi 5 procesa decenas de cuadros por segundo, lo que permite un control fluido. Aquí el control es solo <strong class="text-neutral-100">proporcional</strong> (velocidad = ganancia × error); en el tema 5 se convierte en PID.</p>
+<figure class="fig mb-3">
+<svg aria-label="Imagen de 320 por 240 píxeles con la línea central; el objetivo azul está a la derecha del centro, en x igual a 232; el error de giro es más 0,45, así que la rueda izquierda acelera y la derecha frena para girar a la derecha; el área del objetivo comparada con el área deseada da el error de distancia." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><pattern height="32" id="m36-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m36-ah3" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker></defs>
+<rect fill="url(#m36-grid3)" height="300" width="640"></rect>
+<rect fill="#0b0b10" height="240" rx="6" stroke="#a8a8b3" stroke-width="2" width="320" x="20" y="30"></rect>
+<path d="M180,30 L180,270" stroke="#a8a8b3" stroke-dasharray="6 5" stroke-width="1.5"></path>
+<circle cx="252" cy="150" fill="#0e1b26" r="34" stroke="#38bdf8" stroke-width="3"></circle><circle cx="252" cy="150" fill="#7dd3fc" r="4"></circle>
+<path d="M182,150 L240,150" fill="none" marker-end="url(#m36-ah3)" stroke="#c084fc" stroke-width="2.5"></path>
+<g font-family="Inter,sans-serif">
+<text fill="#a8a8b3" font-size="14" text-anchor="middle" x="180" y="22">centro x = 160</text>
+<text fill="#bfe6ff" font-size="14" text-anchor="middle" x="252" y="208">cx = 232</text>
+<text fill="#c084fc" font-size="16" font-weight="600" x="370" y="64">error de giro</text>
+<text fill="#e9d5ff" font-size="15" x="370" y="90">(232 − 160) ÷ 160 = +0,45</text>
+<text fill="#e9d5ff" font-size="15" x="370" y="114">objetivo a la derecha → girar a la derecha</text>
+<text fill="#c084fc" font-size="16" font-weight="600" x="370" y="162">ruedas</text>
+<text fill="#e9d5ff" font-size="15" x="370" y="188">izq = avance + giro</text>
+<text fill="#e9d5ff" font-size="15" x="370" y="212">der = avance − giro</text>
+<text fill="#7dd3fc" font-size="15" x="370" y="254">área pequeña → lejos → avanza</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Cómo leer:</strong> la línea discontinua es el centro de la imagen, que coincide con el frente del robot. La flecha morada representa el error: apunta hacia donde el robot debe girar. Con un error positivo, la rueda izquierda gira más que la derecha y el robot gira a la derecha, llevando la pelota de vuelta al centro.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-6-t3-p2"><strong class="text-neutral-100">Objetivo:</strong> el robot gira hasta centrar la pelota y avanza hasta que esta tenga el tamaño deseado. Guarda el archivo en la misma carpeta que <span class="font-mono text-xs">link_esp32.py</span> y ejecútalo en el venv del curso (creado con <span class="font-mono text-xs">--system-site-packages</span> para detectar picamera2). Ajusta <span class="font-mono text-xs">HSV_MIN</span>/<span class="font-mono text-xs">HSV_MAX</span> a tu color.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">seguidor_cor.py</span></div>
+<pre><code><span class="c">#!/usr/bin/env python3</span>
+<span class="c">"""Robot que sigue un objeto de color (módulo 3.6). Requiere link_esp32.py (módulo 3.5) en la misma carpeta."""</span>
+<span class="k">import</span> time
+<span class="k">import</span> cv2
+<span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+<span class="k">from</span> link_esp32 <span class="k">import</span> Link
+
+LARGURA, ALTURA = 320, 240
+HSV_MIN = np.array([100, 120, 70])    <span class="c"># rango del azul; calibra con el módulo 3.2</span>
+HSV_MAX = np.array([130, 255, 255])
+AREA_MIN = 300                        <span class="c"># menor que esto es ruido</span>
+AREA_ALVO = 6000                      <span class="c"># área (píxeles) a la distancia deseada: mide la tuya</span>
+KP_GIRO, KP_DIST, VEL_MAX = 180, 160, 180
+
+
+<span class="k">def</span> acha_objeto(quadro):
+    hsv = cv2.cvtColor(quadro, cv2.COLOR_BGR2HSV)
+    mascara = cv2.inRange(hsv, HSV_MIN, HSV_MAX)
+    mascara = cv2.morphologyEx(mascara, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
+    contornos, _ = cv2.findContours(mascara, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    <span class="k">if not</span> contornos:
+        <span class="k">return None</span>
+    maior = max(contornos, key=cv2.contourArea)
+    area = cv2.contourArea(maior)
+    <span class="k">if</span> area &lt; AREA_MIN:
+        <span class="k">return None</span>
+    m = cv2.moments(maior)
+    <span class="k">return</span> m[<span class="s">"m10"</span>] / m[<span class="s">"m00"</span>], area      <span class="c"># centro x y área</span>
+
+
+<span class="k">def</span> comando(cx, area):
+    erro_x = (cx - LARGURA / 2) / (LARGURA / 2)                    <span class="c"># -1 izquierda .. +1 derecha</span>
+    erro_d = max(-1.0, min(1.0, (AREA_ALVO - area) / AREA_ALVO))   <span class="c"># &gt;0 lejos, &lt;0 cerca</span>
+    giro, avanco = KP_GIRO * erro_x, KP_DIST * erro_d
+    esq = max(-VEL_MAX, min(VEL_MAX, avanco + giro))
+    drt = max(-VEL_MAX, min(VEL_MAX, avanco - giro))
+    <span class="k">return</span> esq, drt
+
+
+<span class="k">def</span> main():
+    cam = Picamera2()
+    cam.configure(cam.create_video_configuration(main={<span class="s">"size"</span>: (LARGURA, ALTURA), <span class="s">"format"</span>: <span class="s">"RGB888"</span>}))
+    cam.start()
+    link = Link()
+    t0, quadros, esq, drt = time.monotonic(), 0, 0, 0
+    <span class="k">try</span>:
+        <span class="k">while True</span>:
+            quadro = cam.capture_array()     <span class="c"># "RGB888" de picamera2 ya viene en el orden BGR de OpenCV</span>
+            achado = acha_objeto(quadro)
+            esq, drt = comando(*achado) <span class="k">if</span> achado <span class="k">else</span> (0, 0)   <span class="c"># perdió el objetivo: detenido</span>
+            link.motores(esq, drt)           <span class="c"># cada cuadro envía un comando: mantiene activo el ESP32</span>
+            quadros += 1
+            <span class="k">if</span> time.monotonic() - t0 &gt;= 1.0:
+                print(f<span class="s">"{quadros} FPS | objetivo={'sí' if achado else 'no'} | izq={esq:.0f} der={drt:.0f}"</span>)
+                t0, quadros = time.monotonic(), 0
+    <span class="k">except</span> KeyboardInterrupt:
+        <span class="k">pass</span>
+    <span class="k">finally</span>:
+        link.fechar()                        <span class="c"># envía "S"</span>
+        cam.stop()
+
+
+<span class="k">if</span> __name__ == <span class="s">"__main__"</span>:
+    main()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar (primero con las ruedas en el aire)</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>La terminal muestra una línea por segundo con los FPS (espera algo por encima de 20) y «objetivo=sí» cuando la pelota está al frente.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Pelota a la derecha: la rueda izquierda gira más. Pelota demasiado cerca: ambas giran hacia atrás.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿Gira hacia el lado equivocado? Cambia los cables de un motor o invierte el signo de <span class="font-mono text-xs">giro</span>. Si la cámara está montada al revés, también se invierte.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-6-t3-p3">La versión por color es rápida, económica y fácil de depurar, así que es la mejor para ajustar la mecánica, las señales y las ganancias. Cuando funciona, cambiar el detector por una red neuronal consiste en cambiar una función.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Máscara HSV</div><div class="text-xs text-neutral-400">separa el color</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Momentos</div><div class="text-xs text-neutral-400">centro del contorno</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Control P</div><div class="text-xs text-neutral-400">ganancia × error</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">AREA_ALVO</div><div class="text-xs text-neutral-400">distancia deseada</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-3-6#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🧍 Seguir a una persona o un objeto (YOLO26)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-6-t4-p1">Para seguir a una persona, un color no es suficiente. Cambia el detector por el <strong class="text-purple-400">YOLO26n exportado a NCNN</strong> (módulo 3.3). En lugar del área, usa la <strong class="text-neutral-100">altura del recuadro</strong> como medida de distancia: cambia menos cuando la persona abre los brazos. El detector es más lento que la máscara de color (unos pocos cuadros por segundo en CPU), por eso las ganancias aquí son menores. Con el AI HAT+ los FPS aumentan bastante.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-6-t4-p2">El YOLO26 preentrenado conoce las 80 clases del conjunto <strong>COCO</strong>; la clase 0 es "person", la 32 es "sports ball". Cada detección incluye una <strong>caja</strong> (x1, y1, x2, y2), a <strong>clase</strong> e a <strong>confianza</strong> (de 0 a 1). Ignora las detecciones con baja confianza para no perseguir fantasmas.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-6-t4-p3"><strong class="text-neutral-100">Objetivo:</strong> seguir a la persona más grande de la imagen. Primero, exporta el modelo con el tamaño que se usa aquí: <span class="font-mono text-xs">yolo export model=yolo26n.pt format=ncnn imgsz=320</span> (crea la carpeta <span class="font-mono text-xs">yolo26n_ncnn_model</span>).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">seguidor_yolo.py</span></div>
+<pre><code><span class="c">#!/usr/bin/env python3</span>
+<span class="c">"""Sigue a una persona con YOLO26 (NCNN) en el Pi 5 (módulo 3.6). Requiere link_esp32.py y el modelo exportado."""</span>
+<span class="k">import</span> time
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+<span class="k">from</span> ultralytics <span class="k">import</span> YOLO
+<span class="k">from</span> link_esp32 <span class="k">import</span> Link
+
+LARGURA, ALTURA = 640, 480
+CLASSE = 0              <span class="c"># 0 = "person" en COCO; 32 = "sports ball"</span>
+CONF_MIN = 0.5
+ALTURA_ALVO = 0.6       <span class="c"># altura del recuadro ÷ altura de la imagen a la distancia deseada</span>
+KP_GIRO, KP_DIST, VEL_MAX = 140, 150, 150
+modelo = YOLO(<span class="s">"yolo26n_ncnn_model"</span>)
+
+
+<span class="k">def</span> maior_caixa(resultado):
+    melhor = None
+    <span class="k">for</span> caixa <span class="k">in</span> resultado.boxes:
+        <span class="k">if</span> int(caixa.cls) != CLASSE <span class="k">or</span> float(caixa.conf) &lt; CONF_MIN:
+            <span class="k">continue</span>
+        x1, y1, x2, y2 = caixa.xyxy[0].tolist()
+        <span class="k">if</span> melhor <span class="k">is None or</span> (y2 - y1) &gt; (melhor[3] - melhor[1]):
+            melhor = (x1, y1, x2, y2)
+    <span class="k">return</span> melhor
+
+
+<span class="k">def</span> main():
+    cam = Picamera2()
+    cam.configure(cam.create_video_configuration(main={<span class="s">"size"</span>: (LARGURA, ALTURA), <span class="s">"format"</span>: <span class="s">"RGB888"</span>}))
+    cam.start()
+    link = Link()
+    <span class="k">try</span>:
+        <span class="k">while True</span>:
+            t = time.monotonic()
+            quadro = cam.capture_array()
+            caixa = maior_caixa(modelo.predict(quadro, imgsz=320, verbose=False)[0])
+            esq = drt = 0
+            <span class="k">if</span> caixa:
+                x1, y1, x2, y2 = caixa
+                erro_x = ((x1 + x2) / 2 - LARGURA / 2) / (LARGURA / 2)
+                erro_d = max(-1.0, min(1.0, (ALTURA_ALVO - (y2 - y1) / ALTURA) / ALTURA_ALVO))
+                giro, avanco = KP_GIRO * erro_x, KP_DIST * erro_d
+                esq = max(-VEL_MAX, min(VEL_MAX, avanco + giro))
+                drt = max(-VEL_MAX, min(VEL_MAX, avanco - giro))
+            link.motores(esq, drt)
+            print(f<span class="s">"{(time.monotonic() - t) * 1000:.0f} ms | pessoa={'sim' if caixa else 'nao'} | esq={esq:.0f} dir={drt:.0f}"</span>)
+    <span class="k">except</span> KeyboardInterrupt:
+        <span class="k">pass</span>
+    <span class="k">finally</span>:
+        link.fechar()
+        cam.stop()
+
+
+<span class="k">if</span> __name__ == <span class="s">"__main__"</span>:
+    main()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Cada línea muestra el tiempo del ciclo. Si supera los 300 ms, el ESP32 se detiene entre un cuadro y otro: reduce <span class="font-mono text-xs">imgsz</span> o usa el AI HAT+.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Camina despacio frente al robot: gira para mantenerte en el centro y se detiene a unos dos metros.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿"pessoa=nao" aunque estés frente a él? Hay poca luz o luz de frente desde la ventana; prueba el modelo por sí solo como en el módulo 3.3.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-6-t4-p4">Cambiar el color por una red neuronal muestra el valor de la arquitectura en capas: el enlace, el ESP32 y la lógica de las ruedas siguen iguales. Al entrenar YOLO26 con tus imágenes (módulo 3.3), el mismo programa sigue tu objeto, la mascota de la escuela u otro robot.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Clase COCO</div><div class="text-xs text-neutral-400">0 = person</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Confianza</div><div class="text-xs text-neutral-400">umbral de 0,5</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Altura del cuadro</div><div class="text-xs text-neutral-400">medida de distancia</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Tiempo del ciclo</div><div class="text-xs text-neutral-400">menos de 300 ms</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-3-6#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🎛️ PID de giro y distancia</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-6-t5-p1">Solo con el término P, el robot suele pasarse del punto y oscilar de un lado a otro (el retraso de la cámara lo empeora). El <strong class="text-neutral-100">D</strong> frena el giro cuando el error ya está disminuyendo; el <strong class="text-neutral-100">I</strong> corrige la pequeña distancia que queda por la fricción. Son <strong class="text-purple-400">dos PID independientes</strong>, como en el módulo 2.3: uno para el giro y otro para la distancia, que se suman al enviar las órdenes a las ruedas.</p>
+<figure class="fig mb-3">
+<svg aria-label="Dos controladores en paralelo: el error de giro entra en el PID de giro y genera la parte de giro; el error de distancia entra en el PID de distancia y genera la parte de avance; la rueda izquierda recibe avance más giro y la derecha, avance menos giro." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs><pattern height="32" id="m36-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m36-ah5" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker></defs>
+<rect fill="url(#m36-grid5)" height="260" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#1a1230" height="64" rx="10" stroke="#c084fc" stroke-width="2" width="140" x="10" y="40"></rect><text fill="#e9d5ff" font-size="15" x="80" y="78">error de giro</text>
+<rect fill="#0e1b26" height="64" rx="10" stroke="#38bdf8" stroke-width="2" width="140" x="10" y="150"></rect><text fill="#bfe6ff" font-size="15" x="80" y="188">error de dist.</text>
+<rect fill="#221640" height="64" rx="10" stroke="#a855f7" stroke-width="2.5" width="150" x="200" y="40"></rect><text fill="#c084fc" font-size="16" font-weight="600" x="275" y="70">PID giro</text><text fill="#e9d5ff" font-size="14" x="275" y="92">P + D</text>
+<rect fill="#0e1b26" height="64" rx="10" stroke="#38bdf8" stroke-width="2" width="150" x="200" y="150"></rect><text fill="#7dd3fc" font-size="16" font-weight="600" x="275" y="180">PID dist.</text><text fill="#bfe6ff" font-size="14" x="275" y="202">P + I</text>
+<rect fill="#1a1230" height="64" rx="10" stroke="#c084fc" stroke-width="2" width="210" x="420" y="40"></rect><text fill="#e9d5ff" font-size="15" x="525" y="78">izq = avance + giro</text>
+<rect fill="#1a1230" height="64" rx="10" stroke="#c084fc" stroke-width="2" width="210" x="420" y="150"></rect><text fill="#e9d5ff" font-size="15" x="525" y="188">der = avance − giro</text>
+<text fill="#a8a8b3" font-size="14" x="385" y="138">suma</text>
+</g>
+<g fill="none" opacity="0.8" stroke-width="1.8"><path d="M150,72 L193,72" marker-end="url(#m36-ah5)" stroke="#c084fc"></path><path d="M150,182 L193,182" marker-end="url(#m36-ah5)" stroke="#38bdf8"></path>
+<path d="M350,72 L413,72" marker-end="url(#m36-ah5)" stroke="#c084fc"></path><path d="M350,72 L413,176" marker-end="url(#m36-ah5)" stroke="#c084fc"></path><path d="M350,182 L413,182" marker-end="url(#m36-ah5)" stroke="#38bdf8"></path><path d="M350,182 L413,78" marker-end="url(#m36-ah5)" stroke="#38bdf8"></path></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Cómo leer:</strong> cada error tiene su propio controlador, y las flechas cruzadas muestran que ambas ruedas reciben los dos componentes. El giro entra con signo opuesto en cada rueda; el avance entra por igual. Ajusta un PID a la vez: primero el giro con el avance en cero y luego la distancia.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-6-t5-p2"><strong class="text-neutral-100">Objetivo:</strong> un PID reutilizable, con límite de salida y protección contra windup (la integral deja de crecer cuando la salida se satura).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">pid.py</span></div>
+<pre><code><span class="c">"""PID simple con límite y anti-windup (módulo 3.6)."""</span>
+<span class="k">import</span> time
+
+
+<span class="k">class</span> PID:
+    <span class="k">def</span> __init__(self, kp, ki=0.0, kd=0.0, limite=255.0):
+        self.kp, self.ki, self.kd, self.limite = kp, ki, kd, limite
+        self.reset()
+
+    <span class="k">def</span> reset(self):
+        self.integral, self.erro_ant, self.t_ant = 0.0, 0.0, None
+
+    <span class="k">def</span> __call__(self, erro):
+        agora = time.monotonic()
+        dt = 0.0 <span class="k">if</span> self.t_ant <span class="k">is None else</span> agora - self.t_ant
+        deriv = (erro - self.erro_ant) / dt <span class="k">if</span> dt &gt; 0 <span class="k">else</span> 0.0
+        self.integral += erro * dt
+        saida = self.kp * erro + self.ki * self.integral + self.kd * deriv
+        <span class="k">if</span> abs(saida) &gt; self.limite:          <span class="c"># saturou: desfaz a soma (anti-windup)</span>
+            self.integral -= erro * dt
+            saida = max(-self.limite, min(self.limite, saida))
+        self.erro_ant, self.t_ant = erro, agora
+        <span class="k">return</span> saida</code></pre>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-6-t5-p3">En el <span class="font-mono text-xs">seguidor_cor.py</span>, agrega el import y los dos objetos después de las constantes, y reemplaza la función <span class="font-mono text-xs">comando</span> completa por esta. En <span class="font-mono text-xs">main()</span>, cuando desaparezca el objetivo, llama a <span class="font-mono text-xs">pid_giro.reset()</span> e <span class="font-mono text-xs">pid_dist.reset()</span>.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">seguidor_cor.py (fragmento que cambia)</span></div>
+<pre><code><span class="k">from</span> pid <span class="k">import</span> PID
+
+pid_giro = PID(kp=180, ki=0.0, kd=20, limite=150)   <span class="c"># empieza con kd=0 y súbelo poco a poco</span>
+pid_dist = PID(kp=160, ki=30, kd=0, limite=150)
+
+
+<span class="k">def</span> comando(cx, area):
+    erro_x = (cx - LARGURA / 2) / (LARGURA / 2)
+    erro_d = max(-1.0, min(1.0, (AREA_ALVO - area) / AREA_ALVO))
+    <span class="k">if</span> abs(erro_x) &lt; 0.05:                    <span class="c"># zona muerta: no vibrar cuando el objetivo está en el centro</span>
+        erro_x = 0.0
+    giro, avanco = pid_giro(erro_x), pid_dist(erro_d)
+    esq = max(-VEL_MAX, min(VEL_MAX, avanco + giro))
+    drt = max(-VEL_MAX, min(VEL_MAX, avanco - giro))
+    <span class="k">return</span> esq, drt</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-purple-400">Cómo verificar:</strong> con el robot en el suelo, empuja la pelota hacia un lado. Solo con P, se pasa del punto y regresa; con D ajustado, llega al centro con una sobrepasada pequeña como máximo. Si empieza a vibrar, kd está demasiado alto.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-6-t5-p4">El mismo PID del seguidor de línea de la Trilha 2, ahora con un sensor lento y ruidoso (la cámara). Aprender a ajustar con retraso es lo que distingue a un robot que persigue suavemente de uno que baila alrededor del objetivo.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Dos PID</div><div class="text-xs text-neutral-400">giro y distancia</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Anti-windup</div><div class="text-xs text-neutral-400">la integral no se dispara</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Zona muerta</div><div class="text-xs text-neutral-400">ignora errores pequeños</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">reset()</div><div class="text-xs text-neutral-400">al perder el objetivo</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-3-6#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">✅ Pruebas, seguridad y mejoras</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-6-t6-p1">Haz pruebas por etapas, de la más segura a la más real: ruedas en el aire, suelo despejado con velocidad máxima baja (<span class="font-mono text-xs">VEL_MAX = 100</span>), y solo después la velocidad final. Anota en cada ronda qué cambió y cuál fue el resultado, como en el diario de bitácora de la Trilha 2. Las causas de los problemas más comunes son conocidas:</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3 text-purple-400">Síntoma</th><th class="text-left p-3 text-purple-400">Causa probable</th><th class="text-left p-3 text-purple-400">Qué ajustar</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">Oscila alrededor del objetivo</td><td class="p-3">KP_GIRO alto, retraso de la cámara</td><td class="p-3">baja kp, sube kd</td></tr>
+<tr><td class="p-3">Se aleja del objetivo</td><td class="p-3">la fricción vence al PWM bajo</td><td class="p-3">sube ki de la distancia</td></tr>
+<tr><td class="p-3">Se detiene y avanza a tirones</td><td class="p-3">ciclo de más de 300 ms</td><td class="p-3">menor resolución, NCNN, AI HAT+</td></tr>
+<tr><td class="p-3">Persigue la cortina azul</td><td class="p-3">rango HSV demasiado amplio</td><td class="p-3">reduce el rango HSV, sube AREA_MIN</td></tr>
+<tr><td class="p-3">La Pi se reinicia al arrancar</td><td class="p-3">alimentación compartida</td><td class="p-3">fuentes separadas (tema 2)</td></tr>
+</tbody>
+</table>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Seguridad</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Mantén el interruptor de corte de los motores siempre al alcance.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Área de prueba libre de escaleras y cables; nadie debe estar acostado en el suelo.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Prueba el timeout: Ctrl+C y desconectar el cable deben detener el robot.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Evita</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Seguir a niños o animales a alta velocidad.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Probarlo sobre la mesa: un error de signo y el robot se cae.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Cambiar tres ganancias a la vez: no sabrás cuál ayudó.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Mejoras (desafíos)</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🔄 Buscar cuando pierde el objetivo</div><p class="text-sm text-neutral-400">En vez de detenerse, gira despacio hacia el lado donde vio el objetivo por última vez, durante un máximo de 5 segundos.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">📉 Filtrar la posición</div><p class="text-sm text-neutral-400">Un promedio móvil del centro x (módulo 1.4) reduce la vibración causada por el ruido en la detección.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🛑 Freno por proximidad</div><p class="text-sm text-neutral-400">Conecta el HC-SR04 al ESP32: por debajo de 20 cm ignora la orden de avanzar, sin importar lo que decida la Pi.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">📺 Ver lo que ve el robot</div><p class="text-sm text-neutral-400">Dibuja el cuadro y el error en la imagen y transmítelos al navegador, como en el módulo 3.2.</p></div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Siguiente paso: ROS 2</h3>
+<p class="text-neutral-300 text-sm">El robot de la Trilha 3 ya tiene el diseño de un robot con ROS 2: una computadora que piensa, un microcontrolador que actúa y mensajes entre ambos. En la Trilha 4, el protocolo casero se convierte en tópicos (<span class="font-mono text-xs">/cmd_vel</span>), el ESP32 usa micro-ROS y un LiDAR agrega el mapa y la navegación.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-6-t6-p2">Un proyecto termina cuando funciona de manera repetible y segura, no la primera vez que sale bien. Documentar los síntomas, las causas y los ajustes permite presentar el robot, enseñar con él y seguir mejorándolo sin empezar de nuevo.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Pruebas por etapas</div><div class="text-xs text-neutral-400">aire, suelo lento, velocidad final</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Un ajuste a la vez</div><div class="text-xs text-neutral-400">y anotar</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Bloqueo local</div><div class="text-xs text-neutral-400">el ESP32 tiene prioridad sobre la Pi</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">/cmd_vel</div><div class="text-xs text-neutral-400">lo mismo, con ROS 2</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Resumen del módulo y de la ruta</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Ciclo cámara → detección → error → PID → ESP32</strong><span class="text-neutral-400">, que se ejecuta en cada cuadro.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Montaje con fuentes separadas</strong><span class="text-neutral-400">: buck 5 V/5 A para la Pi, batería propia para los motores, GND común, interruptor de corte.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Dos detectores, el mismo control</strong><span class="text-neutral-400">: color con OpenCV para ajustar la mecánica, YOLO26 en NCNN para personas.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Dos PID</strong><span class="text-neutral-400">: giro (P+D) y distancia (P+I), con anti-windup y zona muerta.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Ruta 3 completa</strong><span class="text-neutral-400">: Pi 5 y Linux, cámara, YOLO26, TinyML en ESP32-S3, enlace Pi↔ESP32 y un robot que sigue.</span></div></div>
+</div>
+<h3 class="font-semibold text-purple-400 mb-3">Para profundizar</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.ultralytics.com/guides/raspberry-pi/" rel="noopener" target="_blank">Ultralytics en Raspberry Pi</a> <span class="text-neutral-500">— YOLO26, exportación NCNN y rendimiento</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf" rel="noopener" target="_blank">Manual de picamera2</a> <span class="text-neutral-500">— ajustes de video y formatos</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.opencv.org/4.x/df/d9d/tutorial_py_colorspaces.html" rel="noopener" target="_blank">OpenCV: espacios de color y HSV</a> <span class="text-neutral-500">— rastrear objetos por color</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.raspberrypi.com/documentation/computers/ai.html" rel="noopener" target="_blank">Raspberry Pi AI HAT+</a> <span class="text-neutral-500">— acelerar la detección</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.ros.org/en/lyrical/" rel="noopener" target="_blank">Documentación de ROS 2</a> <span class="text-neutral-500">— para la Ruta 4</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-purple-400 mb-1">Siguiente: Ruta 4 · ROS 2 y navegación</h3>
+<p class="text-neutral-300">4.1 · ROS 2 sin miedo: nodos, tópicos y mensajes. Tu robot de la Ruta 3 adquiere mapa, localización y navegación de una habitación a otra.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-3-5.html">← Anterior: 3.5 Pi se comunica con el ESP32</a>
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">Índice de la Ruta 3</a>
+<a class="inline-flex items-center px-5 py-3 bg-purple-700 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors" href="../trilha4/modulo-4-1.html">Siguiente: Ruta 4 · 4.1 ROS 2 sin miedo →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica de cero a experto · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licencia MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

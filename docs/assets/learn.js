@@ -1,3 +1,6 @@
+var __INEMA_L=(document.documentElement.getAttribute('lang')||'pt').slice(0,2);
+var __INEMA_D={en:{" de ": " of ", " mais nova que a suportada (": " is newer than supported (", " so nao resolvidas": " only unresolved", "Adicionar nota": "Add note", "Anotar selecao": "Annotate selection", "Apagar TODO o progresso, duvidas e notas deste curso? Esta acao nao pode ser desfeita.": "Erase ALL progress, questions and notes for this course? This cannot be undone.", "Apagar tudo": "Erase everything", "Armazenamento cheio. Exporte sua jornada para nao perder dados.": "Storage is full. Export your journey so you do not lose data.", "Arquivo invalido. Nada foi alterado.": "Invalid file. Nothing was changed.", "Backup": "Backup", "Continuar de onde parei": "Continue where I left off", "Copiado.": "Copied.", "Copiar": "Copy", "Cor: ": "Color: ", "Correto. ": "Correct. ", "Curso": "Course", "Curso concluido. Parabens pelo esforco.": "Course completed. Congratulations on your effort.", "Duvidas (": "Questions (", "Estado do curso apagado.": "Course state erased.", "Este trecho nao e anotavel.": "This passage cannot be annotated.", "Excluir": "Delete", "Exportar .json": "Export .json", "Fechar": "Close", "Fechar minha jornada": "Close my journey", "Importado: ": "Imported: ", "Importar .json": "Import .json", "Ir ao trecho": "Go to passage", "JSON invalido ou ilegivel.": "Invalid or unreadable JSON.", "Lido": "Read", "Marcar com cor ": "Highlight in ", "Marcar como duvida": "Mark as question", "Marcar como lido": "Mark as read", "Marcar resolvida": "Mark resolved", "Minha jornada": "My journey", "Modo leitura: seu progresso nao sera salvo neste navegador.": "Read-only mode: your progress will not be saved in this browser.", "Modulo ": "Module ", "Nao foi possivel copiar.": "Could not copy.", "Nao foi possivel exportar.": "Could not export.", "Nenhuma duvida.": "No questions.", "Nenhuma nota.": "No notes.", "Nota": "Note", "Notas e marcacoes (": "Notes and highlights (", "Progresso": "Progress", "Reabrir": "Reopen", "Reveja: ": "Review: ", "Secao ": "Section ", "Selecao limitada a um paragrafo.": "Selection limited to one paragraph.", "Selecione dentro de um paragrafo anotavel.": "Select inside an annotatable paragraph.", "Sua anotacao:": "Your note:", "Substituir TODO o estado atual pelo arquivo importado? O progresso atual sera perdido.": "Replace ALL current state with the imported file? Current progress will be lost.", "Topico: ": "Topic: ", "Trecho marcado": "Highlighted passage", "Trilha ": "Track ", "Voltar ao ultimo ponto": "Back to last spot", "cancelado pelo usuario": "cancelled by the user", "nota sem ancora": "note without anchor", "schemaVersion ausente.": "schemaVersion missing."},es:{" de ": " de ", " mais nova que a suportada (": " es más nueva que la admitida (", " so nao resolvidas": " solo sin resolver", "Adicionar nota": "Agregar nota", "Anotar selecao": "Anotar selección", "Apagar TODO o progresso, duvidas e notas deste curso? Esta acao nao pode ser desfeita.": "¿Borrar TODO el progreso, dudas y notas de este curso? Esta acción no se puede deshacer.", "Apagar tudo": "Borrar todo", "Armazenamento cheio. Exporte sua jornada para nao perder dados.": "Almacenamiento lleno. Exporta tu recorrido para no perder datos.", "Arquivo invalido. Nada foi alterado.": "Archivo inválido. No se cambió nada.", "Backup": "Respaldo", "Continuar de onde parei": "Continuar donde lo dejé", "Copiado.": "Copiado.", "Copiar": "Copiar", "Cor: ": "Color: ", "Correto. ": "Correcto. ", "Curso": "Curso", "Curso concluido. Parabens pelo esforco.": "Curso completado. Felicitaciones por tu esfuerzo.", "Duvidas (": "Dudas (", "Estado do curso apagado.": "Estado del curso borrado.", "Este trecho nao e anotavel.": "Este fragmento no se puede anotar.", "Excluir": "Eliminar", "Exportar .json": "Exportar .json", "Fechar": "Cerrar", "Fechar minha jornada": "Cerrar mi recorrido", "Importado: ": "Importado: ", "Importar .json": "Importar .json", "Ir ao trecho": "Ir al fragmento", "JSON invalido ou ilegivel.": "JSON inválido o ilegible.", "Lido": "Leído", "Marcar com cor ": "Marcar con color ", "Marcar como duvida": "Marcar como duda", "Marcar como lido": "Marcar como leído", "Marcar resolvida": "Marcar resuelta", "Minha jornada": "Mi recorrido", "Modo leitura: seu progresso nao sera salvo neste navegador.": "Modo lectura: tu progreso no se guardará en este navegador.", "Modulo ": "Módulo ", "Nao foi possivel copiar.": "No se pudo copiar.", "Nao foi possivel exportar.": "No se pudo exportar.", "Nenhuma duvida.": "Ninguna duda.", "Nenhuma nota.": "Ninguna nota.", "Nota": "Nota", "Notas e marcacoes (": "Notas y marcas (", "Progresso": "Progreso", "Reabrir": "Reabrir", "Reveja: ": "Revisa: ", "Secao ": "Sección ", "Selecao limitada a um paragrafo.": "Selección limitada a un párrafo.", "Selecione dentro de um paragrafo anotavel.": "Selecciona dentro de un párrafo anotable.", "Sua anotacao:": "Tu nota:", "Substituir TODO o estado atual pelo arquivo importado? O progresso atual sera perdido.": "¿Reemplazar TODO el estado actual por el archivo importado? Se perderá el progreso actual.", "Topico: ": "Tema: ", "Trecho marcado": "Fragmento marcado", "Trilha ": "Ruta ", "Voltar ao ultimo ponto": "Volver al último punto", "cancelado pelo usuario": "cancelado por el usuario", "nota sem ancora": "nota sin ancla", "schemaVersion ausente.": "falta schemaVersion."}};
+function __INEMA_T(x){var d=__INEMA_D[__INEMA_L];return d&&d[x]!=null?d[x]:x;}
 /*!
  * INEMA learn.js — camada de aprendizagem v2 (formato-curso-v2)
  * ------------------------------------------------------------------
@@ -156,7 +159,7 @@
     } catch (e) {
       // Cota estourada: mantem estado anterior, sugere export, segue legivel.
       warn('[INEMA] setItem falhou (cota?):', e);
-      notify('Armazenamento cheio. Exporte sua jornada para nao perder dados.', 'warn');
+      notify(__INEMA_T('Armazenamento cheio. Exporte sua jornada para nao perder dados.'), 'warn');
       return false;
     }
   }
@@ -542,7 +545,7 @@
       var mods = tk.modules || [];
       for (var j = 0; j < mods.length; j++) {
         var md = mods[j];
-        out.push({ id: String(md.id), track: trk, topics: (+md.topics || 0), title: md.title || ('Modulo ' + md.id), href: md.href || null });
+        out.push({ id: String(md.id), track: trk, topics: (+md.topics || 0), title: md.title || (__INEMA_T('Modulo ') + md.id), href: md.href || null });
       }
     }
     return out;
@@ -649,9 +652,9 @@
     btn.classList.toggle('is-read', isOn);
     // estado por icone+texto+cor (1.4.1): atualiza label se houver slot
     var lbl = btn.querySelector('[data-inema-read-label]') || btn.querySelector('.inema-read-label');
-    if (lbl) lbl.textContent = isOn ? 'Lido' : 'Marcar como lido';
+    if (lbl) lbl.textContent = isOn ? __INEMA_T('Lido') : __INEMA_T('Marcar como lido');
     else if (!btn.querySelector('svg') && !btn.children.length) {
-      btn.textContent = isOn ? 'Lido' : 'Marcar como lido';
+      btn.textContent = isOn ? __INEMA_T('Lido') : __INEMA_T('Marcar como lido');
     }
     // slot de icone legado (single-icon): troca o glifo. O padrao 4-span
     // (.inema-ico-todo/.inema-ico-done) ja e regido por CSS via aria-pressed.
@@ -679,7 +682,7 @@
     el.setAttribute('aria-valuemin', '0');
     el.setAttribute('aria-valuemax', '100');
     el.setAttribute('aria-valuenow', String(pr.pct));
-    el.setAttribute('aria-valuetext', pr.done + ' de ' + pr.total + ' (' + pr.pct + '%)');
+    el.setAttribute('aria-valuetext', pr.done + __INEMA_T(' de ') + pr.total + ' (' + pr.pct + '%)');
     // CSS multiplica por 1% (calc(var(--inema-pct) * 1%)) -> var unitless
     el.style.setProperty('--inema-pct', String(pr.pct));
     el.style.setProperty('--inema-pct-num', String(pr.pct));
@@ -690,7 +693,7 @@
     var pctSlot = el.querySelector('[data-inema-meter-pct]') || el.querySelector('.inema-meter-pct');
     if (pctSlot) pctSlot.textContent = pr.pct + '%';
     var fracSlot = el.querySelector('[data-inema-meter-frac]') || el.querySelector('.inema-meter-count') || el.querySelector('.inema-meter-frac');
-    if (fracSlot) fracSlot.textContent = pr.done + ' de ' + pr.total;
+    if (fracSlot) fracSlot.textContent = pr.done + __INEMA_T(' de ') + pr.total;
 
     // Barra: filete interno opcional.
     var fill = el.querySelector('[data-inema-meter-fill]');
@@ -715,7 +718,7 @@
       if (!meta.completedAt) {
         meta.completedAt = new Date().toISOString();
         setMeta(meta);
-        notify('Curso concluido. Parabens pelo esforco.', 'ok');
+        notify(__INEMA_T('Curso concluido. Parabens pelo esforco.'), 'ok');
       }
     }
   }
@@ -873,13 +876,13 @@
     // MVP: restringe a UM bloco anotavel (contiguidade + robustez).
     var block = blockOf(range.startContainer);
     var endBlock = blockOf(range.endContainer);
-    if (!block) { notify('Selecione dentro de um paragrafo anotavel.', 'warn'); return null; }
+    if (!block) { notify(__INEMA_T('Selecione dentro de um paragrafo anotavel.'), 'warn'); return null; }
     if (endBlock && endBlock !== block) {
       // colapsa a selecao ao bloco inicial (E8: nao tenta cross-node)
-      notify('Selecao limitada a um paragrafo.', 'warn');
+      notify(__INEMA_T('Selecao limitada a um paragrafo.'), 'warn');
     }
     var blockId = block.getAttribute('data-inema-block');
-    if (!blockId) { notify('Este trecho nao e anotavel.', 'warn'); return null; }
+    if (!blockId) { notify(__INEMA_T('Este trecho nao e anotavel.'), 'warn'); return null; }
 
     var startOffset, endOffset;
     try {
@@ -1093,7 +1096,7 @@
     var pop = document.createElement('div');
     pop.className = 'inema-selpop';
     pop.setAttribute('role', 'toolbar');
-    pop.setAttribute('aria-label', 'Anotar selecao');
+    pop.setAttribute('aria-label', __INEMA_T('Anotar selecao'));
     pop.style.position = 'absolute';
     pop.style.display = 'none';
     pop.style.zIndex = '60';
@@ -1106,7 +1109,7 @@
       b.className = 'inema-swatch inema-swatch--' + c;
       b.setAttribute('data-inema-swatch', c);
       b.setAttribute('data-hl', c);
-      b.setAttribute('aria-label', c === 'doubt' ? 'Marcar como duvida' : ('Marcar com cor ' + c));
+      b.setAttribute('aria-label', c === 'doubt' ? __INEMA_T('Marcar como duvida') : (__INEMA_T('Marcar com cor ') + c));
       b.textContent = c === 'doubt' ? '?' : '';
       pop.appendChild(b);
     });
@@ -1115,14 +1118,14 @@
     addBtn.type = 'button';
     addBtn.className = 'inema-selpop__action';
     addBtn.setAttribute('data-inema-act', 'note');
-    addBtn.textContent = 'Adicionar nota';
+    addBtn.textContent = __INEMA_T('Adicionar nota');
     pop.appendChild(addBtn);
 
     var copyBtn = document.createElement('button');
     copyBtn.type = 'button';
     copyBtn.className = 'inema-selpop__action';
     copyBtn.setAttribute('data-inema-act', 'copy');
-    copyBtn.textContent = 'Copiar';
+    copyBtn.textContent = __INEMA_T('Copiar');
     pop.appendChild(copyBtn);
 
     (document.body || document.documentElement).appendChild(pop);
@@ -1181,7 +1184,7 @@
     try {
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(function () {
-          notify('Copiado.', 'ok');
+          notify(__INEMA_T('Copiado.'), 'ok');
         }, function () { fallbackCopy(text); });
         return;
       }
@@ -1201,9 +1204,9 @@
       var ok = false;
       try { ok = document.execCommand('copy'); } catch (e) {}
       document.body.removeChild(ta);
-      notify(ok ? 'Copiado.' : 'Nao foi possivel copiar.', ok ? 'ok' : 'warn');
+      notify(ok ? __INEMA_T('Copiado.') : __INEMA_T('Nao foi possivel copiar.'), ok ? 'ok' : 'warn');
     } catch (e) {
-      notify('Nao foi possivel copiar.', 'warn');
+      notify(__INEMA_T('Nao foi possivel copiar.'), 'warn');
     }
   }
 
@@ -1338,12 +1341,12 @@
 
     // header
     var head = el('div', 'inema-journey__header');
-    var h = el('h2', 'inema-journey__title', 'Minha jornada');
+    var h = el('h2', 'inema-journey__title', __INEMA_T('Minha jornada'));
     h.id = 'inema-journey-title';
     head.appendChild(h);
-    var closeB = el('button', 'inema-journey__close', 'Fechar');
+    var closeB = el('button', 'inema-journey__close', __INEMA_T('Fechar'));
     closeB.type = 'button';
-    closeB.setAttribute('aria-label', 'Fechar minha jornada');
+    closeB.setAttribute('aria-label', __INEMA_T('Fechar minha jornada'));
     closeB.addEventListener('click', closeJourney);
     head.appendChild(closeB);
     mountEl.appendChild(head);
@@ -1353,10 +1356,10 @@
 
     // ---- Progresso (curso/trilhas/modulos) ----
     var secP = el('section', 'inema-journey-sec');
-    secP.appendChild(el('h3', 'inema-journey__section-title', 'Progresso'));
+    secP.appendChild(el('h3', 'inema-journey__section-title', __INEMA_T('Progresso')));
     var cur = progress('curso');
     body.appendChild(secP);
-    secP.appendChild(meterRow('Curso', cur));
+    secP.appendChild(meterRow(__INEMA_T('Curso'), cur));
 
     // trilhas/modulos: do MANIFESTO (curso inteiro, em qualquer pagina) se houver;
     // senao, do DOM da pagina atual (so o modulo corrente).
@@ -1364,19 +1367,19 @@
     if (man && man.tracks && man.tracks.length) {
       man.tracks.forEach(function (tk) {
         var trk = String(tk.n != null ? tk.n : tk.track);
-        secP.appendChild(meterRow(tk.title || ('Trilha ' + trk), progress('trilha:' + trk)));
+        secP.appendChild(meterRow(tk.title || (__INEMA_T('Trilha ') + trk), progress('trilha:' + trk)));
         (tk.modules || []).forEach(function (md) {
-          secP.appendChild(meterRow(md.title || ('Modulo ' + md.id), progress('modulo:' + md.id)));
+          secP.appendChild(meterRow(md.title || (__INEMA_T('Modulo ') + md.id), progress('modulo:' + md.id)));
         });
       });
     } else {
       var tracks = uniqueAttr('[data-inema-track]', 'data-inema-track');
       tracks.forEach(function (tk) {
-        secP.appendChild(meterRow('Trilha ' + tk, progress('trilha:' + tk)));
+        secP.appendChild(meterRow(__INEMA_T('Trilha ') + tk, progress('trilha:' + tk)));
       });
       var mods = uniqueAttr('[data-inema-module]', 'data-inema-module');
       mods.forEach(function (md) {
-        secP.appendChild(meterRow('Modulo ' + md, progress('modulo:' + md)));
+        secP.appendChild(meterRow(__INEMA_T('Modulo ') + md, progress('modulo:' + md)));
       });
     }
 
@@ -1384,8 +1387,8 @@
     var meta = getMeta();
     if (meta.lastTopicAnchor || meta.lastModuleHref) {
       var secC = el('section', 'inema-journey-sec');
-      secC.appendChild(el('h3', 'inema-journey__section-title', 'Continuar de onde parei'));
-      var resumeBtn = el('button', 'inema-journey__resume', 'Voltar ao ultimo ponto');
+      secC.appendChild(el('h3', 'inema-journey__section-title', __INEMA_T('Continuar de onde parei')));
+      var resumeBtn = el('button', 'inema-journey__resume', __INEMA_T('Voltar ao ultimo ponto'));
       resumeBtn.type = 'button';
       resumeBtn.addEventListener('click', function () { closeJourney(); resume(); });
       secC.appendChild(resumeBtn);
@@ -1395,11 +1398,11 @@
     // ---- Duvidas (filtravel, com link de volta) ----
     var doubts = listDoubts();
     var secD = el('section', 'inema-journey-sec');
-    secD.appendChild(el('h3', 'inema-journey__section-title', 'Duvidas (' + doubts.length + ')'));
+    secD.appendChild(el('h3', 'inema-journey__section-title', __INEMA_T('Duvidas (') + doubts.length + ')'));
     var filterWrap = el('div', 'inema-journey__filters');
     var onlyOpen = el('label', null, null);
     var cb = document.createElement('input'); cb.type = 'checkbox';
-    onlyOpen.appendChild(cb); onlyOpen.appendChild(document.createTextNode(' so nao resolvidas'));
+    onlyOpen.appendChild(cb); onlyOpen.appendChild(document.createTextNode(__INEMA_T(' so nao resolvidas')));
     filterWrap.appendChild(onlyOpen);
     secD.appendChild(filterWrap);
     var doubtList = el('ul', 'inema-journey__list');
@@ -1410,8 +1413,8 @@
         if (cb.checked && d.resolved) return;
         var li = el('li', 'inema-journey__item' + (d.resolved ? ' is-resolved' : ''));
         var label = d.kind === 'topic'
-          ? ('Topico: ' + d.id)
-          : (d.quote ? ('"' + truncate(d.quote, 90) + '"') : 'Trecho marcado');
+          ? (__INEMA_T('Topico: ') + d.id)
+          : (d.quote ? ('"' + truncate(d.quote, 90) + '"') : __INEMA_T('Trecho marcado'));
         var a = el('a', 'inema-journey-link', label);
         a.href = '#';
         a.addEventListener('click', function (ev) {
@@ -1423,7 +1426,7 @@
         li.appendChild(tag);
         if (d.note) li.appendChild(el('p', 'inema-journey__note', d.note));
         if (d.kind === 'topic') {
-          var rb = el('button', 'inema-btn inema-btn--ghost', d.resolved ? 'Reabrir' : 'Marcar resolvida');
+          var rb = el('button', 'inema-btn inema-btn--ghost', d.resolved ? __INEMA_T('Reabrir') : __INEMA_T('Marcar resolvida'));
           rb.type = 'button';
           rb.addEventListener('click', function () {
             setDoubtResolved(d.id, !d.resolved); d.resolved = !d.resolved; paintDoubts();
@@ -1432,7 +1435,7 @@
         }
         doubtList.appendChild(li);
       });
-      if (!doubtList.children.length) doubtList.appendChild(el('li', 'inema-journey-empty', 'Nenhuma duvida.'));
+      if (!doubtList.children.length) doubtList.appendChild(el('li', 'inema-journey-empty', __INEMA_T('Nenhuma duvida.')));
     }
     cb.addEventListener('change', paintDoubts);
     paintDoubts();
@@ -1441,13 +1444,13 @@
     // ---- Notas (filtravel por cor "duvida") ----
     var allNotes = flatNotes();
     var secN = el('section', 'inema-journey-sec');
-    secN.appendChild(el('h3', 'inema-journey__section-title', 'Notas e marcacoes (' + allNotes.length + ')'));
+    secN.appendChild(el('h3', 'inema-journey__section-title', __INEMA_T('Notas e marcacoes (') + allNotes.length + ')'));
     var nFilter = el('div', 'inema-journey__filters');
     var selColor = document.createElement('select');
     ['todas'].concat(SWATCHES).forEach(function (c) {
       var o = document.createElement('option'); o.value = c; o.textContent = c; selColor.appendChild(o);
     });
-    nFilter.appendChild(el('span', null, 'Cor: '));
+    nFilter.appendChild(el('span', null, __INEMA_T('Cor: ')));
     nFilter.appendChild(selColor);
     secN.appendChild(nFilter);
     var noteList = el('ul', 'inema-journey__list');
@@ -1464,15 +1467,15 @@
           ntag.setAttribute('data-tag', 'duvida');
           li.appendChild(ntag);
         }
-        if (n.orphan) li.appendChild(el('span', 'inema-journey-orphan', 'nota sem ancora'));
+        if (n.orphan) li.appendChild(el('span', 'inema-journey-orphan', __INEMA_T('nota sem ancora')));
         var actions = el('div', 'inema-journey-actions');
         if (!n.orphan) {
-          var go = el('button', 'inema-btn inema-btn--ghost', 'Ir ao trecho');
+          var go = el('button', 'inema-btn inema-btn--ghost', __INEMA_T('Ir ao trecho'));
           go.type = 'button';
           go.addEventListener('click', function () { closeJourney(); jumpTo({ kind: 'note', id: n.id, blockId: n.blockId }); });
           actions.appendChild(go);
         }
-        var del = el('button', 'inema-btn inema-btn--ghost', 'Excluir');
+        var del = el('button', 'inema-btn inema-btn--ghost', __INEMA_T('Excluir'));
         del.type = 'button';
         del.addEventListener('click', function () {
           removeNote(n.id);
@@ -1482,7 +1485,7 @@
         li.appendChild(actions);
         noteList.appendChild(li);
       });
-      if (!noteList.children.length) noteList.appendChild(el('li', 'inema-journey-empty', 'Nenhuma nota.'));
+      if (!noteList.children.length) noteList.appendChild(el('li', 'inema-journey-empty', __INEMA_T('Nenhuma nota.')));
     }
     selColor.addEventListener('change', paintNotes);
     paintNotes();
@@ -1490,15 +1493,15 @@
 
     // ---- Export / Import / Reset ----
     var secX = el('section', 'inema-journey-sec');
-    secX.appendChild(el('h3', 'inema-journey__section-title', 'Backup'));
+    secX.appendChild(el('h3', 'inema-journey__section-title', __INEMA_T('Backup')));
     var row = el('div', 'inema-journey__footer');
 
-    var expBtn = el('button', 'inema-btn', 'Exportar .json');
+    var expBtn = el('button', 'inema-btn', __INEMA_T('Exportar .json'));
     expBtn.type = 'button';
     expBtn.addEventListener('click', downloadJSON);
     row.appendChild(expBtn);
 
-    var impLabel = el('label', 'inema-btn', 'Importar .json');
+    var impLabel = el('label', 'inema-btn', __INEMA_T('Importar .json'));
     var impInput = document.createElement('input');
     impInput.type = 'file'; impInput.accept = 'application/json,.json';
     impInput.style.display = 'none';
@@ -1509,11 +1512,11 @@
       reader.onload = function () {
         var res = importJSON(String(reader.result), { mode: 'merge' });
         if (res.ok) {
-          notify('Importado: ' + res.applied + ' itens.', 'ok');
+          notify(__INEMA_T('Importado: ') + res.applied + ' itens.', 'ok');
           rehydrateAll();
           renderJourney(mountEl);
         } else {
-          notify('Arquivo invalido. Nada foi alterado.', 'warn');
+          notify(__INEMA_T('Arquivo invalido. Nada foi alterado.'), 'warn');
         }
       };
       reader.readAsText(file);
@@ -1521,14 +1524,14 @@
     impLabel.appendChild(impInput);
     row.appendChild(impLabel);
 
-    var resetBtn = el('button', 'inema-btn inema-danger', 'Apagar tudo');
+    var resetBtn = el('button', 'inema-btn inema-danger', __INEMA_T('Apagar tudo'));
     resetBtn.type = 'button';
     resetBtn.addEventListener('click', function () {
-      if (window.confirm('Apagar TODO o progresso, duvidas e notas deste curso? Esta acao nao pode ser desfeita.')) {
+      if (window.confirm(__INEMA_T('Apagar TODO o progresso, duvidas e notas deste curso? Esta acao nao pode ser desfeita.'))) {
         resetCourse();
         rehydrateAll();
         renderJourney(mountEl);
-        notify('Estado do curso apagado.', 'ok');
+        notify(__INEMA_T('Estado do curso apagado.'), 'ok');
       }
     });
     row.appendChild(resetBtn);
@@ -1545,12 +1548,12 @@
     bar.setAttribute('aria-valuemin', '0');
     bar.setAttribute('aria-valuemax', '100');
     bar.setAttribute('aria-valuenow', String(pr.pct));
-    bar.setAttribute('aria-valuetext', pr.done + ' de ' + pr.total + ' (' + pr.pct + '%)');
+    bar.setAttribute('aria-valuetext', pr.done + __INEMA_T(' de ') + pr.total + ' (' + pr.pct + '%)');
     var fill = el('div', 'inema-bar__fill');
     fill.style.width = pr.pct + '%';
     bar.appendChild(fill);
     row.appendChild(bar);
-    row.appendChild(el('span', 'inema-journey-meter-frac', pr.done + ' de ' + pr.total + ' (' + pr.pct + '%)'));
+    row.appendChild(el('span', 'inema-journey-meter-frac', pr.done + __INEMA_T(' de ') + pr.total + ' (' + pr.pct + '%)'));
     return row;
   }
 
@@ -1728,7 +1731,7 @@
         a2.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(str);
         a2.download = 'inema-' + S.courseId + '.json';
         a2.click();
-      } catch (e2) { notify('Nao foi possivel exportar.', 'warn'); }
+      } catch (e2) { notify(__INEMA_T('Nao foi possivel exportar.'), 'warn'); }
     }
   }
 
@@ -1756,25 +1759,25 @@
     // parse em variavel temporaria (nao muta estado se invalido)
     var parsed = safeJSON(text, undefined);
     if (parsed === undefined || typeof parsed !== 'object' || parsed === null) {
-      res.errors.push('JSON invalido ou ilegivel.');
+      res.errors.push(__INEMA_T('JSON invalido ou ilegivel.'));
       return res;
     }
     if (typeof parsed.schemaVersion !== 'number' || parsed.schemaVersion > SCHEMA_VERSION) {
       // versao futura desconhecida: nao commita (evita corromper)
       if (typeof parsed.schemaVersion !== 'number') {
-        res.errors.push('schemaVersion ausente.');
+        res.errors.push(__INEMA_T('schemaVersion ausente.'));
         return res;
       }
       // se for futura, ainda tentamos preservar via migrate, mas avisamos
-      res.errors.push('schemaVersion ' + parsed.schemaVersion + ' mais nova que a suportada (' + SCHEMA_VERSION + ').');
+      res.errors.push('schemaVersion ' + parsed.schemaVersion + __INEMA_T(' mais nova que a suportada (') + SCHEMA_VERSION + ').');
     }
 
     var incoming = migrate(parsed);
 
     if (mode === 'replace') {
       if (!opts.__confirmed) {
-        var ok = window.confirm('Substituir TODO o estado atual pelo arquivo importado? O progresso atual sera perdido.');
-        if (!ok) { res.errors.push('cancelado pelo usuario'); return res; }
+        var ok = window.confirm(__INEMA_T('Substituir TODO o estado atual pelo arquivo importado? O progresso atual sera perdido.'));
+        if (!ok) { res.errors.push(__INEMA_T('cancelado pelo usuario')); return res; }
       }
       setRead(incoming.read || {});
       setDoubts(incoming.doubts || {});
@@ -1888,7 +1891,7 @@
       fb.innerHTML = '';
       fb.classList.toggle('is-correct', correct);
       fb.classList.toggle('is-wrong', !correct);
-      var msg = correct ? 'Correto. ' : 'Reveja: ';
+      var msg = correct ? __INEMA_T('Correto. ') : __INEMA_T('Reveja: ');
       var expl = (def && def.explain && def.explain[choice]) ? def.explain[choice] : '';
       fb.appendChild(el('p', null, msg + expl));
       // realca a opcao escolhida
@@ -2044,18 +2047,18 @@
     menu.style.top = (r.bottom + (window.scrollY || 0) + 4) + 'px';
     menu.style.left = (r.left + (window.scrollX || 0)) + 'px';
 
-    var noteBtn = el('button', 'inema-btn inema-btn--ghost', 'Nota');
+    var noteBtn = el('button', 'inema-btn inema-btn--ghost', __INEMA_T('Nota'));
     noteBtn.type = 'button';
     noteBtn.addEventListener('click', function () {
       var f = findNote(id);
       var cur = f && f.rec.note ? f.rec.note : '';
-      var txt = window.prompt('Sua anotacao:', cur);
+      var txt = window.prompt(__INEMA_T('Sua anotacao:'), cur);
       if (txt !== null) promoteToNote(id, txt);
       removeMarkMenu();
     });
     menu.appendChild(noteBtn);
 
-    var delBtn = el('button', 'inema-btn inema-btn--ghost', 'Excluir');
+    var delBtn = el('button', 'inema-btn inema-btn--ghost', __INEMA_T('Excluir'));
     delBtn.type = 'button';
     delBtn.addEventListener('click', function () { removeNote(id); removeMarkMenu(); });
     menu.appendChild(delBtn);
@@ -2086,7 +2089,7 @@
       var rng = currentRange();
       if (a === 'copy' && rng) { copyText(rng.toString()); clearSelectionAndHide(); return; }
       if (a === 'note' && rng) {
-        var txt = window.prompt('Sua anotacao:', '');
+        var txt = window.prompt(__INEMA_T('Sua anotacao:'), '');
         var nid = highlight(rng, { color: 'yellow' });
         if (nid && txt !== null && txt !== '') promoteToNote(nid, txt);
         clearSelectionAndHide();
@@ -2127,7 +2130,7 @@
         }
         if (counter) {
           var idx = topics.indexOf(en.target);
-          counter.textContent = 'Secao ' + (idx + 1) + ' de ' + topics.length;
+          counter.textContent = __INEMA_T('Secao ') + (idx + 1) + __INEMA_T(' de ') + topics.length;
         }
       });
     }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
@@ -2238,7 +2241,7 @@
       var ok = probeStorage();
       S.ephemeral = !ok;
       if (S.ephemeral) {
-        notify('Modo leitura: seu progresso nao sera salvo neste navegador.', 'warn');
+        notify(__INEMA_T('Modo leitura: seu progresso nao sera salvo neste navegador.'), 'warn');
       }
       S.courseId = opts.courseId || detectCourseId();
     }

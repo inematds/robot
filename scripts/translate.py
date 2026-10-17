@@ -90,6 +90,8 @@ def run(lang, jobs):
                 payload = json.dumps({n: b[k] for n, k in ids.items()}, ensure_ascii=False)
                 raw = codex_json(system, payload)
                 raw = {ids[n]: v for n, v in raw.items() if n in ids}
+                # às vezes o modelo devolve o objeto de entrada com a tradução em "source"
+                raw = {k: (v.get('source') if isinstance(v, dict) else v) for k, v in raw.items()}
                 if set(raw) != set(b):
                     raise ValueError('IDs divergentes')
                 bad = check(b, raw)

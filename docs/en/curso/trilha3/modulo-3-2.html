@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 3.2 · Camera and OpenCV | Robotics from Zero to Expert</title>
+<meta content="Vision on the Raspberry Pi 5: pixels and channels, Camera Module 3 with picamera2, OpenCV with HSV and masks, object contours and center, measuring FPS, and streaming video to the browser." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha3/modulo-3-2.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha3/modulo-3-2.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha3/modulo-3-2.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha3/modulo-3-2.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha3/modulo-3-2.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha3/modulo-3-2.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-3-2.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha3/modulo-3-2.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T3 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a aria-current="page" class="nav-trail text-purple-400 bg-purple-500/10" href="index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="3-2" data-inema-track="3" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400"><a class="hover:text-purple-400" href="../../index.html">Home</a><span aria-hidden="true">/</span><a class="hover:text-purple-400" href="index.html">Learning Path 3</a><span aria-hidden="true">/</span><span class="text-purple-400">Module 3.2</span></div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MODULE 3.2 · PRACTICE</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">📷 Camera and OpenCV</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">The robot gets eyes. You’ll learn what an image looks like to a computer, connect the <strong class="text-neutral-100">Camera Module 3</strong> with picamera2, isolate an object by color with <strong class="text-purple-400">OpenCV</strong>, find its center, measure how many frames per second the Pi can handle, and watch the robot’s video in your phone’s browser.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Intermediate</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Practice</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Pi 5 + camera</div><div class="text-xs text-neutral-400">Hardware</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 3.2 progress" class="inema-ring" data-inema-meter="modulo:3-2"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:3-2"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-1">1. Pixels and channels</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-2">2. Camera with picamera2</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-3">3. Colors, HSV and masks</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-4">4. Contours and center</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-5">5. FPS and resolution</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-6">6. Video in the browser</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-3-2#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🖼️ How a computer sees an image</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t1-p1">To a program, a photo isn’t a scene: it’s a <strong class="text-purple-400">table of numbers</strong>. Each little square, called a pixel, stores three values from 0 to 255, one for each primary color. A 640 × 480 image is a table with 480 rows, 640 columns and 3 layers. In Python, it becomes a NumPy array with the shape <span class="font-mono text-xs">(480, 640, 3)</span>. Finding “the red ball” is really a matter of searching the table for a region where the numbers follow a certain pattern.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-2-t1-p2">A <strong>channel</strong> is one of the image’s color layers. OpenCV stores colors in the order <strong>BGR</strong> (blue, green, red), unlike the RGB order you see in editors.  <strong>NumPy</strong> is the Python library for tables of numbers; <strong>OpenCV</strong> is the computer vision library that works with those tables. Coordinate (0, 0) is the <strong>upper</strong> left corner: x increases to the right and y increases downward.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="An image enlarged down to the pixels: each pixel has three numbers—blue, green, and red; a red pixel has the value 30, 40, 220. Beside it, the axes: x increases to the right and y downward, starting at the top-left corner." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs><pattern height="32" id="m32-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.1" r="1.3"></circle></pattern><marker id="m32-ah1" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker><filter height="180%" id="m32-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m32-grid1)" height="280" width="640"></rect>
+<g stroke="#272730" stroke-width="2">
+<rect fill="#1e3a5f" height="40" width="40" x="40" y="50"></rect><rect fill="#1e3a5f" height="40" width="40" x="80" y="50"></rect><rect fill="#2b4c7e" height="40" width="40" x="120" y="50"></rect><rect fill="#1e3a5f" height="40" width="40" x="160" y="50"></rect>
+<rect fill="#1e3a5f" height="40" width="40" x="40" y="90"></rect><rect fill="#b91c1c" height="40" width="40" x="80" y="90"></rect><rect fill="#dc2626" height="40" width="40" x="120" y="90"></rect><rect fill="#2b4c7e" height="40" width="40" x="160" y="90"></rect>
+<rect fill="#2b4c7e" height="40" width="40" x="40" y="130"></rect><rect fill="#dc2626" height="40" width="40" x="80" y="130"></rect><rect fill="#b91c1c" height="40" width="40" x="120" y="130"></rect><rect fill="#1e3a5f" height="40" width="40" x="160" y="130"></rect>
+<rect fill="#1e3a5f" height="40" width="40" x="40" y="170"></rect><rect fill="#2b4c7e" height="40" width="40" x="80" y="170"></rect><rect fill="#1e3a5f" height="40" width="40" x="120" y="170"></rect><rect fill="#1e3a5f" height="40" width="40" x="160" y="170"></rect>
+</g>
+<rect fill="none" filter="url(#m32-glow1)" height="40" stroke="#c084fc" stroke-width="3" width="40" x="120" y="90"></rect>
+<path d="M162,110 L262,110" stroke="#c084fc" stroke-dasharray="5 4" stroke-width="2"></path>
+<g font-family="Inter,sans-serif">
+<rect fill="#22153a" height="112" rx="12" stroke="#a855f7" stroke-width="2" width="190" x="268" y="56"></rect>
+<text fill="#c084fc" font-size="17" font-weight="600" text-anchor="middle" x="363" y="84">one pixel = 3 numbers</text>
+<text fill="#93c5fd" font-size="16" x="288" y="112">B (blue) 30</text>
+<text fill="#86efac" font-size="16" x="288" y="134">G (green) 40</text>
+<text fill="#fca5a5" font-size="16" x="288" y="156">R (red) 220</text>
+<text fill="#7dd3fc" font-size="14" x="40" y="38">(0, 0)</text>
+<text fill="#7dd3fc" font-size="15" x="500" y="98">x → right</text>
+<text fill="#7dd3fc" font-size="15" x="500" y="160">y ↓ down</text>
+<text fill="#ddd6fe" font-size="15" x="40" y="244">640 × 480 image → array (480, 640, 3): rows, columns, channels</text>
+</g>
+<path d="M40,222 L210,222" marker-end="url(#m32-ah1)" stroke="#38bdf8" stroke-width="2"></path>
+<path d="M24,50 L24,212" marker-end="url(#m32-ah1)" stroke="#38bdf8" stroke-width="2"></path>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> on the left, a section of an image enlarged until the little squares are visible. The pixel highlighted in purple is “red” because the R channel value is high and the others are low. Notice the B, G, R order: that’s what OpenCV uses. The cyan arrows show that y is counted from top to bottom.</p>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">⬛ Grayscale</div><p class="text-sm text-neutral-400">Just one channel, from 0 (black) to 255 (white). Three times less data; great for edges and shapes.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🌈 BGR</div><p class="text-sm text-neutral-400">Three channels, as delivered by the camera. Good for displaying and saving, poor for separating colors when the lighting changes.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🎨 HSV</div><p class="text-sm text-neutral-400">Hue, saturation, and brightness. Separates “what color” from “how much light”: the right format for finding a colored object (topic 3).</p></div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t1-p3">When the mask misses the object or its center appears in the wrong place, the problem is almost always here: swapped colors (RGB treated as BGR), the y-axis inverted in the head, or an image that’s too large for the Pi to process in time.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Pixel</div><div class="text-xs text-neutral-400">smallest point in the image</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Channel</div><div class="text-xs text-neutral-400">one layer of color</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">BGR</div><div class="text-xs text-neutral-400">the OpenCV order</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">shape</div><div class="text-xs text-neutral-400">(height, width, channels)</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-3-2#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">📷 Camera Module 3 with picamera2</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t2-p1">A <strong class="text-neutral-100">Camera Module 3</strong> connects to the Pi 5 camera connector with a flat cable (ribbon). In the terminal, the <strong class="text-neutral-100">rpicam-apps</strong> (<span class="font-mono text-xs">rpicam-hello</span>, <span class="font-mono text-xs">rpicam-still</span>) test the camera in seconds. In your Python code, images are delivered by <strong class="text-purple-400">picamera2</strong>, which comes with Raspberry Pi OS. Older tutorials use command-line tools that are no longer available on the current system; if the command doesn’t start with <span class="font-mono text-xs">rpicam-</span>, be suspicious.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-2-t2-p2">The Pi 5 connector is <strong>smaller</strong> (22 pins) than the camera connectors (15 pins): use the cable made for the Pi 5, which has one end of each size. Orient the metal contacts as indicated on the connector; open the latch with your fingernail, insert the cable straight, and close it. Do this with the Pi <strong>powered off</strong>.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Image path: the Camera Module 3 sensor sends data through the flat cable; the Pi’s image processor adjusts color and exposure; picamera2 delivers a NumPy array to your code; OpenCV processes and saves it." class="w-full h-auto" role="img" viewbox="0 0 640 230">
+<defs><pattern height="32" id="m32-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.1" r="1.3"></circle></pattern><marker id="m32-ah2" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker></defs>
+<rect fill="url(#m32-grid2)" height="230" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<g class="rb-a"><rect fill="#0e1b26" height="90" rx="12" stroke="#38bdf8" stroke-width="2" width="135" x="12" y="50"></rect><text fill="#7dd3fc" font-size="17" font-weight="600" x="80" y="86">sensor</text><text fill="#bfe6ff" font-size="14" x="80" y="112">Camera Module 3</text></g>
+<g class="rb-a"><rect fill="#1a1029" height="90" rx="12" stroke="#a855f7" stroke-width="2" width="135" x="170" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="237" y="86">Pi ISP</text><text fill="#ede9fe" font-size="14" x="237" y="112">color, exposure</text></g>
+<g class="rb-a"><rect fill="#22153a" height="90" rx="12" stroke="#a855f7" stroke-width="2.5" width="135" x="328" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="395" y="86">picamera2</text><text fill="#ede9fe" font-size="14" x="395" y="112">NumPy array</text></g>
+<rect fill="#1a1029" height="90" rx="12" stroke="#c084fc" stroke-width="2" width="142" x="486" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="557" y="86">OpenCV</text><text fill="#ede9fe" font-size="14" x="557" y="112">your code</text>
+<text fill="#a8a8b3" font-size="14" x="80" y="174">flat cable</text>
+<text fill="#a8a8b3" font-size="14" x="395" y="174">capture_array()</text>
+<text fill="#ddd6fe" font-size="15" x="320" y="210">“RGB888” in picamera2 already comes in the BGR order that OpenCV expects</text>
+</g>
+<g fill="none" stroke="#c084fc" stroke-width="2"><path d="M147,95 L162,95" marker-end="url(#m32-ah2)"></path><path d="M305,95 L320,95" marker-end="url(#m32-ah2)"></path><path d="M463,95 L478,95" marker-end="url(#m32-ah2)"></path></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> from left to right, light turns into numbers. The ISP (image signal processor) corrects color and exposure before you receive the frame; that’s why the first image right after turning on the camera may come out dark, and the code waits a second before capturing.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-2-t2-p3"><strong class="text-neutral-100">Goal:</strong> confirm that the camera was detected, take a photo from the terminal, then capture a frame in Python. Install the system OpenCV once (the module 3.1 venv can see it).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">Pi terminal</span></div>
+<pre><code>rpicam-hello --list-cameras          <span class="c"># should list the camera (imx708 = Camera Module 3)</span>
+rpicam-still -o ~/robo/teste.jpg      <span class="c"># takes a photo from the terminal</span>
+sudo apt install -y python3-opencv    <span class="c"># system OpenCV, visible in the venv</span>
+source ~/robo-venv/bin/activate</code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">~/robo/captura.py</span></div>
+<pre><code><span class="c"># Captures a camera frame and saves it as JPEG</span>
+<span class="k">import</span> time, os
+<span class="k">import</span> cv2
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+
+picam2 = Picamera2()
+config = picam2.create_preview_configuration(main={<span class="s">"size"</span>: (640, 480), <span class="s">"format"</span>: <span class="s">"RGB888"</span>})
+picam2.configure(config)
+picam2.start()
+time.sleep(1)                         <span class="c"># lets auto exposure adjust</span>
+
+quadro = picam2.capture_array()       <span class="c"># NumPy array in BGR order</span>
+print(<span class="s">"formato:"</span>, quadro.shape, quadro.dtype)
+print(<span class="s">"center pixel (B, G, R):"</span>, quadro[240, 320])
+cv2.imwrite(os.path.expanduser(<span class="s">"~/robo/quadro.jpg"</span>), quadro)
+picam2.stop()
+print(<span class="s">"saved to ~/robo/quadro.jpg"</span>)</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>The terminal displays <span class="font-mono text-xs">format: (480, 640, 3) uint8</span> and three numbers for the center pixel.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Copy the photo to your computer (<span class="font-mono text-xs">scp &lt;seu_usuario&gt;@robo.local:~/robo/quadro.jpg .</span>) and open it: the colors should look natural.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>“no cameras available”? Turn it off, check the cable (orientation and latch) at both ends, and turn it back on.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t2-p4">This setup block (size, format, start, capture_array) is the entry point for everything that follows: color mask, YOLO26, and the course project. Testing first with the <span class="font-mono text-xs">rpicam-hello</span> separates hardware problems from code problems.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">rpicam-apps</div><div class="text-xs text-neutral-400">terminal test</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">picamera2</div><div class="text-xs text-neutral-400">camera in Python</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">capture_array</div><div class="text-xs text-neutral-400">frame as NumPy</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">22 → 15 cable</div><div class="text-xs text-neutral-400">the right one for the Pi 5</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-3-2#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🎨 OpenCV: colors, HSV, and masks</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t3-p1">A red ball in the shade and the same ball in the sun have very different BGR values. In the <strong class="text-purple-400">HSV</strong> color space, the difference is almost entirely in V (brightness), while H (hue, “what color”) stays similar. That’s why the standard approach is to convert the frame to HSV, choose an H, S, and V range, and create a <strong class="text-neutral-100">mask</strong>, a black-and-white image in which only the pixels within the range appear white.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-2-t3-p2"><strong>Hue (H)</strong> is the color on the color wheel; in OpenCV, it ranges from 0 to 179. <strong>Saturation (S)</strong> is how vivid the color is (0 = gray). <strong>Brightness (V)</strong> is how much light there is (0 = black). A <strong>mask</strong> is a filter: white where the condition is true, black everywhere else. Red lies at both ends of the wheel (near 0 and near 179), so it needs two ranges combined.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="OpenCV hue range from 0 to 179: red at the beginning and end, then orange, yellow, green, cyan, blue, and purple. Two windows mark red, from 0 to 10 and from 170 to 179; one window marks green, from 40 to 80." class="w-full h-auto" role="img" viewbox="0 0 640 220">
+<defs><lineargradient id="m32-hue" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#ff0000"></stop><stop offset="0.083" stop-color="#ff8000"></stop><stop offset="0.167" stop-color="#ffff00"></stop><stop offset="0.333" stop-color="#00ff00"></stop><stop offset="0.5" stop-color="#00ffff"></stop><stop offset="0.667" stop-color="#0000ff"></stop><stop offset="0.833" stop-color="#ff00ff"></stop><stop offset="1" stop-color="#ff0000"></stop></lineargradient><pattern height="32" id="m32-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.1" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m32-grid3)" height="220" width="640"></rect>
+<rect fill="url(#m32-hue)" height="44" opacity="0.85" rx="6" width="560" x="40" y="70"></rect>
+<g fill="none" stroke-width="3"><rect height="60" rx="4" stroke="#c084fc" width="34" x="38" y="62"></rect><rect height="60" rx="4" stroke="#c084fc" width="35" x="567" y="62"></rect><rect height="60" rx="4" stroke="#38bdf8" width="126" x="164" y="62"></rect></g>
+<g font-family="Inter,sans-serif" font-size="15" text-anchor="middle">
+<text fill="#a8a8b3" x="40" y="146">0</text><text fill="#a8a8b3" x="320" y="146">90</text><text fill="#a8a8b3" x="600" y="146">179</text>
+<text fill="#c084fc" font-weight="600" x="56" y="48">0–10</text><text fill="#c084fc" font-weight="600" x="584" y="48">170–179</text>
+<text fill="#7dd3fc" font-weight="600" x="227" y="48">green 40–80</text>
+<text fill="#ddd6fe" x="320" y="182">red = two ranges combined · minimum S and V cut out gray and shadows</text>
+<text fill="#a8a8b3" font-size="14" x="320" y="206">starting values: adjust for your object and lighting</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> the range is the color wheel opened into a straight line, on OpenCV’s 0–179 scale. The purple frames show why red is tricky: it starts and ends the scale. The cyan frame shows a “well-behaved” color that fits in a single window.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-2-t3-p3"><strong class="text-neutral-100">Goal:</strong> generate a mask for a red object and save the frame and mask side by side, so you can adjust the range by looking at the result.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">~/robo/mascara.py</span></div>
+<pre><code><span class="c"># HSV color mask (red = two ranges)</span>
+<span class="k">import</span> time, os
+<span class="k">import</span> cv2, numpy <span class="k">as</span> np
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+
+picam2 = Picamera2()
+picam2.configure(picam2.create_preview_configuration(main={<span class="s">"size"</span>: (640, 480), <span class="s">"format"</span>: <span class="s">"RGB888"</span>}))
+picam2.start(); time.sleep(1)
+quadro = picam2.capture_array()
+picam2.stop()
+
+hsv = cv2.cvtColor(quadro, cv2.COLOR_BGR2HSV)
+baixo1, alto1 = np.array([0, 120, 70]),   np.array([10, 255, 255])   <span class="c"># red, start of the scale</span>
+baixo2, alto2 = np.array([170, 120, 70]), np.array([179, 255, 255])  <span class="c"># red, end of the scale</span>
+mascara = cv2.inRange(hsv, baixo1, alto1) | cv2.inRange(hsv, baixo2, alto2)
+
+<span class="c"># Cleanup: removes loose specks and fills holes</span>
+nucleo = np.ones((5, 5), np.uint8)
+mascara = cv2.morphologyEx(mascara, cv2.MORPH_OPEN, nucleo)
+mascara = cv2.morphologyEx(mascara, cv2.MORPH_CLOSE, nucleo)
+
+brancos = cv2.countNonZero(mascara)
+print(f<span class="s">"pixels in mask: {brancos} ({100 * brancos / mascara.size:.1f}% of image)"</span>)
+lado_a_lado = np.hstack([quadro, cv2.cvtColor(mascara, cv2.COLOR_GRAY2BGR)])
+cv2.imwrite(os.path.expanduser(<span class="s">"~/robo/mascara.jpg"</span>), lado_a_lado)
+print(<span class="s">"saved to ~/robo/mascara.jpg"</span>)</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>With a red object in front of the camera, the right half of <span class="font-mono text-xs">mascara.jpg</span> shows a white patch in its shape.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Without the object, the percentage drops close to 0%.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Skin or wood showing up? Raise the minimum S (120 → 150). Object disappearing in the shade? Lower the minimum V.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Helps color detection work</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Bright, matte-colored object (ball, poster board, tape).</span></li><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Background with a color very different from the object’s.</span></li><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Adjust the range where the robot will run.</span></li></ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Gets in the way</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Shiny object that reflects the lamp (turns white).</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Yellowish or flickering light that changes the hue.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Calibrate during the day and test at night.</span></li></ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t3-p4">A color mask is the lightest form of vision: it runs at dozens of frames per second on the Pi, with no AI, and is enough for a robot to follow a ball or a colored line. It’s the first version of project 3.6, before YOLO26 is introduced.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">HSV</div><div class="text-xs text-neutral-400">color separated from light</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">inRange</div><div class="text-xs text-neutral-400">range → mask</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Morphology</div><div class="text-xs text-neutral-400">opens and closes the mask</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Dual red range</div><div class="text-xs text-neutral-400">0–10 + 170–179</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-3-2#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🎯 Object contours and center</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t4-p1">The mask says “there’s red here,” but the robot needs two numbers: <strong class="text-neutral-100">where</strong> the object <strong class="text-neutral-100">how close</strong>. OpenCV finds the <strong class="text-purple-400">contours</strong> (the edges of each white blob), you keep the largest one, calculate its center and area. The center becomes the <strong class="text-neutral-100">error</strong> horizontal position (how far the object is to the left or right of the image center), and the area indicates distance: the larger it is, the closer the object is.</p>
+<figure class="fig mb-3">
+<svg aria-label="From frame to command: the mask shows two blobs; the largest contour is selected; center cx is to the right of the image’s midpoint; the error is cx minus 320, a positive value, so the robot should turn right." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs><pattern height="32" id="m32-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.1" r="1.3"></circle></pattern><filter height="180%" id="m32-glow4" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter><marker id="m32-ah4" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker></defs>
+<rect fill="url(#m32-grid4)" height="280" width="640"></rect>
+<rect fill="#0b0b10" height="210" rx="8" stroke="#3a3a46" stroke-width="2" width="400" x="40" y="30"></rect>
+<path d="M240,30 L240,240" stroke="#a8a8b3" stroke-dasharray="6 5" stroke-width="1.5"></path>
+<circle cx="90" cy="200" fill="#e6e6e6" opacity="0.5" r="12"></circle>
+<g filter="url(#m32-glow4)"><ellipse cx="340" cy="120" fill="#e6e6e6" opacity="0.9" rx="52" ry="46" stroke="#c084fc" stroke-width="3"></ellipse></g>
+<circle cx="340" cy="120" fill="#a855f7" r="6"></circle>
+<path d="M240,120 L330,120" marker-end="url(#m32-ah4)" stroke="#38bdf8" stroke-width="2.5"></path>
+<g font-family="Inter,sans-serif" font-size="15">
+<text fill="#a8a8b3" x="246" y="52">center: x = 320</text>
+<text fill="#ddd6fe" x="352" y="196">largest contour</text>
+<text fill="#a8a8b3" font-size="14" x="60" y="230">small blob: ignored</text>
+<text fill="#7dd3fc" x="250" y="110">error</text>
+<text fill="#c084fc" font-weight="600" x="462" y="70">cx = 440</text>
+<text fill="#7dd3fc" x="462" y="98">error = 440 − 320</text>
+<text fill="#7dd3fc" x="462" y="122">= +120</text>
+<text fill="#ddd6fe" x="462" y="160">positive → turn</text>
+<text fill="#ddd6fe" x="462" y="182">right</text>
+<text fill="#a8a8b3" font-size="14" x="40" y="268">640 × 480 frame drawn to scale</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> The rectangle is the mask; the dashed line is the image center. Of the two blobs, only the largest counts (the small one is noise). The cyan arrow is the error: positive when the object is on the right, negative on the left, and zero when it’s centered. This is the number the PID in project 3.6 will drive to zero.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-2-t4-p2"><strong class="text-neutral-100">Goal:</strong> run continuously in a loop, print the center, error, and area of the largest red object, and indicate which way the robot should turn.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">~/robo/centro_cor.py</span></div>
+<pre><code><span class="c"># Finds the largest red object and calculates its center, error, and area</span>
+<span class="k">import</span> time
+<span class="k">import</span> cv2, numpy <span class="k">as</span> np
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+
+LARGURA, ALTURA = 640, 480
+AREA_MIN = 800                      <span class="c"># smaller than this is noise</span>
+FAIXAS = [((0, 120, 70), (10, 255, 255)), ((170, 120, 70), (179, 255, 255))]
+nucleo = np.ones((5, 5), np.uint8)
+
+<span class="k">def</span> achar_objeto(quadro):
+    hsv = cv2.cvtColor(quadro, cv2.COLOR_BGR2HSV)
+    mascara = np.zeros(hsv.shape[:2], np.uint8)
+    <span class="k">for</span> baixo, alto <span class="k">in</span> FAIXAS:                <span class="c"># combines the ranges (OR)</span>
+        mascara |= cv2.inRange(hsv, np.array(baixo), np.array(alto))
+    mascara = cv2.morphologyEx(mascara, cv2.MORPH_OPEN, nucleo)
+    contornos, _ = cv2.findContours(mascara, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    <span class="k">if not</span> contornos:
+        <span class="k">return None</span>
+    maior = max(contornos, key=cv2.contourArea)
+    area = cv2.contourArea(maior)
+    <span class="k">if</span> area &lt; AREA_MIN:
+        <span class="k">return None</span>
+    m = cv2.moments(maior)
+    cx, cy = int(m[<span class="s">"m10"</span>] / m[<span class="s">"m00"</span>]), int(m[<span class="s">"m01"</span>] / m[<span class="s">"m00"</span>])
+    <span class="k">return</span> cx, cy, area
+
+picam2 = Picamera2()
+picam2.configure(picam2.create_preview_configuration(main={<span class="s">"size"</span>: (LARGURA, ALTURA), <span class="s">"format"</span>: <span class="s">"RGB888"</span>}))
+picam2.start(); time.sleep(1)
+print(<span class="s">"Show a red object. Ctrl+C to exit."</span>)
+<span class="k">try</span>:
+    <span class="k">while True</span>:
+        achado = achar_objeto(picam2.capture_array())
+        <span class="k">if</span> achado <span class="k">is None</span>:
+            print(<span class="s">"no object → stop and search"</span>)
+        <span class="k">else</span>:
+            cx, cy, area = achado
+            erro = cx - LARGURA // 2
+            lado = <span class="s">"centro"</span> <span class="k">if</span> abs(erro) &lt; 40 <span class="k">else</span> (<span class="s">"direita"</span> <span class="k">if</span> erro &gt; 0 <span class="k">else</span> <span class="s">"esquerda"</span>)
+            print(f<span class="s">"cx={cx:3d} cy={cy:3d} error={erro:+4d} area={area:7.0f} → {lado}"</span>)
+        time.sleep(0.1)
+<span class="k">except</span> KeyboardInterrupt:
+    picam2.stop()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Move the object to the right of the camera, and the error becomes positive and “→ right” appears.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Move the object closer and the area grows substantially; move it farther away and the area gets smaller.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Right and left reversed? The camera is upside down or mirrored: invert the error’s sign or rotate the camera.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Area is not distance in meters</h3>
+<p class="text-neutral-300 text-sm">Area is useful for comparison (“closer,” “too far”), not for measurement. Note the area with the object at 30 cm and 1 m: those two numbers become the “reached” and “move closer” thresholds in the project.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t4-p3">Center and area are the bridge between vision and movement. YOLO26 in the next module returns a box instead of a contour, but you’ll calculate the exact same error and “size” from it.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Contour</div><div class="text-xs text-neutral-400">edge of the blob</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Moments</div><div class="text-xs text-neutral-400">give you the center (cx, cy)</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Error</div><div class="text-xs text-neutral-400">cx − image center</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Minimum area</div><div class="text-xs text-neutral-400">filters out noise</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-3-2#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">⏱️ Measure FPS and reduce resolution</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t5-p1">A robot that sees at 3 frames per second reacts late: moving at half a meter per second, it travels more than 15 cm between images. The number that matters is the <strong class="text-purple-400">FPS</strong> of the entire loop (capture + process + decide), not the camera’s. The biggest lever is <strong class="text-neutral-100">resolution</strong>: half the width and half the height means one quarter of the pixels, and almost all the processing workload drops accordingly.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-2-t5-p2"><strong>FPS</strong> (frames per second) counts how many complete cycles your loop runs in one second. <strong>Latency</strong> is the delay between something happening in front of the camera and the robot reacting. They go hand in hand: low FPS almost always means a delayed reaction.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Bars showing the number of pixels per frame: 1920 by 1080 has about 2.1 million; 1280 by 720, 0.9 million; 640 by 480, 0.3 million; 320 by 240, 0.08 million. Fewer pixels, more frames per second." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs><pattern height="32" id="m32-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.1" r="1.3"></circle></pattern><lineargradient id="m32-bar5" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#a855f7"></stop><stop offset="1" stop-color="#38bdf8"></stop></lineargradient></defs>
+<rect fill="url(#m32-grid5)" height="260" width="640"></rect>
+<g font-family="Inter,sans-serif" font-size="15">
+<text fill="#ede9fe" x="20" y="52">1920 × 1080</text><rect fill="url(#m32-bar5)" height="22" opacity="0.55" rx="4" width="420" x="140" y="36"></rect><text fill="#a8a8b3" x="566" y="52">2,1 M</text>
+<text fill="#ede9fe" x="20" y="102">1280 × 720</text><rect fill="url(#m32-bar5)" height="22" opacity="0.7" rx="4" width="184" x="140" y="86"></rect><text fill="#a8a8b3" x="332" y="102">0,9 M</text>
+<text fill="#c084fc" font-weight="600" x="20" y="152">640 × 480</text><rect fill="url(#m32-bar5)" height="22" rx="4" width="61" x="140" y="136"></rect><text fill="#c084fc" font-weight="600" x="210" y="152">0.3 M · good starting point</text>
+<text fill="#7dd3fc" x="20" y="202">320 × 240</text><rect fill="#38bdf8" height="22" rx="4" width="16" x="140" y="186"></rect><text fill="#7dd3fc" x="166" y="202">0.08 M · simple color, very fast</text>
+<text fill="#a8a8b3" font-size="14" x="20" y="244">pixels per frame (millions): processing time grows with the count</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> Each bar represents the work for one frame. Going from Full HD to 640 × 480 cuts the workload by almost seven times. To track a colored ball, even 320 × 240 works; for YOLO26, 640 × 480 is the natural size.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-2-t5-p3"><strong class="text-neutral-100">Goal:</strong> measure the real FPS of the “capture + HSV + mask” loop at three resolutions and choose yours based on the numbers.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">~/robo/fps.py</span></div>
+<pre><code><span class="c"># Measures FPS for the complete loop at three resolutions (5 s each)</span>
+<span class="k">import</span> time
+<span class="k">import</span> cv2
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+
+picam2 = Picamera2()
+<span class="k">for</span> largura, altura <span class="k">in</span> [(1280, 720), (640, 480), (320, 240)]:
+    cfg = picam2.create_video_configuration(main={<span class="s">"size"</span>: (largura, altura), <span class="s">"format"</span>: <span class="s">"RGB888"</span>})
+    picam2.configure(cfg)
+    picam2.start(); time.sleep(1)
+    n, t0 = 0, time.perf_counter()
+    <span class="k">while</span> time.perf_counter() - t0 &lt; 5:
+        quadro = picam2.capture_array()
+        hsv = cv2.cvtColor(quadro, cv2.COLOR_BGR2HSV)          <span class="c"># typical workload</span>
+        mascara = cv2.inRange(hsv, (0, 120, 70), (10, 255, 255))
+        n += 1
+    fps = n / (time.perf_counter() - t0)
+    print(f<span class="s">"{largura}x{altura}: {fps:5.1f} FPS  ({1000 / fps:5.1f} ms per cycle)"</span>)
+    picam2.stop()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Three lines appear, and FPS rises as the resolution drops (the camera’s own frame rate is the ceiling).</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Write down the numbers: they’re your reference for comparison with YOLO26 in 3.3.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>FPS dropping over time? Run <span class="font-mono text-xs">saude.py</span> from 3.1: it’s probably heat.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Improves FPS</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Ask the camera for the final resolution (without resizing afterward).</span></li><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Process only the part of the image you need (for example, the bottom half).</span></li><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Print less: <span class="font-mono text-xs">print</span> printing every frame also has a cost.</span></li></ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Reduces FPS</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Save a JPEG for every frame to the card.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Open the desktop with a video window while the robot is running.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Pi without a cooler: starts fast, then slows down.</span></li></ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t5-p4">Without measuring, every optimization is a guess. With the FPS in hand, you can use data to choose between “fast color” and “slower AI,” and know how far the robot can travel between decisions without losing the object.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Loop FPS</div><div class="text-xs text-neutral-400">capture + process</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Latency</div><div class="text-xs text-neutral-400">delay before reacting</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Resolution</div><div class="text-xs text-neutral-400">half = ¼ of the workload</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">perf_counter</div><div class="text-xs text-neutral-400">clock for measuring</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-3-2#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🌐 Stream video to the browser</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t6-p1">The Pi on the robot has no screen, and video windows over SSH don’t work. The solution is to make the Pi a small <strong class="text-purple-400">web server</strong>: it compresses each frame into a JPEG and sends the sequence over the network in the <strong class="text-neutral-100">MJPEG</strong>format, which any browser can display as video. This lets you see exactly what the robot sees, with your code’s markings already applied, on your phone or laptop.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-2-t6-p2"><strong>MJPEG</strong> is “JPEG in motion”: one photo after another over a connection that stays open. It’s simple and has low latency, but uses more network bandwidth than properly compressed video. The <strong>port</strong> (here, 8000) is the number that distinguishes services on the same computer; that’s why the address ends in <span class="font-mono text-xs">:8000</span>.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Streaming: on the Pi, one task captures each frame, draws markings on it, and saves the latest JPEG; the web server on port 8000 sends that JPEG in a sequence; a phone or laptop on the same Wi-Fi network opens the address and views the video." class="w-full h-auto" role="img" viewbox="0 0 640 240">
+<defs><pattern height="32" id="m32-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.1" r="1.3"></circle></pattern><marker id="m32-ah6" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker><filter height="180%" id="m32-glow6" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m32-grid6)" height="240" width="640"></rect>
+<rect fill="#140e1f" height="140" rx="14" stroke="#6b5a86" stroke-dasharray="6 5" stroke-width="2" width="380" x="14" y="30"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<text fill="#a8a8b3" font-size="14" x="204" y="54">Raspberry Pi 5</text>
+<rect fill="#1a1029" height="84" rx="12" stroke="#a855f7" stroke-width="2" width="160" x="30" y="70"></rect><text fill="#c084fc" font-size="16" font-weight="600" x="110" y="102">capture</text><text fill="#ede9fe" font-size="14" x="110" y="126">draw, encode</text>
+<g filter="url(#m32-glow6)"><rect fill="#22153a" height="84" rx="12" stroke="#a855f7" stroke-width="2.5" width="160" x="216" y="70"></rect></g><text fill="#c084fc" font-size="16" font-weight="600" x="296" y="102">server</text><text fill="#ede9fe" font-size="14" x="296" y="126">port 8000</text>
+<rect fill="#0e1b26" height="112" rx="16" stroke="#38bdf8" stroke-width="2" width="160" x="460" y="56"></rect><text fill="#7dd3fc" font-size="16" font-weight="600" x="540" y="96">browser</text><text fill="#bfe6ff" font-size="14" x="540" y="122">phone or</text><text fill="#bfe6ff" font-size="14" x="540" y="142">laptop</text>
+<text fill="#7dd3fc" font-size="14" x="420" y="94">JPEG,</text><text fill="#7dd3fc" font-size="14" x="420" y="112">JPEG…</text>
+<text fill="#ddd6fe" font-size="15" x="320" y="206">http://robo.local:8000 · local network only</text>
+</g>
+<path d="M190,112 L208,112" marker-end="url(#m32-ah6)" stroke="#c084fc" stroke-width="2"></path>
+<path d="M376,130 L452,130" marker-end="url(#m32-ah6)" stroke="#38bdf8" stroke-width="2.2"></path>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> Inside the Pi (dashed outline), two tasks run at the same time: one only captures and prepares the latest JPEG; the other only delivers it. Keeping them separate prevents a slow browser from delaying the robot’s vision.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-2-t6-p3"><strong class="text-neutral-100">Goal:</strong> View the robot’s video in a browser, with the center of the red object marked. Uses only Python’s standard library, with nothing to install.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">~/robo/stream.py</span></div>
+<pre><code><span class="c"># Camera video in the browser (MJPEG) with the object center marked</span>
+<span class="k">import</span> threading, time
+<span class="k">from</span> http.server <span class="k">import</span> BaseHTTPRequestHandler, ThreadingHTTPServer
+<span class="k">import</span> cv2, numpy <span class="k">as</span> np
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+
+picam2 = Picamera2()
+picam2.configure(picam2.create_video_configuration(main={<span class="s">"size"</span>: (640, 480), <span class="s">"format"</span>: <span class="s">"RGB888"</span>}))
+picam2.start()
+ultimo_jpeg, trava = <span class="k">None</span>, threading.Lock()
+
+<span class="k">def</span> capturar():
+    <span class="k">global</span> ultimo_jpeg
+    <span class="k">while True</span>:
+        quadro = picam2.capture_array()
+        hsv = cv2.cvtColor(quadro, cv2.COLOR_BGR2HSV)
+        mascara = cv2.inRange(hsv, (0, 120, 70), (10, 255, 255)) | cv2.inRange(hsv, (170, 120, 70), (179, 255, 255))
+        contornos, _ = cv2.findContours(mascara, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        <span class="k">if</span> contornos:
+            maior = max(contornos, key=cv2.contourArea)
+            m = cv2.moments(maior)
+            <span class="k">if</span> m[<span class="s">"m00"</span>] &gt; 800:
+                cx, cy = int(m[<span class="s">"m10"</span>] / m[<span class="s">"m00"</span>]), int(m[<span class="s">"m01"</span>] / m[<span class="s">"m00"</span>])
+                cv2.drawContours(quadro, [maior], -1, (255, 0, 255), 2)
+                cv2.circle(quadro, (cx, cy), 6, (255, 255, 0), -1)
+        cv2.line(quadro, (320, 0), (320, 480), (200, 200, 200), 1)   <span class="c"># center of the image</span>
+        ok, buf = cv2.imencode(<span class="s">".jpg"</span>, quadro, [cv2.IMWRITE_JPEG_QUALITY, 70])
+        <span class="k">if</span> ok:
+            <span class="k">with</span> trava:
+                ultimo_jpeg = buf.tobytes()
+
+PAGINA = b<span class="s">'&lt;html&gt;&lt;body style="margin:0;background:#111"&gt;&lt;img src="/video" style="width:100%"&gt;&lt;/body&gt;&lt;/html&gt;'</span>
+
+<span class="k">class</span> Servidor(BaseHTTPRequestHandler):
+    <span class="k">def</span> do_GET(self):
+        <span class="k">if</span> self.path == <span class="s">"/"</span>:
+            self.send_response(200); self.send_header(<span class="s">"Content-Type"</span>, <span class="s">"text/html"</span>); self.end_headers()
+            self.wfile.write(PAGINA)
+        <span class="k">elif</span> self.path == <span class="s">"/video"</span>:
+            self.send_response(200)
+            self.send_header(<span class="s">"Content-Type"</span>, <span class="s">"multipart/x-mixed-replace; boundary=QUADRO"</span>)
+            self.end_headers()
+            <span class="k">try</span>:
+                <span class="k">while True</span>:
+                    <span class="k">with</span> trava:
+                        jpg = ultimo_jpeg
+                    <span class="k">if</span> jpg:
+                        self.wfile.write(b<span class="s">"--QUADRO\r\nContent-Type: image/jpeg\r\n\r\n"</span> + jpg + b<span class="s">"\r\n"</span>)
+                    time.sleep(0.05)                 <span class="c"># up to ~20 frames per second</span>
+            <span class="k">except</span> (BrokenPipeError, ConnectionResetError):
+                <span class="k">pass</span>                                 <span class="c"># the browser closed the tab</span>
+        <span class="k">else</span>:
+            self.send_error(404)
+    <span class="k">def</span> log_message(self, *args):
+        <span class="k">pass</span>                                         <span class="c"># silence the log for each request</span>
+
+threading.Thread(target=capturar, daemon=<span class="k">True</span>).start()
+print(<span class="s">"Open http://robo.local:8000 in your browser. Ctrl+C to exit."</span>)
+ThreadingHTTPServer((<span class="s">"0.0.0.0"</span>, 8000), Servidor).serve_forever()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>On your phone (on the same Wi-Fi), <span class="font-mono text-xs">http://robo.local:8000</span> shows the video with a vertical line down the middle.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>A red object gets a magenta outline and a cyan dot at its center.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Can’t open robo.local on your phone? Use the Pi’s IP (<span class="font-mono text-xs">hostname -I</span>) instead of the name.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Local network only</h3>
+<p class="text-neutral-300 text-sm">This server has no password: anyone on the same network can see the camera. Use it at home or in the lab, never exposed to the internet. On a school network, check with the teacher before turning it on.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t6-p4">Seeing what the robot sees is the most powerful debugging tool in this learning path. When it turns the wrong way in project 3.6, you can look at the video and tell in seconds whether the problem is vision (it marked the wrong object) or control (it marked the right one but turned the wrong way).</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">MJPEG</div><div class="text-xs text-neutral-400">JPEG sequence</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Port 8000</div><div class="text-xs text-neutral-400">service address</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Thread</div><div class="text-xs text-neutral-400">capture and serve at the same time</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Overlay</div><div class="text-xs text-neutral-400">markings on the frame</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Image = table of numbers</strong><span class="text-neutral-400">: (height, width, 3), in BGR order, with y increasing downward.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Camera tested in two layers</strong><span class="text-neutral-400">: rpicam-hello in the terminal, picamera2 in the code.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Color by HSV</strong><span class="text-neutral-400">: range → mask → cleanup; red needs two ranges.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Center and area become error and distance</strong><span class="text-neutral-400">: the two numbers the robot uses to turn and move closer.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Measure and view</strong><span class="text-neutral-400">: FPS for the entire loop and MJPEG video in the browser for debugging.</span></div></div>
+</div>
+<h3 class="font-semibold text-purple-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.raspberrypi.com/documentation/computers/camera_software.html" rel="noopener" target="_blank">Raspberry Pi camera software</a> <span class="text-neutral-500">— rpicam-apps and picamera2</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.raspberrypi.com/documentation/accessories/camera.html" rel="noopener" target="_blank">Raspberry Pi cameras</a> <span class="text-neutral-500">— models, cables, and installation</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.opencv.org/4.x/df/d9d/tutorial_py_colorspaces.html" rel="noopener" target="_blank">OpenCV: color spaces</a> <span class="text-neutral-500">— HSV and inRange step by step</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.opencv.org/4.x/d3/d05/tutorial_py_table_of_contents_contours.html" rel="noopener" target="_blank">OpenCV: contours</a> <span class="text-neutral-500">— moments, area, and bounding boxes</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.opencv.org/4.x/" rel="noopener" target="_blank">OpenCV documentation</a> <span class="text-neutral-500">— complete reference</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-purple-400 mb-1">Next module</h3>
+<p class="text-neutral-300">3.3 · Detect objects with YOLO26: from “find the red thing” to “find the person, cat, or bottle,” running on the Pi 5.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-3-1.html">← Previous: 3.1 Raspberry Pi 5 and Linux</a>
+<a class="inline-flex items-center px-5 py-3 bg-purple-700 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors" href="modulo-3-3.html">Next: 3.3 YOLO26 →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

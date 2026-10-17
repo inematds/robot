@@ -1,133 +1,55 @@
-# 🤖 Robótica do Zero ao Expert
+# 🦾 Robótica do Zero ao Expert — edição 2026
 
-Curso completo e gratuito de robótica, do básico em eletrônica até IA e visão computacional.
+Curso aberto e gratuito do **INEMA.CLUB**: do primeiro LED no ESP32 ao braço robótico que aprende por demonstração. Sem carga horária: cada trilha resolve um problema e você entra pela que precisa hoje.
 
-[![GitHub Pages](https://img.shields.io/badge/GitHub-Pages-blue)](https://inematds.github.io/robot)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://opensource.org/)
+**Acesse:** [Português](https://inematds.github.io/robot/) · [English](https://inematds.github.io/robot/en/) · [Español](https://inematds.github.io/robot/es/)
 
-## 🎯 Sobre o Curso
+## Trilhas
 
-Um curso estruturado em 3 níveis progressivos, totalizando **180 horas** de conteúdo prático e teórico. Do zero absoluto até robôs autônomos com inteligência artificial.
+| Trilha | Módulos |
+|---|---|
+| 1 · Primeiros passos | O que é um robô e o seu kit · Eletrônica essencial · ESP32: o primeiro programa · Sensores · Motores e energia · **Projeto:** rover que desvia de obstáculos |
+| 2 · Robô autônomo | Controle pelo celular (Wi-Fi e BLE) · IMU e encoders · Controle PID · Várias tarefas ao mesmo tempo · Telemetria · **Projeto:** seguidor de linha com PID |
+| 3 · Visão e IA embarcada | Raspberry Pi 5 e Linux · Câmera e OpenCV · YOLO26 · IA no microcontrolador · Pi conversa com o ESP32 · **Projeto:** robô que segue um objeto |
+| 4 · ROS 2 e navegação | ROS 2 sem medo · URDF e Gazebo · micro-ROS no ESP32 · LiDAR e SLAM · Nav2 · **Projeto:** robô que mapeia e navega |
+| 5 · IA moderna e braço robótico | LLM como cérebro · Voz local · SO-101 e LeRobot · Aprender por demonstração · Simular antes do real · **Projeto final:** robô assistente |
+| 6 · Para o professor | Como ministrar este curso (turmas, kits, avaliação, segurança) |
 
-### 🟢 Nível 1: Fundamentos (60h)
-- Eletrônica básica e Arduino
-- Sensores e atuadores
-- Primeiros robôs (seguidor de linha, desviador de obstáculos)
+São 31 módulos e 188 tópicos. Cada módulo tem explicação, diagramas, código pronto para copiar e "como verificar". O progresso, as dúvidas e as anotações ficam salvos no seu navegador, e você pode exportá-los em "Minha jornada".
 
-### 🟠 Nível 2: Robôs Autônomos (60h)
-- ESP32 e IoT
-- WiFi, Bluetooth e conectividade
-- Controle PID e navegação
+## O que mudou na edição 2026
 
-### 🔴 Nível 3: Expert com IA (60h)
-- Raspberry Pi e Linux
-- Visão computacional com OpenCV
-- Machine Learning e Deep Learning
-- ROS2 e SLAM
+- Formato novo (INEMA curso v2), com progresso, anotações e temas de leitura.
+- Conteúdo atualizado: ESP32 core 3.x (`ledcAttach`), ROS 2 Lyrical/Jazzy, Gazebo, YOLO26, LeRobot com o braço SO-101.
+- Todos os sketches de ESP32 compilados com `arduino-cli` + esp32 core 3.3.12.
+- Trilha 6 nova, para quem vai dar o curso em escola ou clube.
+- A versão antiga continua em [/robot/v1/](https://inematds.github.io/robot/v1/).
 
-## 🚀 Acesse o Curso
-
-**Website:** [https://inematds.github.io/robot](https://inematds.github.io/robot)
-
-## 📚 Estrutura do Repositório
+## Estrutura do repositório
 
 ```
-robot/
-├── docs/                    # Website do curso (GitHub Pages)
-│   ├── index.html          # Página principal
-│   ├── materiais.html      # Lista de componentes
-│   ├── recursos.html       # Ferramentas e documentação
-│   ├── instrutor.html      # Sobre o instrutor
-│   ├── nivel1.html         # Detalhes Nível 1
-│   ├── nivel2.html         # Detalhes Nível 2
-│   ├── nivel3.html         # Detalhes Nível 3
-│   ├── css/                # Estilos customizados
-│   ├── js/                 # JavaScript
-│   └── imagens/            # Assets visuais
-│
-├── curso_robotica_completo/ # Material didático completo
-│   ├── nivel_1_fundamentos/
-│   ├── nivel_2_autonomo/
-│   └── nivel_3_expert/
-│
-└── README.md               # Este arquivo
+docs/              site publicado (GitHub Pages)
+  index.html       landing
+  curso/trilhaN/   índice e módulos de cada trilha
+  curso/_shared/   manifesto, convenções, currículo, fatos conferidos
+  en/  es/         versões traduzidas (geradas)
+  v1/              site antigo
+i18n/              catálogo PT e traduções EN/ES (cache)
+scripts/           validate.py, compile-check.py, browser-check.cjs, localization.py, translate.py, render-locales.py
 ```
 
-## 🛠️ Tecnologias Utilizadas
-
-- **Frontend:** HTML5, Tailwind CSS, JavaScript
-- **Hardware:** Arduino, ESP32, Raspberry Pi
-- **Frameworks:** ROS2, OpenCV, TensorFlow
-- **Linguagens:** C/C++, Python
-
-## 💰 Investimento Estimado
-
-- **Nível 1:** R$ 150-200
-- **Nível 2:** R$ 250-350
-- **Nível 3:** R$ 800-1200
-
-**Total completo:** R$ 1200-1750
-
-## 🎓 Para Quem é Este Curso?
-
-- ✅ Iniciantes sem experiência prévia
-- ✅ Estudantes de engenharia
-- ✅ Makers e entusiastas
-- ✅ Profissionais buscando especialização em robótica
-
-## 📖 Como Começar?
-
-1. Acesse o website: [inematds.github.io/robot](https://inematds.github.io/robot)
-2. Leia a lista de materiais do Nível 1
-3. Adquira os componentes básicos
-4. Siga o currículo passo a passo
-5. Compartilhe seus projetos!
-
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Este é um projeto educacional open-source.
-
-### Como contribuir:
-1. Fork este repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/MinhaFeature`)
-5. Abra um Pull Request
-
-### Ideias para contribuições:
-- Novos projetos práticos
-- Traduções
-- Melhorias na documentação
-- Correções de bugs
-- Diagramas e esquemáticos
-- Vídeo tutoriais
-
-## 📝 Licença
-
-Este projeto é licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-## 🌟 Roadmap Futuro
-
-- [ ] Vídeo-aulas complementares
-- [ ] Fórum de discussão
-- [ ] Projetos da comunidade
-- [ ] Certificados de conclusão
-- [ ] Desafios e competições
-- [ ] Integração com simuladores online
-
-## 📬 Contato
-
-- **GitHub:** [@inematds](https://github.com/inematds)
-- **Email:** contato@roboticacourse.com
-- **Website:** [inematds.github.io/robot](https://inematds.github.io/robot)
-
-## 🙏 Agradecimentos
-
-Obrigado a todos que contribuem para tornar a educação em robótica mais acessível!
+Para conferir: `python3 scripts/validate.py pt|en|es` e `python3 scripts/compile-check.py <filtro>`.
 
 ---
 
-**⭐ Se este projeto te ajudou, considere dar uma estrela!**
+## English
 
-🤖 **Robótica do Zero ao Expert** | Projeto educacional open-source | 2024
+**Robotics from Zero to Expert, 2026 edition.** A free, open INEMA.CLUB course that goes from your first LED on an ESP32 to a robot arm that learns by demonstration. Six tracks (first steps, autonomous robot, vision and edge AI, ROS 2 and navigation, modern AI and the SO-101 arm, and a track for teachers), 31 modules, no fixed schedule. → [inematds.github.io/robot/en/](https://inematds.github.io/robot/en/)
+
+## Español
+
+**Robótica de Cero a Experto, edición 2026.** Curso abierto y gratuito de INEMA.CLUB: del primer LED en el ESP32 al brazo robótico que aprende por demostración. Seis rutas (primeros pasos, robot autónomo, visión e IA embebida, ROS 2 y navegación, IA moderna y el brazo SO-101, y una ruta para el docente), 31 módulos, sin carga horaria. → [inematds.github.io/robot/es/](https://inematds.github.io/robot/es/)
+
+## Licença
+
+MIT. Veja [LICENSE](LICENSE).

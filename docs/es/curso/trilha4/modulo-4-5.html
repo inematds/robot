@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Módulo 4.5 · Navegación con Nav2 | Robótica desde cero hasta experto</title>
+<meta content="Nav2 en la práctica: localización con AMCL, mapas de costo, planificadores, enviar el robot a un punto por RViz2 y Python (nav2_simple_commander), recuperación y ronda por waypoints." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Primeros pasos",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "Qué es un robot y su kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Electrónica esencial",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: el primer programa",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensores: el robot percibe",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motores y energía",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Proyecto: rover que esquiva obstáculos",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Robot autónomo",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control desde el celular: Wi-Fi y BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU y encoders: saber dónde está",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "Control PID en la práctica",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Varias tareas al mismo tiempo",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetría y registro de datos",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Proyecto: seguidor de línea con PID",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Visión e IA integrada",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 y Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Cámara y OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detectar objetos con YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "IA dentro del microcontrolador",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi se comunica con el ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Proyecto: robot que sigue un objeto",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 y navegación",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 sin miedo",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describir y simular el robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS en el ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR y mapas (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navegación con Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Proyecto: robot que mapea y navega",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "IA moderna y brazo robótico",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "Modelo de lenguaje como cerebro",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Voz local: escuchar y hablar",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "Brazo SO-101 y LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Aprender por demostración",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simular antes de hacerlo en la realidad",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Proyecto final: robot asistente",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "Para el docente",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "Cómo impartir este curso",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha4/modulo-4-5.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha4/modulo-4-5.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha4/modulo-4-5.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha4/modulo-4-5.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha4/modulo-4-5.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha4/modulo-4-5.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="../../../en/curso/trilha4/modulo-4-5.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">EN</a><a href="modulo-4-5.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">ES</a></div>
+<a class="skip" href="#conteudo">Saltar al contenido</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T4 ativa -->
+<nav aria-label="Navegación principal" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robótica desde cero hasta experto — inicio" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeros pasos</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autónomo</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visión e IA</span></a>
+<a aria-current="page" class="nav-trail text-amber-400 bg-amber-500/10" href="index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Docente</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="Mi recorrido" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Mi recorrido</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Apariencia" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Apariencia</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Oscuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Enfoque</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fuente</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Lectura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamaño</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Ancho</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estrecho</button><button data-inema-set-linewidth="68" type="button">Mediano</button><button data-inema-set-linewidth="75" type="button">Ancho</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Interlineado</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Cómodo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento morado" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento ámbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/oscuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="4-5" data-inema-track="4" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Ruta de navegación" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-amber-400" href="../../index.html">Inicio</a><span aria-hidden="true">/</span>
+<a class="hover:text-amber-400" href="index.html">Ruta 4</a><span aria-hidden="true">/</span>
+<span class="text-amber-400">Módulo 4.5</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full mb-4">MÓDULO 4.5 · PRÁCTICA</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🧭 Navegación con Nav2</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Con el mapa guardado en el módulo 4.4, el robot recibe un objetivo: haces clic en un punto (o lo envías por Python) y se <strong class="text-neutral-100">Nav2</strong> localiza, planifica la ruta, esquiva lo que aparezca e intenta recuperarse cuando se atasca. Al final, el robot hace una <strong class="text-amber-400">ronda por la casa</strong> solo.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">6</div><div class="text-xs text-neutral-400">Temas</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Avanzado</div><div class="text-xs text-neutral-400">Nivel</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Práctica</div><div class="text-xs text-neutral-400">Tipo</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Mapa guardado</div><div class="text-xs text-neutral-400">Requisito previo (4.4)</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progreso del módulo 4.5" class="inema-ring" data-inema-meter="modulo:4-5"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:4-5"><strong data-inema-meter-frac="">0 de 0</strong> temas leídos · <span data-inema-section-counter="">Sección 1 de 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Índice de la página" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">En este módulo</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-1">1. La pila de Nav2</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-2">2. Localización con AMCL</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-3">3. Costos y planificadores</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-4">4. Ir hasta un punto</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-5">5. Recuperación</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-6">6. Waypoints: la ronda</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Contenido detallado</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-4-5#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🧱 Nav2: la pila de navegación</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t1-p1">O <strong class="text-amber-400">Nav2</strong> es el conjunto de paquetes de navegación de ROS 2. No es un solo nodo: es un equipo de servidores, cada uno con una tarea. Uno carga el mapa, otro descubre dónde está el robot, otro traza la ruta en todo el mapa, otro decide la velocidad en cada instante y otro intenta destrabar el robot. Quien coordina al equipo es el <strong class="text-neutral-100">BT Navigator</strong>, que sigue un árbol de comportamiento.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-5-t1-p2">Una <strong>acción</strong> de ROS 2 (módulo 4.1) es una solicitud que tarda y devuelve resultados parciales: «ve hasta allí» y, mientras avanza, «faltan 2 m». Nav2 recibe tus objetivos mediante la acción <span class="font-mono text-xs">navigate_to_pose</span>. Al final, publica velocidades en <span class="font-mono text-xs">/cmd_vel</span>, el mismo tópico que escucha el ESP32 con micro-ROS en el módulo 4.3.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Arquitectura de Nav2: el objetivo entra en BT Navigator, que llama al planner (ruta global en el mapa de costo global), al controller (velocidad en cada instante en el mapa de costo local) y al behavior server (recuperación); map server y AMCL proporcionan el mapa y la posición; la salida es /cmd_vel para los motores." class="w-full h-auto" role="img" viewbox="0 0 640 340">
+<defs><pattern height="32" id="m45-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<filter height="180%" id="m45-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter><marker id="m45-ah1" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#fbbf24"></path></marker>
+<marker id="m45-ah1c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker></defs>
+<rect fill="url(#m45-grid1)" height="340" width="640"></rect><g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0e1b26" height="54" rx="10" stroke="#38bdf8" stroke-width="2" width="150" x="20" y="20"></rect><text fill="#bfe6ff" font-size="16" x="95" y="53">objetivo (x, y)</text><g filter="url(#m45-glow1)"><rect fill="#2a1d0a" height="66" rx="12" stroke="#fbbf24" stroke-width="2.5" width="180" x="230" y="14"></rect></g>
+<text fill="#fbbf24" font-size="17" font-weight="600" x="320" y="42">BT Navigator</text><text fill="#fef3c7" font-size="14" x="320" y="64">árbol de comportamiento</text><rect fill="#261a08" height="70" rx="12" stroke="#f59e0b" stroke-width="2" width="180" x="20" y="130"></rect><text fill="#fbbf24" font-size="16" font-weight="600" x="110" y="160">Planner</text><text fill="#fef3c7" font-size="14" x="110" y="182">ruta en todo el mapa</text>
+<rect fill="#261a08" height="70" rx="12" stroke="#f59e0b" stroke-width="2" width="180" x="230" y="130"></rect><text fill="#fbbf24" font-size="16" font-weight="600" x="320" y="160">Controller</text><text fill="#fef3c7" font-size="14" x="320" y="182">velocidad actual</text><rect fill="#261a08" height="70" rx="12" stroke="#f59e0b" stroke-width="2" width="180" x="440" y="130"></rect><text fill="#fbbf24" font-size="16" font-weight="600" x="530" y="160">Behaviors</text><text fill="#fef3c7" font-size="14" x="530" y="182">girar, retroceder, esperar</text>
+<rect fill="#0e1b26" height="60" rx="12" stroke="#38bdf8" stroke-width="2" width="180" x="20" y="250"></rect><text fill="#bfe6ff" font-size="15" x="110" y="276">map server + AMCL</text><text fill="#7dd3fc" font-size="13" x="110" y="296">mapa y posición</text><rect fill="#0e1b26" height="60" rx="12" stroke="#38bdf8" stroke-width="2" width="180" x="230" y="250"></rect><text fill="#bfe6ff" font-size="15" x="320" y="276">costmaps</text><text fill="#7dd3fc" font-size="13" x="320" y="296">global y local</text>
+<rect fill="#2a1d0a" height="60" rx="12" stroke="#fbbf24" stroke-width="2" width="150" x="470" y="250"></rect><text fill="#fde68a" font-size="16" font-weight="600" x="545" y="286">/cmd_vel</text></g>
+<g fill="none" stroke-width="2"><path d="M170,47 L222,47" marker-end="url(#m45-ah1c)" stroke="#38bdf8"></path>
+<path d="M290,80 L130,124" marker-end="url(#m45-ah1)" stroke="#fbbf24"></path><path d="M320,80 L320,122" marker-end="url(#m45-ah1)" stroke="#fbbf24"></path>
+<path d="M350,80 L510,124" marker-end="url(#m45-ah1)" stroke="#fbbf24"></path><path d="M110,244 L110,208" marker-end="url(#m45-ah1c)" stroke="#38bdf8" stroke-dasharray="5 4"></path>
+<path d="M320,244 L320,208" marker-end="url(#m45-ah1c)" stroke="#38bdf8" stroke-dasharray="5 4"></path><path d="M410,165 C450,165 470,220 520,244" marker-end="url(#m45-ah1)" stroke="#fbbf24"></path>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">Cómo leer:</strong> el objetivo entra por arriba y el BT Navigator distribuye el trabajo entre los tres servidores ámbar. Las flechas cian discontinuas representan los datos de apoyo (mapa, posición y costos). Lo único que sale de Nav2 hacia el mundo es la velocidad en <span class="font-mono">/cmd_vel</span>.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t1-p3"><strong class="text-neutral-100">Objetivo:</strong> ver toda la pila en funcionamiento en el TurtleBot simulado antes de usar tu robot. Si ya instalaste los paquetes en el módulo 4.4, omite el <span class="font-mono text-xs">apt</span>.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal</span></div>
+<pre><code><span class="c"># &lt;distro&gt; = jazzy ou lyrical</span>
+sudo apt install ros-&lt;distro&gt;-navigation2 ros-&lt;distro&gt;-nav2-bringup ros-&lt;distro&gt;-nav2-minimal-tb*
+source /opt/ros/&lt;distro&gt;/setup.bash
+
+<span class="c"># Gazebo + RViz2 + Nav2 completo, ya con um mapa de ejemplo</span>
+<span class="c"># (se não existir, liste a pasta launch do nav2_bringup e use o tb3_simulation_launch.py)</span>
+ros2 launch nav2_bringup tb4_simulation_launch.py headless:=False
+
+<span class="c"># em outro terminal: os servidores que subiram</span>
+ros2 node list | grep -E "planner|controller|bt_navigator|amcl|behavior"</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-amber-400">Cómo verificar:</strong> RViz2 se abre con el mapa, el robot y los botones «2D Pose Estimate» y «Nav2 Goal» en la barra; la lista de nodos muestra <span class="font-mono">planner_server</span>, <span class="font-mono">controller_server</span>, <span class="font-mono">bt_navigator</span>, <span class="font-mono">amcl</span> e <span class="font-mono">behavior_server</span>.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t1-p4">Cuando el robot «no se mueve», saber qué hace cada servidor transforma un misterio en una pregunta concreta: ¿no sabe dónde está (AMCL), no encuentra una ruta (planner) o encuentra una ruta, pero no puede seguirla (controller)?</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">BT Navigator</div><div class="text-xs text-neutral-400">el coordinador</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Planner</div><div class="text-xs text-neutral-400">ruta global</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Controller</div><div class="text-xs text-neutral-400">velocidad local</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">/cmd_vel</div><div class="text-xs text-neutral-400">la única salida</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-4-5#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">📍 Localización con AMCL en el mapa guardado</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t2-p1">Con el mapa listo, el robot ya no necesita SLAM: solo necesita descubrir <strong class="text-neutral-100">dónde está dentro de un mapa que ya conoce</strong>. Quien hace esto en Nav2 es <strong class="text-amber-400">AMCL</strong>. Distribuye cientos de «posibles» posiciones (partículas) por el mapa, compara lo que el LiDAR debería ver en cada una con lo que realmente ve y conserva las que coinciden. A medida que el robot avanza, la nube se concentra alrededor de la posición real.</p>
+<figure class="fig mb-3">
+<svg aria-label="Tres cuadros de AMCL: al inicio las partículas están dispersas por la habitación; después de avanzar un poco, se agrupan en dos grupos; al final, forman una nube pequeña alrededor del robot." class="w-full h-auto" role="img" viewbox="0 0 640 230">
+<defs><pattern height="32" id="m45-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern></defs><rect fill="url(#m45-grid2)" height="230" width="640"></rect>
+<g fill="none" stroke="#a8a8b3" stroke-width="2.5"><rect height="150" width="190" x="15" y="20"></rect><rect height="150" width="190" x="225" y="20"></rect><rect height="150" width="190" x="435" y="20"></rect></g><g fill="#fbbf24" opacity="0.85">
+<circle cx="40" cy="45" r="3"></circle><circle cx="90" cy="60" r="3"></circle><circle cx="160" cy="40" r="3"></circle><circle cx="185" cy="100" r="3"></circle><circle cx="60" cy="120" r="3"></circle><circle cx="120" cy="150" r="3"></circle><circle cx="150" cy="110" r="3"></circle><circle cx="35" cy="160" r="3"></circle><circle cx="110" cy="90" r="3"></circle><circle cx="175" cy="150" r="3"></circle><circle cx="260" cy="60" r="3"></circle><circle cx="268" cy="70" r="3"></circle><circle cx="252" cy="72" r="3"></circle><circle cx="270" cy="55" r="3"></circle><circle cx="370" cy="130" r="3"></circle><circle cx="380" cy="122" r="3"></circle><circle cx="362" cy="138" r="3"></circle><circle cx="376" cy="140" r="3"></circle><circle cx="388" cy="132" r="3"></circle>
+<circle cx="560" cy="110" r="3"></circle><circle cx="566" cy="104" r="3"></circle><circle cx="554" cy="116" r="3"></circle><circle cx="570" cy="114" r="3"></circle><circle cx="558" cy="100" r="3"></circle></g>
+<circle cx="562" cy="110" fill="none" r="12" stroke="#38bdf8" stroke-width="2.5"></circle><g font-family="Inter,sans-serif" font-size="15" text-anchor="middle">
+<text fill="#fef3c7" x="110" y="196">1. no sé dónde estoy</text><text fill="#fef3c7" x="320" y="196">2. dos lugares parecidos</text><text fill="#7dd3fc" x="530" y="196">3. localizado</text><text fill="#a8a8b3" font-size="14" x="320" y="220">cada punto ámbar es una posible posición; el robot real es el círculo cian</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">Cómo leer:</strong> de izquierda a derecha, el robot avanza y AMCL descarta las posibles posiciones que no coinciden con el LiDAR. El cuadro del medio muestra el caso difícil: dos esquinas iguales. Avanzar un poco más (o indicar la posición inicial) resuelve la duda.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-5-t2-p2"><strong>Pose</strong> es posición más orientación: (x, y) en el suelo y hacia qué lado está orientado el robot (el ángulo, llamado <em>yaw</em>). <strong>Posición inicial</strong> es la posible posición que le das a AMCL al inicio; con ella, la nube comienza pequeña y el robot se localiza en segundos.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t2-p3"><strong class="text-neutral-100">Objetivo:</strong> iniciar Nav2 con el mapa guardado e indicar dónde está el robot. En la simulación, agrega <span class="font-mono text-xs">use_sim_time:=True</span>.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal</span></div>
+<pre><code><span class="c"># terminal 1: Nav2 con el mapa del módulo 4.4 (el robot ya publica /scan, /odom y TF)</span>
+source /opt/ros/&lt;distro&gt;/setup.bash
+ros2 launch nav2_bringup bringup_launch.py map:=$HOME/mapas/mapa.yaml
+
+<span class="c"># terminal 2: RViz2 con la configuración de Nav2</span>
+ros2 launch nav2_bringup rviz_launch.py
+
+<span class="c"># alternativa al botón "2D Pose Estimate": robot en el origen del mapa, orientado hacia x</span>
+ros2 topic pub --once /initialpose geometry_msgs/msg/PoseWithCovarianceStamped \
+  "{header: {frame_id: map}, pose: {pose: {position: {x: 0.0, y: 0.0}, orientation: {w: 1.0}}}}"</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Después de la posición inicial, RViz2 muestra los puntos del LiDAR <strong class="text-neutral-100">sobre las paredes</strong> del mapa y la nube pequeña de partículas alrededor del robot.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Al avanzar un poco con el teleop, los puntos siguen alineados con las paredes.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿Los puntos del LiDAR están "girados" con respecto al mapa? La posición inicial se indicó con el ángulo incorrecto: arrastra la flecha de "2D Pose Estimate" en la dirección hacia la que apunta el robot.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t2-p4">Toda navegación depende de una buena localización. Si el robot cree que está medio metro a la izquierda, planeará una ruta perfecta hacia un lugar donde no está y chocará con el marco de la puerta.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">AMCL</div><div class="text-xs text-neutral-400">localización por partículas</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Pose</div><div class="text-xs text-neutral-400">x, y y ángulo</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">/initialpose</div><div class="text-xs text-neutral-400">estimación inicial</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">map_server</div><div class="text-xs text-neutral-400">carga el .yaml</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-4-5#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🧮 Mapas de costos y planificadores</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t3-p1">El mapa guardado solo indica "libre" o "pared". Para planificar, Nav2 necesita algo más: <strong class="text-neutral-100">cuánto cuesta pasar por cada celda</strong>. Este es el <strong class="text-amber-400">mapa de costos</strong> (costmap). Se compone de capas sumadas: la capa estática proviene del mapa guardado, la de obstáculos proviene del LiDAR en tiempo real (la silla que cambió de lugar) y la de inflación crea un "margen" alrededor de todo, con un costo alto cerca de la pared y bajo en medio del pasillo.</p>
+<figure class="fig mb-3">
+<svg aria-label="Tres capas del mapa de costo apiladas: estática (paredes del mapa guardado), obstáculos (lo que ve el LiDAR ahora) e inflación (franja de margen alrededor); al sumarlas, forman el mapa de costo que usa el planificador." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><pattern height="32" id="m45-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<radialgradient id="m45-infl"><stop offset="0.35" stop-color="#f59e0b" stop-opacity="0.9"></stop><stop offset="1" stop-color="#f59e0b" stop-opacity="0"></stop></radialgradient></defs>
+<rect fill="url(#m45-grid3)" height="300" width="640"></rect><g font-family="Inter,sans-serif" font-size="15">
+<polygon fill="#16161e" points="60,40 300,40 260,90 20,90" stroke="#a8a8b3" stroke-width="2"></polygon><rect fill="#e6e6e6" height="8" transform="skewX(-38)" width="150" x="70" y="52"></rect><text fill="#fef3c7" x="320" y="70">estática: paredes del mapa guardado</text>
+<polygon fill="#16161e" points="60,115 300,115 260,165 20,165" stroke="#38bdf8" stroke-width="2"></polygon><circle cx="170" cy="140" fill="#38bdf8" r="8"></circle><text fill="#bfe6ff" x="320" y="145">obstáculos: lo que ve el LiDAR ahora</text>
+<polygon fill="#16161e" points="60,190 300,190 260,240 20,240" stroke="#f59e0b" stroke-width="2"></polygon><ellipse cx="160" cy="215" fill="url(#m45-infl)" rx="46" ry="20"></ellipse><text fill="#fde68a" x="320" y="220">inflación: margen de seguridad</text>
+<text fill="#7dd3fc" font-weight="600" text-anchor="middle" x="320" y="276">estática + obstáculos + inflación = mapa de costos</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">Cómo leer:</strong> Imagina tres hojas transparentes apiladas. La de arriba nunca cambia; la del medio cambia con cada vuelta del LiDAR; la de abajo "distribuye" el costo alrededor de lo que marcan las otras. El radio de esa franja ámbar es el parámetro que más vas a ajustar.</p>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t3-p2">Hay dos mapas de costos. El <strong class="text-neutral-100">global</strong> cubre todo el mapa y sirve al <strong class="text-neutral-100">planner</strong>, que traza la ruta del punto A al B (algoritmos como NavFn o Smac). El <strong class="text-neutral-100">local</strong> es una ventana pequeña que se mueve con el robot y sirve al <strong class="text-neutral-100">controller</strong>, que elige la velocidad en cada instante para seguir la ruta sin chocar (algoritmos como DWB, MPPI o Regulated Pure Pursuit).</p>
+<figure class="fig mb-3">
+<svg aria-label="Ruta global discontinua del robot hasta el objetivo pasando por la puerta; dentro de la ventana local alrededor del robot, el controlador esquiva una caja que no estaba en el mapa." class="w-full h-auto" role="img" viewbox="0 0 640 250">
+<defs><pattern height="32" id="m45-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern></defs><rect fill="url(#m45-grid4)" height="250" width="640"></rect>
+<path d="M20,20 H620 V230 H20 Z M330,20 V100 M330,150 V230" fill="none" stroke="#a8a8b3" stroke-width="3"></path><path d="M80,180 C160,170 260,130 330,125 C420,120 520,90 570,60" fill="none" stroke="#fbbf24" stroke-dasharray="8 6" stroke-width="2.5"></path>
+<rect fill="#38bdf8" height="110" opacity="0.07" rx="8" stroke="#38bdf8" stroke-dasharray="4 4" width="170" x="50" y="110"></rect><rect fill="#0e1b26" height="24" stroke="#38bdf8" stroke-width="2" width="30" x="150" y="146"></rect>
+<path d="M80,180 C110,178 140,190 165,190 C190,190 200,160 215,150" fill="none" stroke="#38bdf8" stroke-width="3"></path><circle cx="80" cy="180" fill="#261a08" r="12" stroke="#f59e0b" stroke-width="2.5"></circle>
+<circle cx="570" cy="60" fill="none" r="10" stroke="#fbbf24" stroke-width="3"></circle><circle cx="570" cy="60" fill="#fbbf24" r="3"></circle><g font-family="Inter,sans-serif" font-size="15">
+<text fill="#fde68a" x="440" y="200">ruta global (planner)</text><text fill="#7dd3fc" x="60" y="104">ventana local (controller)</text>
+<text fill="#fef3c7" x="545" y="40">objetivo</text><text fill="#a8a8b3" x="345" y="88">puerto</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">Cómo leer:</strong> la línea ámbar discontinua es el plan en todo el mapa, que pasa por la puerta. Dentro del rectángulo cian (el mapa de costos local), apareció una caja nueva: el controlador traza la curva cian alrededor de ella y vuelve a la ruta sin necesidad de recalcular todo.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t3-p3"><strong class="text-neutral-100">Objetivo:</strong> crear tu archivo de parámetros a partir del archivo predeterminado de Nav2 y ajustar el tamaño del robot, el margen y la velocidad máxima. Los nombres de abajo están en el archivo predeterminado; la ubicación exacta cambia según la versión, así que usa la búsqueda del editor.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal + mi_nav2.yaml</span></div>
+<pre><code><span class="c"># 1) copia el archivo predeterminado para editarlo</span>
+cp $(ros2 pkg prefix nav2_bringup)/share/nav2_bringup/params/nav2_params.yaml ~/meu_nav2.yaml
+
+<span class="c"># 2) en ~/mi_nav2.yaml, busca y ajusta (en AMBOS costmaps, global y local):</span>
+<span class="c">#    robot_radius: 0.15          radio del robot en metros (mide el tuyo)</span>
+<span class="c">#    inflation_radius: 0.35      margen alrededor de paredes y objetos</span>
+<span class="c">#    cost_scaling_factor: 3.0    un valor mayor = el costo disminuye más rápido al alejarse de la pared</span>
+<span class="c"># 3) en velocity_smoother, limita la velocidad [x, y, giro]:</span>
+<span class="c">#    max_velocity: [0.2, 0.0, 1.0]</span>
+
+<span class="c"># 4) inicia Nav2 con tu archivo</span>
+ros2 launch nav2_bringup bringup_launch.py map:=$HOME/mapas/mapa.yaml params_file:=$HOME/meu_nav2.yaml</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-amber-400">Cómo verificar:</strong> en RViz2, activa las capas "Global Costmap" y "Local Costmap": la franja de color alrededor de las paredes debe ensancharse o estrecharse según el <span class="font-mono">inflation_radius</span>. Con <span class="font-mono">ros2 topic echo /cmd_vel</span> durante una navegación, el <span class="font-mono">linear.x</span> no supera 0.2.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-5">
+<h4 class="font-bold text-amber-400 mb-3">✓ Buen ajuste</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>robot_radius un poco mayor que el robot real (cuenta los cables y las ruedas).</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Inflación que aún deja las puertas de la casa "transitables" en el mapa de costos.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Velocidad baja al principio; súbela poco a poco.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Mal ajuste</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Inflación tan grande que bloquea la puerta: el planner indica que no hay ruta.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Inflación en cero: el robot roza el marco de la puerta y las patas de la mesa.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Cambiar diez parámetros a la vez: no sabrás cuál lo solucionó.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t3-p4">Casi cualquier comportamiento extraño de Nav2 (pasar rozando, rechazar una puerta, zigzaguear en el pasillo) se explica al mirar los dos mapas de costos en RViz2. Es la "radiografía" de la navegación.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Costmap</div><div class="text-xs text-neutral-400">costo por celda</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Inflación</div><div class="text-xs text-neutral-400">margen en las paredes</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Global y local</div><div class="text-xs text-neutral-400">ruta y desvío</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">params_file</div><div class="text-xs text-neutral-400">tus ajustes</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-4-5#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🎯 Enviar el robot a un punto (RViz y Python)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t4-p1">La forma más rápida de probar es usar el botón <strong class="text-neutral-100">"Nav2 Goal"</strong> de RViz2: haz clic en el destino y arrastra para indicar hacia dónde debe quedar orientado el robot. Para un robot que realiza tareas por su cuenta, querrás hacer la misma solicitud mediante código. El paquete <strong class="text-amber-400">nav2_simple_commander</strong> incluye la clase <span class="font-mono text-xs">BasicNavigator</span>, que oculta la acción de ROS 2 detrás de funciones sencillas como <span class="font-mono text-xs">goToPose</span>.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-5-t4-p2">En ROS 2, el ángulo se guarda como <strong>cuaternión</strong> (cuatro números: x, y, z, w), un formato que evita problemas de cálculo en 3D. Para un robot en el suelo que gira solo alrededor del eje vertical, basta con: <span class="font-mono text-xs">z = sin(ángulo/2)</span> e <span class="font-mono text-xs">w = cos(ángulo/2)</span>. El ángulo 0 apunta hacia el eje x del mapa.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t4-p3"><strong class="text-neutral-100">Objetivo:</strong> un script de Python que indica la posición inicial, espera a que Nav2 esté listo, envía el robot a (1,5; 0,5) orientado a 90° y muestra cuánto falta. Cambia las coordenadas por un punto libre de tu mapa (pasa el mouse sobre RViz2 para leer x e y).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">ir_hasta_punto.py</span></div>
+<pre><code><span class="c">#!/usr/bin/env python3</span>
+<span class="c"># Envía el robot a un punto del mapa con Nav2 (nav2_simple_commander)</span>
+<span class="k">import</span> math
+<span class="k">import</span> rclpy
+<span class="k">from</span> geometry_msgs.msg <span class="k">import</span> PoseStamped
+<span class="k">from</span> nav2_simple_commander.robot_navigator <span class="k">import</span> BasicNavigator, TaskResult
+
+
+<span class="k">def</span> pose(nav, x, y, angulo_graus=0.0):
+    p = PoseStamped()
+    p.header.frame_id = <span class="s">'map'</span>
+    p.header.stamp = nav.get_clock().now().to_msg()
+    p.pose.position.x = x
+    p.pose.position.y = y
+    a = math.radians(angulo_graus)
+    p.pose.orientation.z = math.sin(a / 2)
+    p.pose.orientation.w = math.cos(a / 2)
+    <span class="k">return</span> p
+
+
+<span class="k">def</span> main():
+    rclpy.init()
+    nav = BasicNavigator()
+    nav.setInitialPose(pose(nav, 0.0, 0.0, 0.0))   <span class="c"># dónde está el robot al inicio</span>
+    nav.waitUntilNav2Active()                     <span class="c"># espera a AMCL y a los servidores</span>
+
+    nav.goToPose(pose(nav, 1.5, 0.5, 90.0))        <span class="c"># destino: x, y, ángulo</span>
+    <span class="k">while not</span> nav.isTaskComplete():
+        fb = nav.getFeedback()
+        <span class="k">if</span> fb:
+            print(f<span class="s">'Faltan {fb.distance_remaining:.2f} m'</span>)
+
+    resultado = nav.getResult()
+    <span class="k">if</span> resultado == TaskResult.SUCCEEDED:
+        print(<span class="s">'Cheguei.'</span>)
+    <span class="k">elif</span> resultado == TaskResult.CANCELED:
+        print(<span class="s">'Cancelado.'</span>)
+    <span class="k">else</span>:
+        print(<span class="s">'Falló: Nav2 no pudo llegar.'</span>)
+    rclpy.shutdown()
+
+
+<span class="k">if</span> __name__ == <span class="s">'__main__'</span>:
+    main()</code></pre>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t4-p5"><strong class="text-neutral-100">Para ejecutar:</strong> con Nav2 ya en funcionamiento, en una terminal con <span class="font-mono text-xs">source /opt/ros/&lt;distro&gt;/setup.bash</span>, ejecuta <span class="font-mono text-xs">python3 ir_ate_ponto.py</span>. Si falta el módulo, instala <span class="font-mono text-xs">ros-&lt;distro&gt;-nav2-simple-commander</span> con apt.</p>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>En RViz2 aparece la ruta hasta el punto y el robot empieza a moverse; la terminal muestra "Faltan 1.43 m", "Faltan 1.20 m"... hasta "Llegué."</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Al final, el robot queda orientado hacia arriba en el mapa (90°).</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿Se queda detenido en "waiting for amcl"? No llegó la posición inicial; comprueba que Nav2 se haya iniciado con el mapa y el use_sim_time correctos.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t4-p4">Con el objetivo en código, otro programa puede decidir adónde va el robot: un botón en el celular (Trilha 2), un objeto detectado por la cámara (Trilha 3) o un comando de voz interpretado por un modelo de lenguaje (Trilha 5).</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Nav2 Goal</div><div class="text-xs text-neutral-400">haz clic en RViz2</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">BasicNavigator</div><div class="text-xs text-neutral-400">Nav2 en Python</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">goToPose</div><div class="text-xs text-neutral-400">ir hasta un punto</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Cuaternión</div><div class="text-xs text-neutral-400">z y w del ángulo</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-4-5#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🛟 Recuperación cuando el robot se atasca</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t5-p1">En el mundo real, el robot se va a atascar: una silla bloquea el camino, una persona se detiene enfrente, una rueda se queda atrapada en la alfombra. Nav2 no se rinde ante el primer fallo. La <strong class="text-amber-400">árbol de comportamiento</strong> del BT Navigator indica qué intentar: primero limpiar el mapa de costos (puede que el obstáculo ya no esté), después girar en el lugar para que el LiDAR vea mejor, esperar, retroceder un poco y volver a planificar. Solo después de varios intentos se considera que el objetivo falló.</p>
+<figure class="fig mb-3">
+<svg aria-label="Árbol de comportamiento simplificado: el nodo de recuperación primero intenta navegar (planificar y seguir); si falla, ejecuta en secuencia limpiar el mapa de costo, girar, esperar y retroceder, e intenta navegar de nuevo, hasta alcanzar un número máximo de intentos." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><pattern height="32" id="m45-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<marker id="m45-ah5" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#a8a8b3"></path></marker></defs>
+<rect fill="url(#m45-grid5)" height="300" width="640"></rect><g fill="none" stroke="#a8a8b3" stroke-width="1.8">
+<path d="M320,74 L170,118" marker-end="url(#m45-ah5)"></path><path d="M320,74 L470,118" marker-end="url(#m45-ah5)"></path><path d="M170,172 L90,218" marker-end="url(#m45-ah5)"></path><path d="M170,172 L250,218" marker-end="url(#m45-ah5)"></path>
+<path d="M470,172 L385,218" marker-end="url(#m45-ah5)"></path><path d="M470,172 L466,218" marker-end="url(#m45-ah5)"></path><path d="M470,172 L565,218" marker-end="url(#m45-ah5)"></path></g>
+<g font-family="Inter,sans-serif" text-anchor="middle"><rect fill="#2a1d0a" height="54" rx="12" stroke="#fbbf24" stroke-width="2.5" width="220" x="210" y="20"></rect><text fill="#fbbf24" font-size="16" font-weight="600" x="320" y="44">Recuperación</text><text fill="#fef3c7" font-size="13" x="320" y="64">hasta N intentos</text>
+<rect fill="#261a08" height="50" rx="10" stroke="#f59e0b" stroke-width="2" width="180" x="80" y="122"></rect><text fill="#fbbf24" font-size="16" x="170" y="153">1.º navegar</text><rect fill="#0e1b26" height="50" rx="10" stroke="#38bdf8" stroke-width="2" width="180" x="380" y="122"></rect><text fill="#7dd3fc" font-size="16" x="470" y="153">si falla: recuperar</text>
+<rect fill="#261a08" height="44" rx="8" stroke="#f59e0b" width="120" x="30" y="222"></rect><text fill="#fef3c7" font-size="14" x="90" y="249">planificar</text><rect fill="#261a08" height="44" rx="8" stroke="#f59e0b" width="120" x="190" y="222"></rect><text fill="#fef3c7" font-size="14" x="250" y="249">seguir</text>
+<rect fill="#0e1b26" height="44" rx="8" stroke="#38bdf8" width="80" x="340" y="222"></rect><text fill="#bfe6ff" font-size="14" x="380" y="249">limpiar</text><rect fill="#0e1b26" height="44" rx="8" stroke="#38bdf8" width="76" x="428" y="222"></rect><text fill="#bfe6ff" font-size="14" x="466" y="249">girar</text>
+<rect fill="#0e1b26" height="44" rx="8" stroke="#38bdf8" width="116" x="512" y="222"></rect><text fill="#bfe6ff" font-size="14" x="570" y="249">esperar, retroceder</text><text fill="#a8a8b3" font-size="14" x="320" y="292">después de recuperarse, vuelve a intentar "navegar"</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">Cómo leer:</strong> se lee de arriba abajo y de izquierda a derecha. La rama ámbar es el camino normal (planificar y seguir). Si falla, la rama cian ejecuta las acciones de recuperación en orden y la parte superior indica que se vuelva a intentar navegar, hasta agotar los intentos.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-5-t5-p2">Una <strong>árbol de comportamiento</strong> (behavior tree) es una forma de escribir decisiones como un organigrama: cada cuadro devuelve "éxito", "fallo" o "en ejecución", y los nodos de arriba deciden qué hacer con la respuesta. En Nav2 está en un archivo XML que puedes cambiar sin recompilar nada. Empieza usando el predeterminado; personalizarlo puede esperar.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t5-p3"><strong class="text-neutral-100">Objetivo:</strong> evitar que tu script espere para siempre. Esta versión cancela el objetivo si pasan más de 60 segundos, y puedes probar la recuperación poniendo una caja (un bloque en Gazebo) en el camino.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">ir_com_limite.py</span></div>
+<pre><code><span class="c">#!/usr/bin/env python3</span>
+<span class="c"># Va hasta un punto, pero cancela si tarda demasiado (red de seguridad de tu programa)</span>
+<span class="k">import</span> rclpy
+<span class="k">from</span> rclpy.duration <span class="k">import</span> Duration
+<span class="k">from</span> geometry_msgs.msg <span class="k">import</span> PoseStamped
+<span class="k">from</span> nav2_simple_commander.robot_navigator <span class="k">import</span> BasicNavigator, TaskResult
+
+LIMITE_S = 60.0
+
+rclpy.init()
+nav = BasicNavigator()
+nav.waitUntilNav2Active()            <span class="c"># aquí RViz2 ya proporcionó la posición inicial</span>
+
+alvo = PoseStamped()
+alvo.header.frame_id = <span class="s">'map'</span>
+alvo.header.stamp = nav.get_clock().now().to_msg()
+alvo.pose.position.x = 2.0
+alvo.pose.position.y = 0.0
+alvo.pose.orientation.w = 1.0
+
+inicio = nav.get_clock().now()
+cancelado = False
+nav.goToPose(alvo)
+<span class="k">while not</span> nav.isTaskComplete():
+    <span class="k">if not</span> cancelado <span class="k">and</span> nav.get_clock().now() - inicio &gt; Duration(seconds=LIMITE_S):
+        print(<span class="s">'Tardó demasiado: cancelando.'</span>)
+        nav.cancelTask()
+        cancelado = True
+
+print(<span class="s">'Resultado:'</span>, nav.getResult())
+rclpy.shutdown()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Camino libre: el robot llega y la terminal muestra <span class="font-mono text-xs">TaskResult.SUCCEEDED</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Con el camino bloqueado: en la terminal de Nav2 aparecen mensajes de recuperación (girar, retroceder) y el robot gira en el lugar antes de rendirse o encontrar otra ruta.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Si pasan más de 60 s, aparece "Tardó demasiado: cancelando." y el robot se detiene.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Retroceder también es movimiento</h3>
+<p class="text-neutral-300 text-sm">El retroceso de recuperación se hace "a ciegas" si tu LiDAR no cubre la parte trasera (por ejemplo, si está montado detrás de un mástil). En un robot real, cerca de personas o de escaleras, empieza con distancias de retroceso cortas y mantén siempre una forma física de cortar la energía de los motores.</p>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t5-p4">Un robot que solo funciona cuando el camino está perfecto no sale del banco de trabajo. Entender la recuperación y poner un límite en tu propio programa es lo que distingue una demostración de un robot que patrulla todos los días.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Behavior tree</div><div class="text-xs text-neutral-400">decisiones en XML</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Spin / BackUp</div><div class="text-xs text-neutral-400">girar / retroceder</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Clear costmap</div><div class="text-xs text-neutral-400">olvidar obstáculo</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">cancelTask</div><div class="text-xs text-neutral-400">tu límite de tiempo</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-4-5#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🔁 Waypoints: una ronda por la casa</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t6-p1">Una ronda es una lista de <strong class="text-amber-400">waypoints</strong> (puntos de paso): sala, pasillo, cocina y regreso a la base. Nav2 <span class="font-mono text-xs">BasicNavigator</span> tiene <span class="font-mono text-xs">followWaypoints</span>, que visita los puntos en orden e informa en cuál está. Si falla un punto (puerta cerrada), de forma predeterminada continúa al siguiente y, al final, indica cuáles fallaron.</p>
+<figure class="fig mb-3">
+<svg aria-label="Plano de una casa con cuatro habitaciones y una ronda: base en la sala, punto 1 en el pasillo, punto 2 en la cocina, punto 3 en el dormitorio y regreso a la base; la escalera está marcada como área prohibida." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><pattern height="32" id="m45-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<pattern height="10" id="m45-hatch" patterntransform="rotate(45)" patternunits="userSpaceOnUse" width="10"><line stroke="#f87171" stroke-width="3" x1="0" x2="0" y1="0" y2="10"></line></pattern></defs>
+<rect fill="url(#m45-grid6)" height="300" width="640"></rect><g fill="none" stroke="#a8a8b3" stroke-width="3"><rect height="260" width="600" x="20" y="20"></rect><path d="M300,20 V120 M300,170 V280 M20,150 H120 M170,150 H300 M300,150 H420 M470,150 H620"></path></g>
+<rect fill="url(#m45-hatch)" height="70" opacity="0.5" width="90" x="520" y="200"></rect><g fill="#a8a8b3" font-family="Inter,sans-serif" font-size="15"><text x="40" y="45">sala</text><text x="320" y="45">cocina</text><text x="40" y="175">dormitorio</text><text x="320" y="175">pasillo</text><text fill="#fca5a5" x="526" y="194">escalera</text></g>
+<path d="M150,90 C220,100 260,150 360,150 C420,150 440,90 460,80 M460,80 C380,110 340,200 160,220 C120,220 120,140 150,90" fill="none" stroke="#fbbf24" stroke-dasharray="8 5" stroke-width="2.5"></path><g font-family="Inter,sans-serif" font-size="15" font-weight="600" text-anchor="middle">
+<circle cx="150" cy="90" fill="#0e1b26" r="15" stroke="#38bdf8" stroke-width="2.5"></circle><text fill="#7dd3fc" x="150" y="95">B</text><circle cx="360" cy="150" fill="#261a08" r="14" stroke="#f59e0b" stroke-width="2.5"></circle><text fill="#fbbf24" x="360" y="155">1</text>
+<circle cx="460" cy="80" fill="#261a08" r="14" stroke="#f59e0b" stroke-width="2.5"></circle><text fill="#fbbf24" x="460" y="85">2</text><circle cx="160" cy="220" fill="#261a08" r="14" stroke="#f59e0b" stroke-width="2.5"></circle><text fill="#fbbf24" x="160" y="225">3</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">Cómo leer:</strong> el robot sale de la base (B, cian), pasa por los puntos 1, 2 y 3 en orden y regresa. El área rayada en rojo es la escalera: ningún waypoint queda cerca de ella. En el módulo 4.6 también la vas a bloquear en el mapa.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t6-p2"><strong class="text-neutral-100">Objetivo:</strong> una ronda de tres puntos con regreso a la base, repetida dos veces. Cambia las coordenadas por los puntos de tu mapa.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">ronda.py</span></div>
+<pre><code><span class="c">#!/usr/bin/env python3</span>
+<span class="c"># Ronda por waypoints con Nav2: visita los puntos en orden y vuelve a la base</span>
+<span class="k">import</span> math
+<span class="k">import</span> rclpy
+<span class="k">from</span> geometry_msgs.msg <span class="k">import</span> PoseStamped
+<span class="k">from</span> nav2_simple_commander.robot_navigator <span class="k">import</span> BasicNavigator, TaskResult
+
+<span class="c"># (nombre, x, y, ángulo en grados) en el frame del mapa</span>
+PONTOS = [
+    (<span class="s">'corredor'</span>, 2.0, 0.0, 0.0),
+    (<span class="s">'cozinha'</span>, 3.0, 1.5, 90.0),
+    (<span class="s">'quarto'</span>, 0.5, -1.5, 180.0),
+    (<span class="s">'base'</span>, 0.0, 0.0, 0.0),
+]
+VOLTAS = 2
+
+
+<span class="k">def</span> pose(nav, x, y, graus):
+    p = PoseStamped()
+    p.header.frame_id = <span class="s">'map'</span>
+    p.header.stamp = nav.get_clock().now().to_msg()
+    p.pose.position.x, p.pose.position.y = x, y
+    p.pose.orientation.z = math.sin(math.radians(graus) / 2)
+    p.pose.orientation.w = math.cos(math.radians(graus) / 2)
+    <span class="k">return</span> p
+
+
+rclpy.init()
+nav = BasicNavigator()
+nav.waitUntilNav2Active()
+<span class="k">for</span> volta <span class="k">in</span> range(1, VOLTAS + 1):
+    nav.followWaypoints([pose(nav, x, y, g) <span class="k">for</span> _, x, y, g <span class="k">in</span> PONTOS])
+    atual = -1
+    <span class="k">while not</span> nav.isTaskComplete():
+        fb = nav.getFeedback()
+        <span class="k">if</span> fb <span class="k">and</span> fb.current_waypoint != atual:
+            atual = fb.current_waypoint
+            print(f<span class="s">'Vuelta {volta}: yendo a {PONTOS[atual][0]}'</span>)
+    print(f<span class="s">'Vuelta {volta} terminó:'</span>, nav.getResult())
+    <span class="k">if</span> nav.getResult() != TaskResult.SUCCEEDED:
+        <span class="k">break</span>
+rclpy.shutdown()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>La terminal muestra "Vuelta 1: yendo a pasillo", luego cocina, dormitorio y base, y repite el recorrido en la vuelta 2.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>En RViz2 puedes ver cómo se recalcula la ruta en cada punto.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿Un punto se "salta" enseguida? Está dentro de una pared o de la zona de inflación; muévelo al centro de la habitación.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-5">
+<h4 class="font-bold text-amber-400 mb-3">✓ Ronda segura</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Puntos en el centro de las habitaciones, lejos de escaleras, vidrios y esquinas.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Primera ronda real caminando junto al robot.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Velocidad máxima baja en velocity_smoother (tema 3).</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Ronda arriesgada</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Dejar al robot funcionando solo por la casa con niños o animales.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Waypoint en la parte superior o cerca de la escalera: el LiDAR 2D no detecta el escalón.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Bucle infinito de rondas sin límite de tiempo ni de batería.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t6-p3">Las rondas son la base de los robots de vigilancia, de entrega entre habitaciones y de inventario. Con una lista de puntos ya tienes un "trabajo" para el robot, que se convertirá en el proyecto del próximo módulo.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Waypoint</div><div class="text-xs text-neutral-400">punto de paso</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">followWaypoints</div><div class="text-xs text-neutral-400">visita en orden</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">current_waypoint</div><div class="text-xs text-neutral-400">en cuál está</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Área prohibida</div><div class="text-xs text-neutral-400">lejos de la escalera</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 rounded-xl border border-amber-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Resumen del módulo</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Nav2 es un equipo</strong><span class="text-neutral-400">: BT Navigator coordina el planner, el controller y los behaviors; la salida es /cmd_vel.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">AMCL</strong><span class="text-neutral-400"> localiza el robot en el mapa guardado; indica la posición inicial correcta, con el ángulo.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Mapas de costo</strong><span class="text-neutral-400">: estática + obstáculos + inflación; ajusta robot_radius, inflation_radius y la velocidad máxima.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">BasicNavigator</strong><span class="text-neutral-400">: goToPose para un punto, followWaypoints para la ronda, cancelTask como límite.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Recuperación</strong><span class="text-neutral-400">: limpiar, girar, esperar, retroceder e intentarlo de nuevo, definido en el árbol de comportamiento.</span></div></div>
+</div>
+<h3 class="font-semibold text-amber-400 mb-3">Para profundizar</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.nav2.org/" rel="noopener" target="_blank">Documentación de Nav2</a> <span class="text-neutral-500">— conceptos, tutoriales y guía de configuración</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.nav2.org/commander_api/index.html" rel="noopener" target="_blank">Simple Commander API</a> <span class="text-neutral-500">— todas las funciones de BasicNavigator</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.nav2.org/configuration/index.html" rel="noopener" target="_blank">Guía de configuración de Nav2</a> <span class="text-neutral-500">— cada parámetro de los costmaps, planners y controllers</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/SteveMacenski/slam_toolbox" rel="noopener" target="_blank">slam_toolbox</a> <span class="text-neutral-500">— modo de localización como alternativa a AMCL</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.ros.org/en/lyrical/" rel="noopener" target="_blank">Documentación de ROS 2</a> <span class="text-neutral-500">— acciones, parámetros y launch (cámbialo por jazzy si es el tuyo)</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-amber-400 mb-1">Siguiente módulo</h3>
+<p class="text-neutral-300">4.6 · Proyecto: tu robot real, con ESP32, Raspberry Pi 5 y LiDAR, mapea la casa y navega entre habitaciones.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-4-4.html">← Anterior: 4.4 LiDAR y mapas</a>
+<a class="inline-flex items-center px-5 py-3 bg-amber-700 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors" href="modulo-4-6.html">Siguiente: 4.6 Proyecto →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica de cero a experto · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licencia MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

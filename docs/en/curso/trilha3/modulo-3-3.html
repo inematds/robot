@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 3.3 · Detect objects with YOLO26 | Robotics from Zero to Expert</title>
+<meta content="Object detection on Raspberry Pi 5 with Ultralytics YOLO26: run yolo26n, export to NCNN and measure performance, accelerate with AI HAT+ (Hailo), train with your images and handle false positives." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha3/modulo-3-3.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha3/modulo-3-3.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha3/modulo-3-3.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha3/modulo-3-3.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha3/modulo-3-3.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha3/modulo-3-3.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-3-3.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha3/modulo-3-3.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T3 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a aria-current="page" class="nav-trail text-purple-400 bg-purple-500/10" href="index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="3-3" data-inema-track="3" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400"><a class="hover:text-purple-400" href="../../index.html">Home</a><span aria-hidden="true">/</span><a class="hover:text-purple-400" href="index.html">Learning Path 3</a><span aria-hidden="true">/</span><span class="text-purple-400">Module 3.3</span></div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MODULE 3.3 · PRACTICE</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🔍 Detect objects with YOLO26</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">The color mask finds “the red thing.” A detector finds <strong class="text-neutral-100">the person, the bottle, the cat</strong>, with a box and a confidence score. You run <strong class="text-purple-400">Ultralytics YOLO26</strong> on the Pi 5, export to NCNN and measure the improvement, learn about the AI HAT+, train a model with your own photos, and learn where detection fails.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Intermediate</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Practice</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">yolo26n</div><div class="text-xs text-neutral-400">Model</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 3.3 progress" class="inema-ring" data-inema-meter="modulo:3-3"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:3-3"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-1">1. What detection is</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-2">2. YOLO26 on the Pi 5</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-3">3. Export to NCNN</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-4">4. AI HAT+ (Hailo)</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-5">5. Train your model</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-6">6. Limitations</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-3-3#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🔍 What object detection is</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-3-t1-p1">A <strong class="text-purple-400">object detector</strong> takes an image and returns a list: for each thing it recognizes, a <strong class="text-neutral-100">box</strong> (where it is), a <strong class="text-neutral-100">class</strong> (what it is), and a <strong class="text-neutral-100">confidence score</strong> (from 0 to 1, how sure the model is). YOLO (“you only look once”) does this by looking at the image just once, which makes it fast enough for robots. Ultralytics’ pretrained models already recognize the <strong class="text-neutral-100">80 classes</strong> in the COCO dataset, such as person, car, dog, bottle, and chair.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-3-t1-p2">A <strong>neural network</strong> is a program with millions of adjustable numbers (the <strong>weights</strong>) that learns patterns from examples. <strong>Training</strong> means adjusting those weights by showing the model thousands of labeled images. <strong>Inference</strong> is to use the ready-made model on a new image, which is what the robot does. The file <span class="font-mono text-xs">yolo26n.pt</span> stores these weights; “n” stands for <em>nano</em>, the smallest and fastest version.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Detector output: the scene has two boxes—a person with a confidence score of 0,91 and a bottle with a confidence score of 0,67. Each box shows the class, confidence score and corner coordinates." class="w-full h-auto" role="img" viewbox="0 0 640 290">
+<defs><pattern height="32" id="m33-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.1" r="1.3"></circle></pattern><filter height="180%" id="m33-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m33-grid1)" height="290" width="640"></rect>
+<rect fill="#0b0b10" height="240" rx="8" stroke="#3a3a46" stroke-width="2" width="360" x="20" y="24"></rect>
+<circle cx="130" cy="92" fill="#3a3a46" r="22"></circle><rect fill="#3a3a46" height="96" rx="16" width="52" x="104" y="116"></rect>
+<rect fill="#2b4c7e" height="62" rx="6" width="26" x="268" y="150"></rect><rect fill="#2b4c7e" height="14" width="14" x="274" y="138"></rect>
+<g fill="none" stroke-width="3"><rect filter="url(#m33-glow1)" height="160" rx="3" stroke="#c084fc" width="82" x="90" y="62"></rect><rect height="90" rx="3" stroke="#38bdf8" width="46" x="258" y="130"></rect></g>
+<g font-family="Inter,sans-serif" font-size="15">
+<rect fill="#a855f7" height="22" width="118" x="90" y="40"></rect><text fill="#0c0c10" font-weight="600" x="96" y="56">person 0.91</text>
+<rect fill="#38bdf8" height="22" width="122" x="232" y="108"></rect><text fill="#0c0c10" font-weight="600" x="238" y="124">bottle 0.67</text>
+<rect fill="#22153a" height="190" rx="12" stroke="#a855f7" stroke-width="2" width="226" x="398" y="40"></rect>
+<text fill="#c084fc" font-weight="600" x="414" y="70">what the code receives</text>
+<text fill="#ede9fe" font-family="JetBrains Mono,monospace" font-size="14" x="414" y="100">class: person</text>
+<text fill="#ede9fe" font-family="JetBrains Mono,monospace" font-size="14" x="414" y="124">conf: 0.91</text>
+<text fill="#ede9fe" font-family="JetBrains Mono,monospace" font-size="14" x="414" y="148">xyxy: 90,62,</text>
+<text fill="#ede9fe" font-family="JetBrains Mono,monospace" font-size="14" x="414" y="168">        172,222</text>
+<text fill="#7dd3fc" font-size="14" x="414" y="200">+ one line per object</text>
+<text fill="#a8a8b3" font-size="14" x="20" y="284">illustrative scene · box = (x1, y1) top corner, (x2, y2) bottom corner</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> each colored box is a detected object, with a “class confidence” label. The purple panel on the right shows what reaches your program for the person: numbers only. The bottle has lower confidence (0,67) because it is small and partly in shadow; that’s where errors arise (topic 6).</p>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🏷️ Classification</div><p class="text-sm text-neutral-400">“This photo has a cat.” One answer per image, without saying where.</p></div>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-5"><div class="font-semibold mb-1 text-purple-400">📦 Detection</div><p class="text-sm text-neutral-400">“Cat here, person there.” Box + class + confidence. That’s what the robot needs to aim.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">✂️ Segmentation</div><p class="text-sm text-neutral-400">The exact outline, pixel by pixel. More precise and more demanding; useful for picking up objects with the arm.</p></div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-3-t1-p3">The color mask fails with objects that have common colors or when the lighting changes. The detector recognizes shape, so it can follow a person wearing a shirt of any color. In return, it uses much more processing power. Knowing what each output means lets you use it to control the robot.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Box (bbox)</div><div class="text-xs text-neutral-400">x1, y1, x2, y2</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Class</div><div class="text-xs text-neutral-400">what it is (80 in COCO)</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Confidence</div><div class="text-xs text-neutral-400">0 a 1</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Inference</div><div class="text-xs text-neutral-400">use the ready-made model</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-3-3#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🚀 YOLO26 on Pi 5 with Ultralytics</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-3-t2-p1">O <strong class="text-purple-400">YOLO26</strong> is the current generation of the Ultralytics YOLO family, the successor to YOLO11. Tutorials using older versions are still around, but today’s approach is the <span class="font-mono text-xs">ultralytics</span> with the <span class="font-mono text-xs">yolo26n.pt</span>weights <strong class="text-neutral-100">n, s, m, l e x</strong>. It comes in <strong class="text-neutral-100">n</strong>: each step up is a little more accurate and runs much more slowly. On the Pi 5, always start with the</p>
+<figure class="fig mb-3">
+<svg aria-label="YOLO26 model size ladder: n, s, m, l and x. The larger the model, the more accurate and slower it is. On the Pi 5 without an accelerator, use n; use s only with an accelerator or when FPS requirements are low." class="w-full h-auto" role="img" viewbox="0 0 640 250">
+<defs><pattern height="32" id="m33-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.1" r="1.3"></circle></pattern><filter height="180%" id="m33-glow2" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m33-grid2)" height="250" width="640"></rect>
+<g font-family="Inter,sans-serif" font-size="22" font-weight="600" text-anchor="middle">
+<g filter="url(#m33-glow2)"><rect fill="#22153a" height="50" rx="10" stroke="#a855f7" stroke-width="2.5" width="100" x="30" y="150"></rect></g><text fill="#c084fc" x="80" y="183">n</text>
+<rect fill="#1a1029" height="76" rx="10" stroke="#7c3aed" stroke-width="2" width="100" x="145" y="124"></rect><text fill="#ddd6fe" x="195" y="170">s</text>
+<rect fill="#141019" height="102" rx="10" stroke="#6b5a86" stroke-width="2" width="100" x="260" y="98"></rect><text fill="#a8a8b3" x="310" y="157">m</text>
+<rect fill="#141019" height="128" rx="10" stroke="#4b4060" stroke-width="2" width="100" x="375" y="72"></rect><text fill="#8b8b9a" x="425" y="144">l</text>
+<rect fill="#141019" height="154" rx="10" stroke="#3a3a46" stroke-width="2" width="100" x="490" y="46"></rect><text fill="#8b8b9a" x="540" y="131">x</text>
+</g>
+<g font-family="Inter,sans-serif" font-size="15">
+<text fill="#c084fc" font-weight="600" x="30" y="228">. In PyTorch, with a 640 px image, it takes about 130 ms per frame, or at most around 7 frames per second.</text>
+<text fill="#a8a8b3" text-anchor="end" x="620" y="228">Pi 5: start here</text>
+<text fill="#7dd3fc" x="30" y="36">higher = more accurate and slower</text><text fill="#7dd3fc" text-anchor="end" x="610" y="36">fast</text>
+</g>
+<path d="M90,30 L540,30" stroke="#38bdf8" stroke-dasharray="6 5" stroke-width="2"></path>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> Each step is a YOLO26 size. The highlighted "n" is the only one that keeps the robot responsive in real time using just the Pi's processor. The larger ones are useful for training comparisons on a PC or running with an accelerator.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-3-t2-p2"><strong class="text-neutral-100">Goal:</strong> each step is a YOLO26 size. The highlighted “n” is the only one that keeps the robot responding in time using just the Pi’s processor. Larger ones are useful for training comparisons on a PC or running with an accelerator.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">Pi terminal</span></div>
+<pre><code>source ~/robo-venv/bin/activate
+pip install ultralytics                        <span class="c"># also installs PyTorch for ARM</span>
+yolo predict model=yolo26n.pt source=<span class="s">"https://ultralytics.com/images/bus.jpg"</span>   <span class="c"># quick test</span></code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">~/robo/yolo_camera.py</span></div>
+<pre><code><span class="c"># YOLO26 live on the Camera Module 3: prints what it sees and the time for each frame</span>
+<span class="k">import</span> sys, time
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+<span class="k">from</span> ultralytics <span class="k">import</span> YOLO
+
+MODELO = sys.argv[1] <span class="k">if</span> len(sys.argv) &gt; 1 <span class="k">else</span> <span class="s">"yolo26n.pt"</span>   <span class="c"># switch to NCNN in topic 3</span>
+modelo = YOLO(MODELO)
+
+picam2 = Picamera2()
+picam2.configure(picam2.create_preview_configuration(main={<span class="s">"size"</span>: (640, 480), <span class="s">"format"</span>: <span class="s">"RGB888"</span>}))
+picam2.start(); time.sleep(1)
+print(f<span class="s">"Model {MODELO} loaded. Press Ctrl+C to exit."</span>)
+<span class="k">try</span>:
+    <span class="k">while True</span>:
+        quadro = picam2.capture_array()                 <span class="c"># BGR, as expected by Ultralytics</span>
+        t0 = time.perf_counter()
+        r = modelo(quadro, imgsz=640, conf=0.5, verbose=<span class="k">False</span>)[0]
+        ms = (time.perf_counter() - t0) * 1000
+        achados = [f<span class="s">"{r.names[int(c)]} {float(p):.2f}"</span> <span class="k">for</span> c, p <span class="k">in</span> zip(r.boxes.cls, r.boxes.conf)]
+        print(f<span class="s">"{ms:6.0f} ms | {1000 / ms:4.1f} FPS | {', '.join(achados) or 'nothing'}"</span>)
+<span class="k">except</span> KeyboardInterrupt:
+    picam2.stop()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>The bus test creates a folder <span class="font-mono text-xs">runs/detect/predict</span> with the marked-up photo (bus, person).</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Live, you appear as <span class="font-mono text-xs">person 0.8x</span> and the time is around 100–200 ms per frame.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>“Illegal instruction” or a PyTorch error? Check that the system is 64-bit (<span class="font-mono text-xs">uname -m</span> = aarch64) and the venv is active.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 First run takes longer</h3>
+<p class="text-neutral-300 text-sm">The first time, Ultralytics downloads the weights <span class="font-mono">yolo26n.pt</span> from the internet, and the first frame takes much longer than the ones that follow. Measure the speed only after about ten frames.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-3-t2-p3">With about twenty lines, you have a robot that recognizes people and everyday objects. This same loop (capture, infer, read the boxes) is the basis for project 3.6 and appears again in Track 5, when the arm needs to find an object before picking it up.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">ultralytics</div><div class="text-xs text-neutral-400">YOLO26 package</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">yolo26n.pt</div><div class="text-xs text-neutral-400">nano weights</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">conf=0.5</div><div class="text-xs text-neutral-400">confidence threshold</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">r.boxes</div><div class="text-xs text-neutral-400">boxes, classes, confidence</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-3-3#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">⚡ Export to NCNN and measure speed</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-3-t3-p1">The <span class="font-mono text-xs">.pt</span> format is great for training, but it isn’t the fastest for running on an ARM processor. Ultralytics <strong class="text-purple-400">exports</strong> the same model to other formats; according to the official Raspberry Pi guide, <strong class="text-neutral-100">NCNN</strong> is fastest on the Pi’s CPU. The boxes and classes stay the same; only the “engine” doing the calculations changes. The other way to improve speed is to change the input size: <span class="font-mono text-xs">imgsz=320</span> processes a quarter of the pixels of 640, but loses accuracy on small objects.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-3-t3-p2"><strong>NCNN</strong> is an open inference engine designed for phones and ARM boards. <strong>Export</strong> means converting the weights from one format to another without retraining. The <strong>imgsz</strong> is the size to which the image is resized before entering the network; it must be a multiple of 32 (320, 416, 640).</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Same image, different engines: the PyTorch model takes about 130 milliseconds per frame on the Pi 5; exported to NCNN, it takes much less; with imgsz 320, less still. Exact values depend on your Pi and should be measured." class="w-full h-auto" role="img" viewbox="0 0 640 230">
+<defs><pattern height="32" id="m33-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.1" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m33-grid3)" height="230" width="640"></rect>
+<g font-family="Inter,sans-serif" font-size="15">
+<text fill="#ede9fe" x="20" y="54">PyTorch .pt · 640</text><rect fill="#6b5a86" height="24" rx="5" width="380" x="210" y="38"></rect><text fill="#ede9fe" text-anchor="end" x="584" y="55">~130 ms</text>
+<text fill="#c084fc" font-weight="600" x="20" y="104">NCNN · 640</text><rect fill="#a855f7" height="24" rx="5" width="200" x="210" y="88"></rect><text fill="#c084fc" x="420" y="105">lower: measure yours</text>
+<text fill="#7dd3fc" font-weight="600" x="20" y="154">NCNN · 320</text><rect fill="#38bdf8" height="24" rx="5" width="80" x="210" y="138"></rect><text fill="#7dd3fc" x="300" y="155">even lower</text>
+<text fill="#a8a8b3" font-size="14" x="20" y="200">time per frame (shorter bar = better) · illustrative, except for the PyTorch reference value</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> only the top bar has a reference number (from the Ultralytics guide for the Pi 5). The others show the direction of the improvement; find the exact time by running the script below on your Pi, with your cooler and camera.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-3-t3-p3"><strong class="text-neutral-100">Goal:</strong> export yolo26n to NCNN and compare the two formats on the same image, with numbers.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">Pi terminal</span></div>
+<pre><code>cd ~/robo &amp;&amp; source ~/robo-venv/bin/activate
+yolo export model=yolo26n.pt format=ncnn       <span class="c"># creates the yolo26n_ncnn_model/ folder</span>
+python yolo_camera.py yolo26n_ncnn_model       <span class="c"># the same script from topic 2, now using NCNN</span></code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">~/robo/compara.py</span></div>
+<pre><code><span class="c"># Compares PyTorch vs. NCNN (640 and 320) on the same image: average of 20 inferences</span>
+<span class="k">import</span> time
+<span class="k">from</span> ultralytics <span class="k">import</span> YOLO
+
+IMAGEM = <span class="s">"https://ultralytics.com/images/bus.jpg"</span>   <span class="c"># or the path to one of your photos</span>
+testes = [(<span class="s">"yolo26n.pt"</span>, 640), (<span class="s">"yolo26n_ncnn_model"</span>, 640), (<span class="s">"yolo26n_ncnn_model"</span>, 320)]
+
+<span class="k">for</span> caminho, tamanho <span class="k">in</span> testes:
+    modelo = YOLO(caminho, task=<span class="s">"detect"</span>)
+    <span class="k">for</span> _ <span class="k">in</span> range(3):                              <span class="c"># warm-up: not counted</span>
+        modelo(IMAGEM, imgsz=tamanho, verbose=<span class="k">False</span>)
+    tempos = []
+    <span class="k">for</span> _ <span class="k">in</span> range(20):
+        r = modelo(IMAGEM, imgsz=tamanho, verbose=<span class="k">False</span>)[0]
+        tempos.append(r.speed[<span class="s">"inference"</span>])           <span class="c"># ms, network only</span>
+    media = sum(tempos) / len(tempos)
+    print(f<span class="s">"{caminho:22s} imgsz={tamanho}: {media:6.1f} ms  ({1000 / media:4.1f} FPS)  objects={len(r.boxes)}"</span>)</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>The folder <span class="font-mono text-xs">yolo26n_ncnn_model/</span> is created, and the script prints three lines.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>The NCNN 640 line has a shorter runtime than the .pt line, with a similar number of objects.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>At 320, the runtime drops further, but small objects (the people in the background) may disappear.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5"><h4 class="font-bold text-purple-400 mb-3">✓ Do</h4><ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Export on the Pi itself and keep the NCNN folder alongside the code.</span></li><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Measure after warm-up with the cooler running.</span></li><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Choose the imgsz based on the size of the object that matters.</span></li></ul></div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5"><h4 class="font-bold text-red-400 mb-3">✗ Don't</h4><ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Compare formats using the first frame (including model loading).</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Switch to a larger model before you run out of options with NCNN and imgsz.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Trusting FPS figures from online videos: measure on your Pi.</span></li></ul></div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-3-t3-p4">Doubling the FPS at no extra cost is the difference between a robot that follows a person and one that loses them at every turn. The habit of measuring before and after applies to any optimization you make from here on.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">NCNN</div><div class="text-xs text-neutral-400">faster on the ARM CPU</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">export</div><div class="text-xs text-neutral-400">converts without training</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">imgsz</div><div class="text-xs text-neutral-400">multiple of 32</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Warm-up</div><div class="text-xs text-neutral-400">ignore the first ones</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-3-3#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🧩 Speed things up with AI HAT+ (Hailo)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-3-t4-p1">When NCNN and imgsz aren’t enough, the next step is to move the neural network off the processor. The <strong class="text-purple-400">AI HAT+</strong> is a board that fits on top of the Pi 5 and connects through the <strong class="text-neutral-100">PCIe</strong>connector; it has a <strong class="text-neutral-100">Hailo</strong> chip designed specifically for inference. There are two generations: AI HAT+ with Hailo-8L (13 TOPS) or Hailo-8 (26 TOPS), designed for vision, and <strong class="text-neutral-100">AI HAT+ 2</strong> with Hailo-10H (40 TOPS in INT4) and 8 GB of its own memory, which can also run small language and vision-language models. Both work only with the Pi 5; the old "AI Kit" has been discontinued.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-3-t4-p2">A <strong>NPU</strong> (neural processing unit) is a chip specialized in neural network calculations. <strong>TOPS</strong> These are trillions of operations per second: they give you an idea of processing capacity, but are useful only for comparing similar chips. <strong>INT4/INT8</strong> means the model’s numbers are stored using fewer bits; this makes everything faster, with a small loss in accuracy. The model needs to be <strong>compiled</strong> for the chip’s format (for Hailo, .hef files).</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="With the AI HAT+, the Pi 5 CPU only captures the image and reads the boxes; the neural network runs on the Hailo NPU, connected via PCIe. Without the HAT, the CPU does everything and heats up." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs><pattern height="32" id="m33-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.1" r="1.3"></circle></pattern><marker id="m33-ah4" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker><filter height="180%" id="m33-glow4" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m33-grid4)" height="260" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<text fill="#a8a8b3" font-size="15" x="150" y="30">CPU only</text>
+<rect fill="#1a1029" height="150" rx="14" stroke="#6b5a86" stroke-width="2" width="220" x="40" y="44"></rect>
+<text fill="#ede9fe" font-size="16" x="150" y="80">capture</text><text fill="#fca5a5" font-size="16" font-weight="600" x="150" y="110">neural network (heavy)</text><text fill="#ede9fe" font-size="16" x="150" y="140">reads boxes, decides</text><text fill="#fca5a5" font-size="14" x="150" y="176">CPU maxed out, hot</text>
+<text fill="#c084fc" font-size="15" font-weight="600" x="470" y="30">with AI HAT+</text>
+<rect fill="#1a1029" height="150" rx="14" stroke="#a855f7" stroke-width="2" width="150" x="340" y="44"></rect>
+<text fill="#ede9fe" font-size="16" x="415" y="86">capture</text><text fill="#ede9fe" font-size="16" x="415" y="148">reads boxes</text><text fill="#86efac" font-size="14" x="415" y="176">CPU with room to spare</text>
+<g filter="url(#m33-glow4)"><rect fill="#22153a" height="100" rx="14" stroke="#c084fc" stroke-width="2.5" width="104" x="520" y="70"></rect></g>
+<text fill="#c084fc" font-size="16" font-weight="600" x="572" y="112">NPU</text><text fill="#ede9fe" font-size="14" x="572" y="136">Hailo</text>
+<text fill="#7dd3fc" font-size="14" x="505" y="214">PCIe</text>
+<text fill="#a8a8b3" font-size="14" x="320" y="246">the model needs to be compiled for the chip (.hef)</text>
+</g>
+<g fill="none" stroke="#38bdf8" stroke-width="2"><path d="M490,96 L512,96" marker-end="url(#m33-ah4)"></path><path d="M520,144 L498,144" marker-end="url(#m33-ah4)"></path></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> On the left, the CPU handles all three tasks, and the middle one (red) dominates. On the right, the heavy processing runs on the NPU over PCIe, and only the result comes back. The CPU stays free for the rest of the robot: video server, communication with the ESP32, logs.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3 text-purple-400">Option</th><th class="text-left p-3 text-purple-400">Purpose</th><th class="text-left p-3 text-purple-400">Cost and effort</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">CPU + NCNN</td><td class="p-3">Get started; follow one person at a slow pace</td><td class="p-3">Zero; just export</td></tr>
+<tr><td class="p-3">AI HAT+ (Hailo-8L/8)</td><td class="p-3">Real-time detection, multiple objects</td><td class="p-3">Extra board; model compiled for Hailo</td></tr>
+<tr><td class="p-3">AI HAT+ 2 (Hailo-10H)</td><td class="p-3">Vision + small language models (Track 5)</td><td class="p-3">About US$ 130 at US retailers (2026); check availability in Brazil</td></tr>
+<tr><td class="p-3">AI Camera (Sony IMX500)</td><td class="p-3">Inference inside the camera itself</td><td class="p-3">Specific camera; models in its format</td></tr>
+</tbody>
+</table>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-4">Step by step (overview)</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Assemble with the Pi turned off</h4><p class="text-neutral-300 text-sm">Connect the PCIe ribbon cable, spacers, and board on top of the Pi 5. The active cooler stays underneath.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Install the software listed in the docs</h4><p class="text-neutral-300 text-sm">Update the system and install the Hailo packages for your exact board model, following the "AI" page in the official Raspberry Pi documentation. Package names vary between generations: copy them from there, not from an old tutorial.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Check it and run a ready-made example</h4><p class="text-neutral-300 text-sm">Check the board with the command below and run the detection examples from the docs. Your own models need to be compiled to .hef with Hailo’s tools on a PC.</p></div></div>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">Pi terminal</span></div>
+<pre><code>lspci | grep -i hailo        <span class="c"># Does the board show up on the PCIe bus?</span>
+vcgencmd get_throttled       <span class="c"># 0x0: the power supply can handle the Pi + HAT + camera setup</span></code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>O <span class="font-mono text-xs">lspci</span> shows a line with "Hailo"; if it doesn’t, check the PCIe cable and connection.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>The detection example in the docs runs at a much higher FPS than your CPU test.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-3-t4-p3">An accelerator isn’t required for this track: project 3.6 works with CPU and NCNN. But knowing when it’s worthwhile (many objects, high FPS, language AI on the same robot) helps you avoid buying one too early or pushing the CPU for too long.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">NPU</div><div class="text-xs text-neutral-400">inference-only chip</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">PCIe</div><div class="text-xs text-neutral-400">fast connection to the Pi 5</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">TOPS</div><div class="text-xs text-neutral-400">approximate capacity</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">.hef</div><div class="text-xs text-neutral-400">Hailo-compiled model</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-3-3#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🏷️ Train with your own images</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-3-t5-p1">COCO doesn’t include "my mug," "orange track cone," or "competition part." For that, you do a <strong class="text-purple-400">fine-tune</strong>: start with yolo26n, which already knows how to recognize shapes, and show it a few hundred of your photos with the boxes marked. Training runs on a <strong class="text-neutral-100">PC with an NVIDIA GPU</strong> or in <strong class="text-neutral-100">Google Colab</strong> (free GPU in your browser); the Pi only receives the finished result. Training on the Pi can work, but it’s far too slow to be worthwhile.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-3-t5-p2"><strong>Labeling</strong> means drawing a box around each object in each photo and assigning it a class. The collection of labeled photos is the <strong>dataset</strong>; it’s split into <strong>training</strong> (the model learns from these) and <strong>validation</strong> (photos the model has never seen, used to measure whether it has really learned). An <strong>epoch</strong> is one complete pass through all the training photos.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Training cycle: take photos in the real setting, label them with boxes, train on a PC or Colab starting from yolo26n, generate best.pt, export to NCNN and test on the Pi; add new photos based on the errors you find." class="w-full h-auto" role="img" viewbox="0 0 640 270">
+<defs><pattern height="32" id="m33-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.1" r="1.3"></circle></pattern><marker id="m33-ah5" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"></path></marker><marker id="m33-ah5c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker></defs>
+<rect fill="url(#m33-grid5)" height="270" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<g class="rb-a"><rect fill="#1a1029" height="84" rx="12" stroke="#a855f7" stroke-width="2" width="140" x="10" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="80" y="84">1 take photos</text><text fill="#ede9fe" font-size="14" x="80" y="110">in the actual location</text></g>
+<g class="rb-a"><rect fill="#1a1029" height="84" rx="12" stroke="#a855f7" stroke-width="2" width="140" x="168" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="238" y="84">2 label</text><text fill="#ede9fe" font-size="14" x="238" y="110">box + class</text></g>
+<g class="rb-a"><rect fill="#22153a" height="84" rx="12" stroke="#a855f7" stroke-width="2.5" width="140" x="326" y="50"></rect><text fill="#c084fc" font-size="17" font-weight="600" x="396" y="84">3 train</text><text fill="#ede9fe" font-size="14" x="396" y="110">PC or Colab</text></g>
+<rect fill="#0e1b26" height="84" rx="12" stroke="#38bdf8" stroke-width="2" width="146" x="484" y="50"></rect><text fill="#7dd3fc" font-size="17" font-weight="600" x="557" y="84">4 on the Pi</text><text fill="#bfe6ff" font-size="14" x="557" y="110">best.pt → NCNN</text>
+<text fill="#7dd3fc" font-size="15" x="320" y="232">errors during testing become new photos: the dataset grows where the model fails</text>
+</g>
+<g fill="none" stroke-width="2"><path d="M150,92 L160,92" marker-end="url(#m33-ah5)" stroke="#c084fc"></path><path d="M308,92 L318,92" marker-end="url(#m33-ah5)" stroke="#c084fc"></path><path d="M466,92 L476,92" marker-end="url(#m33-ah5c)" stroke="#38bdf8"></path><path d="M557,136 C557,200 80,200 80,142" marker-end="url(#m33-ah5c)" stroke="#38bdf8" stroke-dasharray="7 6"></path></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> The purple steps happen outside the robot; the cyan step is the robot using the model. The dashed loop is the key: the first model always fails in some cases, and each error you photograph and label improves the next training run.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-4">Step by step</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Take photos with the robot’s camera</h4><p class="text-neutral-300 text-sm">Start with 150 to 300 photos per class, taken with the Camera Module 3 itself in the place and lighting where the robot will work: close up, far away, from the side, partially hidden, and against different backgrounds.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Label and export in YOLO format</h4><p class="text-neutral-300 text-sm">Use a labeling tool such as Label Studio, CVAT, or Roboflow and export in YOLO format: one images folder and one .txt file per image, with one line per object (class, center x, center y, width, height, all from 0 to 1). Set aside about 20% for validation.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Train, transfer best.pt, and export</h4><p class="text-neutral-300 text-sm">Run the training below on your PC or in Colab, then copy <span class="font-mono text-xs">best.pt</span> to the Pi with <span class="font-mono text-xs">scp</span> and export to NCNN as in topic 3.</p></div></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-3-t5-p3"><strong class="text-neutral-100">Goal:</strong> describe the dataset and train a two-class detector starting from yolo26n. Replace the path and class names with yours.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">my_dataset/data.yaml</span></div>
+<pre><code><span class="c"># Expected structure:</span>
+<span class="c">#   my_dataset/images/train/*.jpg   my_dataset/labels/train/*.txt</span>
+<span class="c">#   my_dataset/images/val/*.jpg     my_dataset/labels/val/*.txt</span>
+path: /caminho/para/meu_dataset
+train: images/train
+val: images/val
+names:
+  0: caneca
+  1: cone</code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">on a PC with a GPU or in a Colab cell</span></div>
+<pre><code>pip install ultralytics
+yolo detect train data=meu_dataset/data.yaml model=yolo26n.pt epochs=100 imgsz=640 batch=16
+<span class="c"># at the end: runs/detect/train/weights/best.pt  (the best model on validation)</span>
+yolo detect val model=runs/detect/train/weights/best.pt data=meu_dataset/data.yaml
+
+<span class="c"># then, on the Pi:</span>
+<span class="c"># scp best.pt &lt;your_username&gt;@robo.local:~/robo/</span>
+<span class="c"># yolo export model=best.pt format=ncnn   →   python yolo_camera.py best_ncnn_model</span></code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>O <span class="font-mono text-xs">val</span> shows the mAP50 metric for each class; above 0.8 is a good starting point for simple objects.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>On the Pi, the <span class="font-mono text-xs">yolo_camera.py</span> with your model prints "mug" and "cone" live.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>A high training score but errors on the robot? Your validation photos were too similar to the training photos: take photos on a different day and in a different place.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-3-t5-p4">This is where the robot's vision starts serving your project, instead of the other way around: competitions, sorting parts, a robot that searches for a specific object. And the process (collect, label, train, test, repeat) is the same one you use in Track 5 to teach the arm through demonstrations.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Fine-tuning</div><div class="text-xs text-neutral-400">starts from yolo26n</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Training / validation</div><div class="text-xs text-neutral-400">learns / measures</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">data.yaml</div><div class="text-xs text-neutral-400">folders and classes</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">best.pt</div><div class="text-xs text-neutral-400">the best model</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-3-3#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">⚠️ Limitations: lighting, distance, false positives</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-3-t6-p1">A detector doesn't "see" the way you do: it makes a statistical guess for every frame. In low light, the object looks dark and blurry; far away, it takes up few pixels after resizing; and sometimes a backpack becomes a "person" for one frame. The <strong class="text-purple-400">confidence threshold</strong> is the control you can adjust: too high and the robot misses the target; too low and it chases ghosts. That's why the robot's code never reacts to just one frame.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-3-t6-p2">A <strong>false positive</strong> is when the model finds something that isn't there. A <strong>false negative</strong> is when it fails to find something that is there. Lowering the threshold trades false negatives for false positives, while raising it does the opposite: there's no value that eliminates both. <strong>Persistence</strong> means requiring the object to appear in several consecutive frames before acting.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Confidence threshold as a scale from 0 to 1: below 0,3, the robot reacts to false positives; above 0,8, it misses real objects. The 0,4 to 0,6 range is a starting point, combined with requiring detections across several consecutive frames." class="w-full h-auto" role="img" viewbox="0 0 640 230">
+<defs><pattern height="32" id="m33-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#a855f7" opacity="0.1" r="1.3"></circle></pattern><lineargradient id="m33-bar6" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#f87171"></stop><stop offset="0.45" stop-color="#a855f7"></stop><stop offset="1" stop-color="#38bdf8"></stop></lineargradient></defs>
+<rect fill="url(#m33-grid6)" height="230" width="640"></rect>
+<rect fill="url(#m33-bar6)" height="14" opacity="0.8" rx="7" width="560" x="40" y="90"></rect>
+<rect fill="none" height="42" rx="8" stroke="#c084fc" stroke-width="3" width="112" x="264" y="76"></rect>
+<g font-family="Inter,sans-serif" font-size="15" text-anchor="middle">
+<text fill="#a8a8b3" x="40" y="136">0</text><text fill="#c084fc" font-weight="600" x="320" y="136">0,4 a 0,6</text><text fill="#a8a8b3" x="600" y="136">1</text>
+<text fill="#fca5a5" x="120" y="60">low threshold</text><text fill="#fca5a5" font-size="14" x="120" y="168">chases ghosts</text><text fill="#fca5a5" font-size="14" x="120" y="188">(false positives)</text>
+<text fill="#c084fc" font-weight="600" x="320" y="60">start here</text><text fill="#ddd6fe" font-size="14" x="320" y="168">+ 3 consecutive frames</text><text fill="#ddd6fe" font-size="14" x="320" y="188">before acting</text>
+<text fill="#7dd3fc" x="520" y="60">high threshold</text><text fill="#7dd3fc" font-size="14" x="520" y="168">misses the target</text><text fill="#7dd3fc" font-size="14" x="520" y="188">(false negatives)</text>
+<text fill="#a8a8b3" font-size="14" x="320" y="220">tune it for your object, lighting, and working distance</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">How to read this map:</strong> the scale shows the value of <span class="font-mono">conf</span>. On the left (red), the robot reacts to everything; on the right (cyan), only to very clear objects. The purple frame is a reasonable starting point, and it becomes much more stable when you require the object to appear in a few consecutive frames.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-3-t6-p3"><strong class="text-neutral-100">Goal:</strong> turn raw detections into a stable decision: only the class that matters, only boxes large enough, and only after 3 consecutive frames. The result is the horizontal error, just like in module 3.2.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">~/robo/alvo_estavel.py</span></div>
+<pre><code><span class="c"># Stable decision from YOLO26: class, minimum size, and persistence</span>
+<span class="k">import</span> time
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+<span class="k">from</span> ultralytics <span class="k">import</span> YOLO
+
+ALVO = <span class="s">"person"</span>          <span class="c"># class name in the model (COCO uses English names)</span>
+CONF_MIN = 0.5
+AREA_MIN = 0.02          <span class="c"># box covers at least 2% of the image</span>
+QUADROS_SEGUIDOS = 3
+LARGURA, ALTURA = 640, 480
+
+modelo = YOLO(<span class="s">"yolo26n_ncnn_model"</span>, task=<span class="s">"detect"</span>)
+picam2 = Picamera2()
+picam2.configure(picam2.create_preview_configuration(main={<span class="s">"size"</span>: (LARGURA, ALTURA), <span class="s">"format"</span>: <span class="s">"RGB888"</span>}))
+picam2.start(); time.sleep(1)
+contador = 0
+<span class="k">try</span>:
+    <span class="k">while True</span>:
+        r = modelo(picam2.capture_array(), imgsz=640, conf=CONF_MIN, verbose=<span class="k">False</span>)[0]
+        melhor = <span class="k">None</span>
+        <span class="k">for</span> (x1, y1, x2, y2), c <span class="k">in</span> zip(r.boxes.xyxy.tolist(), r.boxes.cls.tolist()):
+            area = (x2 - x1) * (y2 - y1) / (LARGURA * ALTURA)
+            <span class="k">if</span> r.names[int(c)] == ALVO <span class="k">and</span> area &gt;= AREA_MIN:
+                <span class="k">if</span> melhor <span class="k">is None or</span> area &gt; melhor[1]:
+                    melhor = ((x1 + x2) / 2, area)          <span class="c"># center x and size</span>
+        contador = contador + 1 <span class="k">if</span> melhor <span class="k">else</span> 0
+        <span class="k">if</span> contador &gt;= QUADROS_SEGUIDOS:
+            cx, area = melhor
+            print(f<span class="s">"STABLE TARGET  error={cx - LARGURA / 2:+5.0f}  size={area:.2f}"</span>)
+        <span class="k">else</span>:
+            print(f<span class="s">"no stable target ({contador}/{QUADROS_SEGUIDOS}) → robot stopped"</span>)
+<span class="k">except</span> KeyboardInterrupt:
+    picam2.stop()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>When you step in front of the camera, you see 1/3, 2/3, and then "STABLE TARGET," with the error changing sign as you move.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>A false detection in just one frame never becomes a "STABLE TARGET."</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Does it disappear when you move a few meters away? Lower <span class="font-mono text-xs">AREA_MIN</span> or accept that this is the useful range of your camera.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5"><h4 class="font-bold text-purple-400 mb-3">✓ Do</h4><ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>The robot stops when it loses the target instead of continuing with the last command.</span></li><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>The ultrasonic sensor or bumper stays active to prevent collisions.</span></li><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Test in the morning, afternoon, and at night.</span></li></ul></div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5"><h4 class="font-bold text-red-400 mb-3">✗ Don't</h4><ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Rely only on the camera to stop before a person or a staircase.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>React to a single frame with high confidence.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Film or follow people without their knowledge and consent.</span></li></ul></div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-3-t6-p4">A person-following robot is the track's project, and it's only safe if you know where vision fails. Threshold, minimum size, persistence, and stopping when the target is lost are the four safeguards that separate a nice-looking demo from a robot you can trust.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">False positive</div><div class="text-xs text-neutral-400">finds what isn't there</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">False negative</div><div class="text-xs text-neutral-400">misses what is there</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Threshold</div><div class="text-xs text-neutral-400">trades one for the other</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Persistence</div><div class="text-xs text-neutral-400">N consecutive frames</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Detection = box + class + confidence</strong><span class="text-neutral-400">, for each object, in every frame.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">YOLO26n on Pi 5</strong><span class="text-neutral-400">: <span class="font-mono text-xs">pip install ultralytics</span> in the venv and twenty lines with picamera2.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">NCNN and imgsz</strong><span class="text-neutral-400">: the free speed boost, always measured after warm-up.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">AI HAT+ when needed</strong><span class="text-neutral-400">: Hailo NPU over PCIe; the AI HAT+ 2 also runs small language models.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Your model, your limits</strong><span class="text-neutral-400">: fine-tune on a PC/Colab and make stable decisions with thresholds, size and persistence.</span></div></div>
+</div>
+<h3 class="font-semibold text-purple-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.ultralytics.com/guides/raspberry-pi/" rel="noopener" target="_blank">Ultralytics on Raspberry Pi</a> <span class="text-neutral-500">— installation, NCNN and reference figures</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.ultralytics.com/modes/train/" rel="noopener" target="_blank">Training with Ultralytics</a> <span class="text-neutral-500">— training and dataset parameters</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.ultralytics.com/integrations/ncnn/" rel="noopener" target="_blank">Exporting to NCNN</a> <span class="text-neutral-500">— format details</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.raspberrypi.com/documentation/computers/ai.html" rel="noopener" target="_blank">AI on Raspberry Pi (AI HAT+)</a> <span class="text-neutral-500">— Hailo’s official installation and examples</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.opencv.org/4.x/" rel="noopener" target="_blank">OpenCV documentation</a> <span class="text-neutral-500">— for drawing and processing around the detector</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-purple-400 mb-1">Next module</h3>
+<p class="text-neutral-300">3.4 · AI inside the microcontroller: small, quantized models running on the ESP32-S3 itself.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-3-2.html">← Previous: 3.2 Camera and OpenCV</a>
+<a class="inline-flex items-center px-5 py-3 bg-purple-700 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors" href="modulo-3-4.html">Next: 3.4 AI in the microcontroller →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

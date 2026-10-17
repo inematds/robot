@@ -22,3 +22,10 @@ Formato: `- AAAA-MM-DD HH:MM · fato|aprendizado|glossário|armadilha · texto`
 - 1-5/1-6 prontos. MAPA DE PINOS CANÔNICO (1-6): PWMA 25, AIN1 26, AIN2 27, PWMB 33, BIN1 32, BIN2 4, STBY 13, TRIG 18, ECHO 19 (divisor 1k/2k), servo 23, BOOT 0, I2C 21/22. CONFLITO: 3-5/3-6 usam 18/19 p/ motor/STBY → corrigir p/ o canônico; UART2 16/17 ok. Conferir 1-4, 2-x, 4-3 também. Ideia: compilar todos os sketches com arduino-cli + esp32 3.x no fim.
 - 5-4..5-6 prontos e testados (MuJoCo, assistente --simular; flags LeRobot 0.6.1). FATOS: avaliação = lerobot-rollout. Conferir 5-3/índice T5 se citam lerobot-record p/ avaliar.
 - 2-4..2-6 prontos. DECISÃO pinos: mapa por trilha, coerente dentro da trilha. T2 (2-6): PWMB 14, BIN1 16, BIN2 17 (IR no ADC1 36/39/34/35/32; SD 18/19/23). 2-1/2-3 usam PWMB 13/BIN1 33/BIN2 32 → alinhar ao 2-6 e explicar a mudança no índice T2/2-6.
+
+## 17/10/2026 — fechamento (sessão robot-v2 retomada)
+- armadilha · translate.py: o modelo às vezes devolve {"source": "<tradução>", "kind": ...} em vez de string → lote inteiro rejeitado. Corrigido (normaliza dict→source); 2.011 recuperados das rejeições sem nova chamada.
+- armadilha · render-locales (BeautifulSoup) reordena atributos → validate.py com regex de ordem fixa acusava 114 falsos problemas. validate.py agora usa lookahead.
+- fato · learn.js tinha ~55 mensagens PT (contador "0 de 36", Minha jornada, notas). Dicionário __INEMA_D en/es no topo + __INEMA_T('...') pelo lang do <html>. Script: scratchpad learn-i18n.py (idempotente pelo marcador __INEMA_T).
+- armadilha · tradução de string Python em aspas simples com apóstrofo ("couldn't") quebra o código; o code_skeleton pega, mas aceitar à mão exige olhar.
+- fato · T4: launch 4-6 agora sobe Node(meu_robo/odometria) e lê meu_robo_description/urdf/robo.urdf.xacro. T2: mapa único (PWMB 14, BIN1 16, BIN2 17, STBY 3V3) + tabela #pinos no índice.

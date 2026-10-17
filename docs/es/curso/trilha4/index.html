@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Ruta 4 · ROS 2 y navegación | Robótica desde cero hasta nivel experto</title>
+<meta content="Ruta 4 del curso de robótica: ROS 2 (Lyrical o Jazzy), URDF y simulación en Gazebo, micro-ROS en ESP32, LiDAR y SLAM con slam_toolbox, y navegación con Nav2. Puedes empezar todo solo en simulación." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Primeros pasos",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "Qué es un robot y su kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Electrónica esencial",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: el primer programa",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensores: el robot percibe",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motores y energía",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Proyecto: rover que esquiva obstáculos",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Robot autónomo",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control desde el celular: Wi-Fi y BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU y encoders: saber dónde está",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "Control PID en la práctica",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Varias tareas al mismo tiempo",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetría y registro de datos",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Proyecto: seguidor de línea con PID",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Visión e IA integrada",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 y Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Cámara y OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detectar objetos con YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "IA dentro del microcontrolador",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi se comunica con el ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Proyecto: robot que sigue un objeto",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 y navegación",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 sin miedo",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describir y simular el robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS en el ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR y mapas (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navegación con Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Proyecto: robot que mapea y navega",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "IA moderna y brazo robótico",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "Modelo de lenguaje como cerebro",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Voz local: escuchar y hablar",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "Brazo SO-101 y LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Aprender por demostración",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simular antes de hacerlo en la realidad",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Proyecto final: robot asistente",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "Para el docente",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "Cómo impartir este curso",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha4/index.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha4/index.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha4/index.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha4/index.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha4/index.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha4/index.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="../../../en/curso/trilha4/index.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">EN</a><a href="index.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">ES</a></div>
+<a class="skip" href="#conteudo">Saltar al contenido</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T4 ativa -->
+<nav aria-label="Navegación principal" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robótica desde cero hasta experto — inicio" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeros pasos</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autónomo</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visión e IA</span></a>
+<a aria-current="page" class="nav-trail text-amber-400 bg-amber-500/10" href="index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Docente</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="Mi recorrido" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Mi recorrido</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Apariencia" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Apariencia</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Oscuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Enfoque</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fuente</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Lectura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamaño</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Ancho</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estrecho</button><button data-inema-set-linewidth="68" type="button">Mediano</button><button data-inema-set-linewidth="75" type="button">Ancho</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Interlineado</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Cómodo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento morado" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento ámbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/oscuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-track="4" id="conteudo">
+<nav aria-label="Ruta de navegación" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400"><a class="hover:text-amber-400" href="../../index.html">Inicio</a><span aria-hidden="true">/</span><span class="text-amber-400">Ruta 4</span></div>
+</nav>
+<!-- HEADER da trilha -->
+<header class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full mb-4">RUTA 4 · INTERMEDIO / AVANZADO</span>
+<h1 class="text-3xl sm:text-4xl font-bold mb-4">🗺️ ROS 2 y navegación</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">El salto del robot que reacciona al robot que sabe dónde está. Aprenderás ROS 2, describirás y simularás tu robot en Gazebo, conectarás el ESP32 a ROS con micro-ROS, crearás mapas con un LiDAR y terminarás con un <strong class="text-amber-400">robot que mapea la habitación y navega solo hasta un punto</strong>. Todo se puede hacer primero solo en simulación, en tu PC.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">6</div><div class="text-xs text-neutral-400">Módulos</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">36</div><div class="text-xs text-neutral-400">Temas</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Intermedio</div><div class="text-xs text-neutral-400">Nivel</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">ROS 2</div><div class="text-xs text-neutral-400">Lyrical o Jazzy</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progreso de la Ruta 4" class="inema-ring" data-inema-meter="trilha:4"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="trilha:4"><strong data-inema-meter-frac="">0 de 0</strong> temas leídos en esta ruta</div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+<!-- HERO SVG da trilha: simulação primeiro, robô real depois -->
+<figure class="fig mb-3">
+<svg aria-label="El recorrido de la Ruta 4 tiene dos caminos: en el de arriba, simulación en la PC (ROS 2, robot en Gazebo, SLAM y Nav2 simulados); en el de abajo, el robot real (micro-ROS en ESP32, LiDAR real, proyecto final). Los dos caminos se unen en el proyecto 4.6." class="w-full h-auto" role="img" viewbox="0 0 720 290">
+<defs>
+<pattern height="32" id="t4-grid" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.12" r="1.3"></circle></pattern>
+<lineargradient id="t4-grad" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#fbbf24"></stop><stop offset="1" stop-color="#f59e0b"></stop></lineargradient>
+<filter height="180%" id="t4-glow" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+<marker id="t4-ah" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#fbbf24"></path></marker>
+<marker id="t4-ahc" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs>
+<rect fill="url(#t4-grid)" height="290" width="720"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<text fill="#fbbf24" font-size="16" font-weight="600" text-anchor="start" x="20" y="34">simulación en PC</text>
+<text fill="#7dd3fc" font-size="16" font-weight="600" text-anchor="start" x="20" y="208">robot real</text>
+<g class="rb-a"><rect fill="#1f1604" height="70" rx="12" stroke="#fbbf24" stroke-width="2" width="120" x="20" y="52"></rect><text fill="#fbbf24" font-size="17" font-weight="600" x="80" y="82">4.1</text><text fill="#fde68a" font-size="15" x="80" y="104">ROS 2</text></g>
+<g class="rb-a"><rect fill="#1f1604" height="70" rx="12" stroke="#fbbf24" stroke-width="2" width="120" x="170" y="52"></rect><text fill="#fbbf24" font-size="17" font-weight="600" x="230" y="82">4.2</text><text fill="#fde68a" font-size="15" x="230" y="104">Gazebo</text></g>
+<g class="rb-a"><rect fill="#1f1604" height="70" rx="12" stroke="#fbbf24" stroke-width="2" width="120" x="320" y="52"></rect><text fill="#fbbf24" font-size="17" font-weight="600" x="380" y="82">4.4</text><text fill="#fde68a" font-size="15" x="380" y="104">SLAM</text></g>
+<rect fill="#1f1604" height="70" rx="12" stroke="#fbbf24" stroke-width="2" width="120" x="470" y="52"></rect><text fill="#fbbf24" font-size="17" font-weight="600" x="530" y="82">4.5</text><text fill="#fde68a" font-size="15" x="530" y="104">Nav2</text>
+<rect fill="#0e1b26" height="56" rx="12" stroke="#38bdf8" stroke-width="2" width="120" x="170" y="222"></rect><text fill="#7dd3fc" font-size="17" font-weight="600" x="230" y="246">4.3</text><text fill="#bfe6ff" font-size="15" x="230" y="266">micro-ROS</text>
+<rect fill="#0e1b26" height="56" rx="12" stroke="#38bdf8" stroke-width="2" width="120" x="320" y="222"></rect><text fill="#7dd3fc" font-size="17" font-weight="600" x="380" y="246">4.4</text><text fill="#bfe6ff" font-size="15" x="380" y="266">LiDAR real</text>
+<g filter="url(#t4-glow)"><rect fill="#2a1d05" height="80" rx="14" stroke="url(#t4-grad)" stroke-width="2.5" width="96" x="610" y="120"></rect></g>
+<text fill="#fbbf24" font-size="17" font-weight="700" x="658" y="154">4.6</text><text fill="#fde68a" font-size="15" x="658" y="176">proyecto</text>
+<text fill="#a8a8b3" font-size="14" x="300" y="168">el mismo código ROS 2 sirve en ambas rutas</text>
+</g>
+<g fill="none" opacity="0.7" stroke-width="1.8">
+<path d="M140,87 L163,87" marker-end="url(#t4-ah)" stroke="#fbbf24"></path><path d="M290,87 L313,87" marker-end="url(#t4-ah)" stroke="#fbbf24"></path><path d="M440,87 L463,87" marker-end="url(#t4-ah)" stroke="#fbbf24"></path>
+<path d="M590,95 C610,100 625,108 640,118" marker-end="url(#t4-ah)" stroke="#fbbf24"></path>
+<path d="M290,250 L313,250" marker-end="url(#t4-ahc)" stroke="#38bdf8"></path>
+<path d="M440,250 C560,250 620,240 648,206" marker-end="url(#t4-ahc)" stroke="#38bdf8" stroke-dasharray="6 6"></path>
+<path d="M230,124 L230,214" marker-end="url(#t4-ahc)" stroke="#38bdf8" stroke-dasharray="5 6"></path>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-10 px-1"><strong class="text-amber-400">Cómo leer:</strong> La ruta de arriba (ámbar) se ejecuta por completo en tu computadora, sin ninguna pieza. La de abajo (cian) es el mismo trabajo en el robot real: el ESP32 se conecta a ROS mediante micro-ROS y el LiDAR real reemplaza al simulado. Ambas flechas llegan al proyecto 4.6. Puedes seguir solo la ruta de arriba y volver a la de abajo cuando tengas el hardware.</p>
+<!-- O QUE VOCÊ MONTA -->
+<section class="mb-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="md:col-span-2 bg-dark-800 rounded-xl border border-amber-500/30 p-5 sm:p-6">
+<h2 class="text-xl font-bold mb-3">🧭 Lo que construirás en esta ruta</h2>
+<p class="text-neutral-300 text-sm mb-3">Un robot diferencial (dos ruedas y una rueda loca) que existe en dos lugares: como modelo en Gazebo y como el robot de las rutas anteriores, ahora con LiDAR. Publica odometría y lecturas del láser en ROS 2, construye el mapa del entorno con slam_toolbox y usa Nav2 para ir solo hasta el punto que selecciones en el mapa, esquivando lo que aparezca en el camino.</p>
+<ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Comandos válidos en Lyrical y Jazzy</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Robot descrito en URDF/xacro y simulado en Gazebo</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>ESP32 conectado a ROS 2 mediante micro-ROS</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Mapa guardado y navegación por puntos con Nav2</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 sm:p-6">
+<h2 class="text-lg font-semibold text-primary mb-2">💡 ¿Aún no tienes LiDAR?</h2>
+<p class="text-neutral-300 text-sm">Los módulos 4.1, 4.2, 4.4 y 4.5 funcionan por completo en simulación: basta con una PC con Ubuntu, una máquina virtual o un contenedor Docker. El hardware solo es obligatorio en el 4.3 y en la parte real del 4.6.</p>
+</div>
+</section>
+<!-- MAPA DA TRILHA (obrigatório, #12) — lado direito = TIPO, nunca horas -->
+<section class="mb-12">
+<h2 class="text-2xl font-bold mb-6">Mapa de la ruta</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-amber-500/30 p-5 transition-all" href="#modulo-4-1"><div class="flex items-center justify-between mb-2"><span class="text-amber-400 font-bold text-sm">4.1</span><span class="text-xs text-neutral-500">Fundamentos</span></div><h3 class="font-semibold mb-1 group-hover:text-amber-400 transition-colors">🧩 ROS 2 sin miedo</h3><p class="text-xs text-neutral-400">Nodos, tópicos y tu primer nodo en Python</p></a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-amber-500/30 p-5 transition-all" href="#modulo-4-2"><div class="flex items-center justify-between mb-2"><span class="text-amber-400 font-bold text-sm">4.2</span><span class="text-xs text-neutral-500">Práctica</span></div><h3 class="font-semibold mb-1 group-hover:text-amber-400 transition-colors">🧱 Describir y simular el robot</h3><p class="text-xs text-neutral-400">URDF, TF, RViz2 y Gazebo</p></a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-amber-500/30 p-5 transition-all" href="#modulo-4-3"><div class="flex items-center justify-between mb-2"><span class="text-amber-400 font-bold text-sm">4.3</span><span class="text-xs text-neutral-500">Práctica</span></div><h3 class="font-semibold mb-1 group-hover:text-amber-400 transition-colors">🔌 micro-ROS en el ESP32</h3><p class="text-xs text-neutral-400">El microcontrolador se integra a ROS</p></a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-amber-500/30 p-5 transition-all" href="#modulo-4-4"><div class="flex items-center justify-between mb-2"><span class="text-amber-400 font-bold text-sm">4.4</span><span class="text-xs text-neutral-500">Fundamentos</span></div><h3 class="font-semibold mb-1 group-hover:text-amber-400 transition-colors">📡 LiDAR y mapas (SLAM)</h3><p class="text-xs text-neutral-400">Mapa y posición al mismo tiempo</p></a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-amber-500/30 p-5 transition-all" href="#modulo-4-5"><div class="flex items-center justify-between mb-2"><span class="text-amber-400 font-bold text-sm">4.5</span><span class="text-xs text-neutral-500">Práctica</span></div><h3 class="font-semibold mb-1 group-hover:text-amber-400 transition-colors">🚩 Navegación con Nav2</h3><p class="text-xs text-neutral-400">Haz clic en el mapa y el robot irá</p></a>
+<a class="group bg-dark-800 rounded-xl border border-dark-600 hover:border-amber-500/30 p-5 transition-all" href="#modulo-4-6"><div class="flex items-center justify-between mb-2"><span class="text-amber-400 font-bold text-sm">4.6</span><span class="text-xs text-neutral-500">Proyecto</span></div><h3 class="font-semibold mb-1 group-hover:text-amber-400 transition-colors">🏠 Proyecto: mapea y navega</h3><p class="text-xs text-neutral-400">De la simulación a tu habitación</p></a>
+</div>
+</section>
+<h2 class="text-2xl font-bold mb-6">Contenido detallado</h2>
+<!-- MÓDULO 4.1 -->
+<div class="module-card bg-dark-800 rounded-xl border border-dark-600 mb-6" id="modulo-4-1" style="scroll-margin-top:5rem">
+<div class="p-5 sm:p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2"><span class="text-amber-400 font-bold">4.1</span><div class="flex items-center gap-3"><span class="text-xs text-neutral-500">Fundamentos</span><div aria-label="Progreso del módulo 4.1" class="inema-ring" data-inema-meter="modulo:4-1" style="--ring-size:2.4rem"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div></div></div>
+<h3 class="text-2xl font-bold mb-2">🧩 ROS 2 sin miedo</h3>
+<p class="text-neutral-400 text-sm">Qué es ROS 2, qué distro elegir, cómo instalarlo y las piezas del grafo: nodos, tópicos, servicios, acciones y parámetros. Termina con tu primer nodo en Python.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<div class="topic-item"><button aria-controls="t41-1" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span><span class="font-medium">Qué es ROS 2 y por qué usarlo</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t41-1"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Un conjunto de bibliotecas y herramientas que permite que varios programas del robot intercambien datos por nombre, en la misma máquina o a través de la red.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Es el estándar en investigación e industria; los mapas, la navegación y los controladores de sensores ya vienen listos.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Middleware · DDS · grafo ROS · paquete.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t41-2" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span><span class="font-medium">Qué distro elegir: Lyrical o Jazzy</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t41-2"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Lyrical Luth (LTS de mayo/2026, Ubuntu 26.04) y Jazzy Jalisco (LTS anterior, Ubuntu 24.04), cada una con su Gazebo.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Una distro incorrecta es la causa n.º 1 de que un tutorial no funcione.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">LTS · compatibilidad Ubuntu ↔ ROS ↔ Gazebo · fin del soporte.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t41-3" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span><span class="font-medium">Instalar (Ubuntu, Docker o Pi)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t41-3"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Tres opciones: paquetes en Ubuntu, un contenedor Docker listo o Raspberry Pi 5 con Ubuntu.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Docker te permite empezar en minutos, en cualquier sistema.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">ros-&lt;distro&gt;-desktop · source · talker/listener.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t41-4" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span><span class="font-medium">Nodos, tópicos y mensajes</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t41-4"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Un nodo es un programa; un tópico es un canal con nombre; un mensaje es el formato de los datos que pasan por él.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Todo robot ROS es un grafo de este tipo; leerlo desde la terminal es la primera herramienta de depuración.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Publisher · subscriber · /cmd_vel · ros2 topic echo.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t41-5" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span><span class="font-medium">Servicios, acciones y parámetros</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t41-5"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Pregunta y respuesta (servicio), tarea larga con progreso (acción) y ajustes del nodo (parámetro).</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Elegir el patrón adecuado evita soluciones improvisadas; todo Nav2 funciona mediante acciones.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Solicitud/respuesta · objetivo/retroalimentación/resultado · ros2 param.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t41-6" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span><span class="font-medium">Tu primer nodo en Python (rclpy) para publicar y escuchar</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t41-6"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Un paquete Python con dos nodos completos, uno que publica y otro que escucha, compilado con colcon.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Es el modelo de todos los nodos que escribirás en el resto de la ruta.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">rclpy · create_publisher · create_subscription · timer.</p></div></div></div></div>
+</div>
+<div class="p-4 bg-dark-700/30 flex flex-wrap justify-start gap-3"><button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-700 rounded-lg transition-colors" onclick="openModal('modal-4-1')" type="button">Ver en modal</button><a class="px-4 py-2 text-sm bg-amber-700 hover:bg-amber-600 text-white rounded-lg transition-colors" href="modulo-4-1.html">Ver completo</a></div>
+</div>
+<!-- MÓDULO 4.2 -->
+<div class="module-card bg-dark-800 rounded-xl border border-dark-600 mb-6" id="modulo-4-2" style="scroll-margin-top:5rem">
+<div class="p-5 sm:p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2"><span class="text-amber-400 font-bold">4.2</span><div class="flex items-center gap-3"><span class="text-xs text-neutral-500">Práctica</span><div aria-label="Progreso del módulo 4.2" class="inema-ring" data-inema-meter="modulo:4-2" style="--ring-size:2.4rem"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div></div></div>
+<h3 class="text-2xl font-bold mb-2">🧱 Describir y simular el robot</h3>
+<p class="text-neutral-400 text-sm">Workspace y colcon, el robot en URDF/xacro, cuadros TF, RViz2, Gazebo con ros_gz y el primer recorrido con el teclado.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<div class="topic-item"><button aria-controls="t42-1" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span><span class="font-medium">Workspace, paquetes y colcon</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t42-1"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">La carpeta de trabajo, cómo se organizan los paquetes y cómo colcon compila e instala todo.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">La mitad de los errores de principiantes se debe a un workspace sin source o a una dependencia faltante.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Underlay · overlay · rosdep · --symlink-install.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t42-2" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span><span class="font-medium">URDF/xacro: describir el robot</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t42-2"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Un archivo XML con las piezas (links) y las articulaciones (joints) del robot; xacro agrega variables y macros.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">RViz, Gazebo, TF y Nav2 leen la misma descripción.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Link · joint · inercia · macro.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t42-3" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span><span class="font-medium">TF2: cuadros de coordenadas</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t42-3"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">El árbol que indica dónde está cada pieza con respecto a las demás, en cada instante.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Sin una TF correcta, el láser aparece en el lugar equivocado y el mapa se deforma.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">map · odom · base_link · tf2_echo.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t42-4" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span><span class="font-medium">RViz2: ver el robot y los sensores</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t42-4"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">La ventana que muestra lo que el robot cree: modelo, cuadros, láser, mapa.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Ahí verificas el modelo antes de simular y el sensor antes de mapear.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Fixed Frame · RobotModel · LaserScan · robot_state_publisher.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t42-5" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span><span class="font-medium">Gazebo (Harmonic/Jetty) y ros_gz</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t42-5"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">El simulador con física y sensores, conectado a ROS 2 mediante el puente ros_gz.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Pruebas el mapa y la navegación sin batería, sin caídas y sin comprar un LiDAR.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Harmonic ↔ Jazzy · Jetty ↔ Lyrical · parameter_bridge · launch.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t42-6" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span><span class="font-medium">Conducir el robot simulado con teleop</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t42-6"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Enviar velocidad con el teclado a /cmd_vel y ver cómo responden la odometría y el láser.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Cierra el ciclo: entra un comando, el robot se mueve y los sensores cambian. Es la prueba de humo de toda la ruta.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">teleop_twist_keyboard · Twist · /odom · /scan.</p></div></div></div></div>
+</div>
+<div class="p-4 bg-dark-700/30 flex flex-wrap justify-start gap-3"><button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-700 rounded-lg transition-colors" onclick="openModal('modal-4-2')" type="button">Ver en modal</button><a class="px-4 py-2 text-sm bg-amber-700 hover:bg-amber-600 text-white rounded-lg transition-colors" href="modulo-4-2.html">Ver completo</a></div>
+</div>
+<!-- MÓDULO 4.3 -->
+<div class="module-card bg-dark-800 rounded-xl border border-dark-600 mb-6" id="modulo-4-3" style="scroll-margin-top:5rem">
+<div class="p-5 sm:p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2"><span class="text-amber-400 font-bold">4.3</span><div class="flex items-center gap-3"><span class="text-xs text-neutral-500">Práctica</span><div aria-label="Progreso del módulo 4.3" class="inema-ring" data-inema-meter="modulo:4-3" style="--ring-size:2.4rem"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div></div></div>
+<h3 class="text-2xl font-bold mb-2">🔌 micro-ROS en el ESP32</h3>
+<p class="text-neutral-400 text-sm">El ESP32 se convierte en un nodo ROS 2: publica los encoders, escucha /cmd_vel, hace girar los motores y envía la odometría al resto del robot.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<div class="topic-item"><button aria-controls="t43-1" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span><span class="font-medium">Qué es micro-ROS</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t43-1"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">La versión de ROS 2 para microcontroladores, que se comunica con el resto del grafo por medio de un agente.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Los motores y encoders permanecen en el ESP32, en tiempo real, y aparecen en ROS como cualquier nodo.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Cliente · agente · XRCE-DDS · rclc.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t43-2" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span><span class="font-medium">Instalar micro-ROS Agent</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t43-2"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">El programa en la PC o en la Pi que traduce micro-ROS a DDS; se ejecuta en Docker con una sola línea.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Sin el agente, el ESP32 habla solo; es lo primero que debes verificar.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Serial · UDP · puerto 8888 · /dev/ttyUSB0.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t43-3" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span><span class="font-medium">ESP32 publicando datos (encoders, IMU)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t43-3"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">El firmware que cuenta los pulsos de las ruedas y publica en /ticks cada 50 ms.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Los datos del sensor en ROS son la base de la odometría y del mapa.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">micro_ros_arduino · publisher · timer · executor.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t43-4" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span><span class="font-medium">ESP32 escuchando /cmd_vel y haciendo girar los motores</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t43-4"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Convertir la velocidad lineal y angular en la velocidad de cada rueda, y detenerse si desaparece el comando.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Es el mismo /cmd_vel de teleop y Nav2: el robot real empieza a obedecer a ROS.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Cinemática diferencial · subscriber · watchdog · TB6612FNG.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t43-5" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span><span class="font-medium">Odometría del robot real en ROS 2</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t43-5"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Un nodo Python en la PC que transforma /ticks en /odom y en el cuadro odom → base_link.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Es lo que SLAM y Nav2 esperan recibir del robot real.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">nav_msgs/Odometry · TransformBroadcaster · ticks por vuelta.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t43-6" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span><span class="font-medium">Problemas comunes (Wi-Fi vs. serial, sincronización del tiempo)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t43-6"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Los fallos más frecuentes: agente sin conexión, puerto ocupado, distribución equivocada, reloj desincronizado.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Una guía de diagnóstico ahorra noches de prueba y error.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Transporte · ping del agente · sincronización del tiempo · reconexión.</p></div></div></div></div>
+</div>
+<div class="p-4 bg-dark-700/30 flex flex-wrap justify-start gap-3"><button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-700 rounded-lg transition-colors" onclick="openModal('modal-4-3')" type="button">Ver en modal</button><a class="px-4 py-2 text-sm bg-amber-700 hover:bg-amber-600 text-white rounded-lg transition-colors" href="modulo-4-3.html">Ver completo</a></div>
+</div>
+<!-- MÓDULO 4.4 -->
+<div class="module-card bg-dark-800 rounded-xl border border-dark-600 mb-6" id="modulo-4-4" style="scroll-margin-top:5rem">
+<div class="p-5 sm:p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2"><span class="text-amber-400 font-bold">4.4</span><div class="flex items-center gap-3"><span class="text-xs text-neutral-500">Fundamentos</span><div aria-label="Progreso del módulo 4.4" class="inema-ring" data-inema-meter="modulo:4-4" style="--ring-size:2.4rem"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div></div></div>
+<h3 class="text-2xl font-bold mb-2">📡 LiDAR y mapas (SLAM)</h3>
+<p class="text-neutral-400 text-sm">Cómo ve el LiDAR, cómo conectarlo a ROS 2 y cómo slam_toolbox construye el mapa mientras descubre dónde está el robot.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<div class="topic-item"><button aria-controls="t44-1" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span><span class="font-medium">Qué ve un LiDAR (LaserScan)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t44-1"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Un láser que gira y mide la distancia en cientos de ángulos por vuelta, publicado como LaserScan.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Entender el alcance y la resolución explica por qué el mapa queda bien o mal.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">ranges · angle_increment · alcance · /scan.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t44-2" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span><span class="font-medium">Conectar el LiDAR a ROS 2</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t44-2"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Driver del fabricante (RPLIDAR C1/A1 o LD19), puerto USB y el cuadro del láser en la TF.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Es el paso que lleva al robot real al mismo punto que el simulado.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Driver · regla udev · frame_id · ros2 topic hz.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t44-3" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span><span class="font-medium">SLAM explicado: mapa y posición al mismo tiempo</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t44-3"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Construir el mapa y localizarse en él al mismo tiempo, corrigiendo la odometría según lo que ve el láser.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Sin mapa no hay navegación autónoma de verdad.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Emparejamiento de escaneos · cierre de bucle · cuadrícula de ocupación.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t44-4" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span><span class="font-medium">slam_toolbox en la simulación</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t44-4"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">El paquete estándar de SLAM en ROS 2 funcionando sobre el robot de Gazebo.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Aprendes a mapear sin hardware y ya sabes qué esperar del robot real.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Modo en línea asíncrono · parámetros · /map.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t44-5" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span><span class="font-medium">Mapear tu casa o salón de clases</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t44-5"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Guía para el mapeo real: velocidad baja, vueltas cerradas, superficies que confunden al láser.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Un mapa bien hecho determina si la navegación funcionará.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Vidrio y espejo · velocidad · volver a visitar lugares.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t44-6" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span><span class="font-medium">Guardar y cargar mapas</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t44-6"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Guardar el mapa en un archivo (imagen + YAML) y volver a abrirlo después para navegar.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Mapeas una vez y navegas muchas veces.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">map_saver · .pgm y .yaml · resolución · origen.</p></div></div></div></div>
+</div>
+<div class="p-4 bg-dark-700/30 flex flex-wrap justify-start gap-3"><button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-700 rounded-lg transition-colors" onclick="openModal('modal-4-4')" type="button">Ver en modal</button><a class="px-4 py-2 text-sm bg-amber-700 hover:bg-amber-600 text-white rounded-lg transition-colors" href="modulo-4-4.html">Ver completo</a></div>
+</div>
+<!-- MÓDULO 4.5 -->
+<div class="module-card bg-dark-800 rounded-xl border border-dark-600 mb-6" id="modulo-4-5" style="scroll-margin-top:5rem">
+<div class="p-5 sm:p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2"><span class="text-amber-400 font-bold">4.5</span><div class="flex items-center gap-3"><span class="text-xs text-neutral-500">Práctica</span><div aria-label="Progreso del módulo 4.5" class="inema-ring" data-inema-meter="modulo:4-5" style="--ring-size:2.4rem"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div></div></div>
+<h3 class="text-2xl font-bold mb-2">🚩 Navegación con Nav2</h3>
+<p class="text-neutral-400 text-sm">La pila de navegación de ROS 2: localizarse en el mapa guardado, planificar, esquivar obstáculos, recuperarse y hacer rondas por waypoints.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<div class="topic-item"><button aria-controls="t45-1" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span><span class="font-medium">Nav2: la pila de navegación</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t45-1"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Los servidores que localizan, planifican, controlan y se recuperan, coordinados por un árbol de comportamiento.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Es el mismo tipo de software que usan los robots de almacén.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">nav2_bringup · behavior tree · lifecycle.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t45-2" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span><span class="font-medium">Localización con AMCL en el mapa guardado</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t45-2"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Un filtro de partículas que estima dónde está el robot al comparar el láser con el mapa.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Si no sabe dónde está, el robot no sabe adónde ir.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Partículas · pose inicial · map → odom.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t45-3" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span><span class="font-medium">Mapas de costos y planificadores</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t45-3"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Mapas que indican por dónde es costoso pasar y algoritmos que trazan y siguen la ruta.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Ajustar la inflación y el radio del robot resuelve la mayoría de los casos de «no pasa por la puerta».</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Costmap global y local · inflación · planner · controller.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t45-4" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span><span class="font-medium">Enviar el robot a un punto (RViz y Python)</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t45-4"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Definir el objetivo con un clic en RViz o mediante código con la API Python de Nav2.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Con Python, la navegación se convierte en un bloque que usan otros programas.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Nav2 Goal · NavigateToPose · acción · feedback.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t45-5" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span><span class="font-medium">Recuperación cuando el robot se atasca</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t45-5"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Los comportamientos de recuperación: limpiar el mapa de costos, girar, retroceder, esperar.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">En el mundo real el robot se atascará; lo importante es cómo sale de esa situación.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Spin · BackUp · Wait · intentos.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t45-6" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span><span class="font-medium">Waypoints: una ronda por la casa</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t45-6"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Una lista de puntos que el robot recorre en orden, como en una ronda.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Es la base de la entrega, la inspección y la vigilancia.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">followWaypoints · orden · repetición.</p></div></div></div></div>
+</div>
+<div class="p-4 bg-dark-700/30 flex flex-wrap justify-start gap-3"><button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-700 rounded-lg transition-colors" onclick="openModal('modal-4-5')" type="button">Ver en modal</button><a class="px-4 py-2 text-sm bg-amber-700 hover:bg-amber-600 text-white rounded-lg transition-colors" href="modulo-4-5.html">Ver completo</a></div>
+</div>
+<!-- MÓDULO 4.6 -->
+<div class="module-card bg-dark-800 rounded-xl border border-dark-600 mb-6" id="modulo-4-6" style="scroll-margin-top:5rem">
+<div class="p-5 sm:p-6 border-b border-dark-600">
+<div class="flex items-center justify-between mb-2"><span class="text-amber-400 font-bold">4.6</span><div class="flex items-center gap-3"><span class="text-xs text-neutral-500">Proyecto</span><div aria-label="Progreso del módulo 4.6" class="inema-ring" data-inema-meter="modulo:4-6" style="--ring-size:2.4rem"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div></div></div>
+<h3 class="text-2xl font-bold mb-2">🏠 Proyecto: robot que mapea y navega</h3>
+<p class="text-neutral-400 text-sm">Integra todo en el robot real: arquitectura, launch que inicia el sistema, mapa del entorno y navegación segura entre habitaciones.</p>
+</div>
+<div class="divide-y divide-dark-600">
+<div class="topic-item"><button aria-controls="t46-1" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">1</span><span class="font-medium">Arquitectura del robot real con ROS 2</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t46-1"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Qué se ejecuta en cada lugar: ESP32 en los motores, Pi 5 con LiDAR y ROS 2, PC para visualizar.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Una arquitectura clara facilita encontrar fallas y cambiar piezas.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">División de tareas · red · ROS_DOMAIN_ID.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t46-2" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">2</span><span class="font-medium">Launch files que inician todo</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t46-2"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Un comando que inicia el agente, la descripción, el LiDAR, la odometría, SLAM o Nav2 en el orden correcto.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Abrir diez terminales cada vez no es práctico, ni siquiera en el aula.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Argumentos · include · condiciones.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t46-3" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">3</span><span class="font-medium">De la simulación al mundo real: qué cambia</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t46-3"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Ruido, deslizamiento, retraso y tiempo real: qué oculta Gazebo y cómo compensarlo.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Aquí es donde se detienen la mayoría de los proyectos; saberlo de antemano evita frustraciones.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">use_sim_time · calibración · límites de velocidad.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t46-4" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">4</span><span class="font-medium">Mapear el entorno</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t46-4"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Crear y guardar el mapa real del espacio donde trabajará el robot.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Es el primer resultado visible del proyecto.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">slam_toolbox · teleop · map_saver.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t46-5" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">5</span><span class="font-medium">Navegar entre habitaciones</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t46-5"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Nav2 en el mapa real, con puntos con nombre (cocina, sala) y una ronda.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Es el robot autónomo completo que prometió la ruta.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">Puntos con nombre · waypoints · métricas de éxito.</p></div></div></div></div>
+<div class="topic-item"><button aria-controls="t46-6" aria-expanded="false" class="w-full px-4 sm:px-6 py-4 flex items-center gap-3 hover:bg-dark-700/50 transition-colors text-left" onclick="toggleTopic(this)"><span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold flex items-center justify-center flex-shrink-0">6</span><span class="font-medium">Lista de verificación de seguridad y próximos pasos</span></button>
+<div class="topic-explanation px-4 sm:px-6 pb-4" id="t46-6"><div class="bg-dark-700/50 rounded-lg p-4 space-y-3 sm:ml-9"><div><span class="text-amber-400 font-semibold">Qué es:</span><p class="text-neutral-300 text-sm">Parada de emergencia, velocidad máxima, batería y el camino hacia la Ruta 5.</p></div><div><span class="text-amber-400 font-semibold">Por qué aprenderlo:</span><p class="text-neutral-300 text-sm">Un robot que se mueve solo cerca de personas necesita mecanismos de seguridad desde la primera prueba.</p></div><div><span class="text-amber-400 font-semibold">Conceptos clave:</span><p class="text-neutral-300 text-sm">E-stop · límites · watchdog · registro.</p></div></div></div></div>
+</div>
+<div class="p-4 bg-dark-700/30 flex flex-wrap justify-start gap-3"><button class="px-4 py-2 text-sm bg-dark-600 hover:bg-dark-700 rounded-lg transition-colors" onclick="openModal('modal-4-6')" type="button">Ver en modal</button><a class="px-4 py-2 text-sm bg-amber-700 hover:bg-amber-600 text-white rounded-lg transition-colors" href="modulo-4-6.html">Ver completo</a></div>
+</div>
+<!-- KIT DA TRILHA -->
+<section class="mt-12 mb-12" id="kit" style="scroll-margin-top:5rem">
+<h2 class="text-2xl font-bold mb-2">🧰 Kit de la trilha</h2>
+<p class="text-neutral-400 text-sm mb-6">Empieza desde cero solo en simulación. Para el robot real, además del robot de la Ruta 3, el rango aproximado es de <strong class="text-neutral-200">R$ 450 a R$ 1.100</strong>, casi todo corresponde al LiDAR (oct/2026, verifica antes de comprar: varía según la tienda, el envío y el tipo de cambio).</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="text-amber-400 font-semibold mb-1">💻 Para simular</div><p class="text-sm text-neutral-300">PC con Ubuntu 24.04 (Jazzy) o 26.04 (Lyrical), máquina virtual o Docker. 8 GB de RAM funcionan; con 16 GB Gazebo funciona con holgura.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="text-amber-400 font-semibold mb-1">🦾 Base del robot</div><p class="text-sm text-neutral-300">El robot de la Ruta 3: Raspberry Pi 5 con fuente oficial y cooler, ESP32 y driver TB6612FNG o DRV8833, chasis de dos ruedas y rueda loca.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="text-amber-400 font-semibold mb-1">📡 LiDAR 2D</div><p class="text-sm text-neutral-300">RPLIDAR C1 o A1 (Slamtec) o LD19 (LDRobot), con el adaptador USB incluido. Es la pieza más cara de la ruta.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="text-amber-400 font-semibold mb-1">⚙️ Encoders</div><p class="text-sm text-neutral-300">Los motores con encoder de la Ruta 2 (N20 o TT con disco). Sin encoder no hay odometría y el mapa queda torcido.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="text-amber-400 font-semibold mb-1">🔋 Energía</div><p class="text-sm text-neutral-300">Batería separada para los motores y para la Pi (o buck de 5 V y 5 A), GND común y un interruptor de parada fácil de alcanzar.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="text-amber-400 font-semibold mb-1">🔌 Cables y red</div><p class="text-sm text-neutral-300">Cables USB de datos (ESP32 y LiDAR) y una red Wi-Fi local estable entre el robot y la PC.</p></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-5"><h3 class="font-bold text-amber-400 mb-2">✓ Opcional que vale la pena</h3><p class="text-sm text-neutral-300">IMU MPU-6050 o ICM-20948 (mejora la odometría en las curvas) y un botón de parada de emergencia que corta la alimentación de los motores.</p></div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5"><h3 class="font-bold text-red-400 mb-2">✗ No compres para esta trilha</h3><p class="text-sm text-neutral-300">LiDAR 3D, cámara de profundidad costosa o una segunda computadora de a bordo. El 2D con encoders es suficiente para el mapa y la navegación en interiores.</p></div>
+</div>
+</section>
+<!-- Navegação entre trilhas (botões à esquerda) -->
+<div class="flex flex-wrap justify-start gap-3 mt-10">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="../../index.html">← Inicio del curso</a>
+<a class="inline-flex items-center px-5 py-3 bg-amber-700 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors" href="modulo-4-1.html">Empezar por el módulo 4.1 →</a>
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="../trilha5/index.html">Siguiente ruta: IA moderna →</a>
+</div>
+</div>
+</main>
+<!-- MODAIS (iframe com a página completa do módulo — #7) -->
+<div class="modal hidden fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-4-1" onclick="if(event.target === this) closeModal()"><div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600"><div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0"><div class="flex items-center gap-3"><span class="text-amber-400 font-bold">4.1</span><span class="font-semibold">ROS 2 sin miedo</span></div><button aria-label="Cerrar" class="text-neutral-400 hover:text-neutral-100 text-2xl leading-none" onclick="closeModal()" type="button">×</button></div><iframe class="flex-1 w-full rounded-b-xl" data-src="modulo-4-1.html" title="Módulo 4.1"></iframe></div></div>
+<div class="modal hidden fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-4-2" onclick="if(event.target === this) closeModal()"><div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600"><div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0"><div class="flex items-center gap-3"><span class="text-amber-400 font-bold">4.2</span><span class="font-semibold">Describir y simular el robot</span></div><button aria-label="Cerrar" class="text-neutral-400 hover:text-neutral-100 text-2xl leading-none" onclick="closeModal()" type="button">×</button></div><iframe class="flex-1 w-full rounded-b-xl" data-src="modulo-4-2.html" title="Módulo 4.2"></iframe></div></div>
+<div class="modal hidden fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-4-3" onclick="if(event.target === this) closeModal()"><div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600"><div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0"><div class="flex items-center gap-3"><span class="text-amber-400 font-bold">4.3</span><span class="font-semibold">micro-ROS en el ESP32</span></div><button aria-label="Cerrar" class="text-neutral-400 hover:text-neutral-100 text-2xl leading-none" onclick="closeModal()" type="button">×</button></div><iframe class="flex-1 w-full rounded-b-xl" data-src="modulo-4-3.html" title="Módulo 4.3"></iframe></div></div>
+<div class="modal hidden fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-4-4" onclick="if(event.target === this) closeModal()"><div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600"><div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0"><div class="flex items-center gap-3"><span class="text-amber-400 font-bold">4.4</span><span class="font-semibold">LiDAR y mapas (SLAM)</span></div><button aria-label="Cerrar" class="text-neutral-400 hover:text-neutral-100 text-2xl leading-none" onclick="closeModal()" type="button">×</button></div><iframe class="flex-1 w-full rounded-b-xl" data-src="modulo-4-4.html" title="Módulo 4.4"></iframe></div></div>
+<div class="modal hidden fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-4-5" onclick="if(event.target === this) closeModal()"><div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600"><div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0"><div class="flex items-center gap-3"><span class="text-amber-400 font-bold">4.5</span><span class="font-semibold">Navegación con Nav2</span></div><button aria-label="Cerrar" class="text-neutral-400 hover:text-neutral-100 text-2xl leading-none" onclick="closeModal()" type="button">×</button></div><iframe class="flex-1 w-full rounded-b-xl" data-src="modulo-4-5.html" title="Módulo 4.5"></iframe></div></div>
+<div class="modal hidden fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80" id="modal-4-6" onclick="if(event.target === this) closeModal()"><div class="bg-dark-800 rounded-xl w-full max-w-6xl h-[95vh] flex flex-col border border-dark-600"><div class="p-4 border-b border-dark-600 flex justify-between items-center flex-shrink-0"><div class="flex items-center gap-3"><span class="text-amber-400 font-bold">4.6</span><span class="font-semibold">Proyecto: robot que mapea y navega</span></div><button aria-label="Cerrar" class="text-neutral-400 hover:text-neutral-100 text-2xl leading-none" onclick="closeModal()" type="button">×</button></div><iframe class="flex-1 w-full rounded-b-xl" data-src="modulo-4-6.html" title="Módulo 4.6"></iframe></div></div>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica de cero a experto · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licencia MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic com um aberto por card, tema, modal com iframe preguiçoso) -->
+<script>
+function toggleTopic(button) {
+  var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'), card = button.closest('.module-card');
+  if (card) card.querySelectorAll('.topic-explanation.active').forEach(function (o) { if (o !== exp) { o.classList.remove('active'); var b = o.closest('.topic-item').querySelector('button[aria-controls]'); if (b) b.setAttribute('aria-expanded', 'false'); } });
+  var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+}
+function openModal(id) { var m = document.getElementById(id); if (!m) return; var f = m.querySelector('iframe[data-src]'); if (f && !f.getAttribute('src')) f.setAttribute('src', f.getAttribute('data-src')); m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init(); }
+</script>
+</body>
+</html>

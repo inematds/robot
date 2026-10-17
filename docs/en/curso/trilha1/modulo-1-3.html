@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 1.3 · ESP32: Your First Program | Robotics from Zero to Expert</title>
+<meta content="First program on the ESP32: Arduino IDE 2.x and esp32 package 3.x, first upload, setup and loop, Serial Monitor and Plotter, button with debounce, analog reading, and PWM with ledcAttach and ledcWrite." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha1/modulo-1-3.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha1/modulo-1-3.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha1/modulo-1-3.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha1/modulo-1-3.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha1/modulo-1-3.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha1/modulo-1-3.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-1-3.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha1/modulo-1-3.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T1 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a aria-current="page" class="nav-trail text-emerald-400 bg-emerald-500/10" href="index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="1-3" data-inema-track="1" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-emerald-400" href="../../index.html">Home</a><span aria-hidden="true">/</span>
+<a class="hover:text-emerald-400" href="index.html">Track 1</a><span aria-hidden="true">/</span>
+<span class="text-emerald-400">Module 1.3</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full mb-4">MODULE 1.3 · PRACTICE</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">💻 ESP32: your first program</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">From the simulator to a real board. You install <strong class="text-neutral-100">Arduino IDE 2.x</strong> with the <strong class="text-neutral-100">esp32 3.x</strong>package, make your first upload, learn just enough C++ to write robot programs, use the Serial Monitor as a window into the board, and control brightness and sound with <strong class="text-emerald-400">PWM with the new API</strong>.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">Beginner</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">Practice</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">ESP32</div><div class="text-xs text-neutral-400">Hardware (or Wokwi)</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 1.3 progress" class="inema-ring" data-inema-meter="modulo:1-3"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:1-3"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-1">1. IDE 2.x and esp32 3.x package</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-2">2. Board, port, and upload</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-3">3. setup, loop, and functions</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-4">4. Serial Monitor</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-5">5. Button and analog reading</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-6">6. PWM with API 3.x</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-1-3#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🧰 Arduino IDE 2.x and the esp32 3.x package</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-3-t1-p1">A <strong class="text-emerald-400">Arduino IDE 2.x</strong> is the program where you write code, compile it, and send it to the board. By itself, it only supports Arduino boards; for ESP32, you install the <strong class="text-neutral-100">Espressif "esp32" package</strong>, which is now in the <strong class="text-neutral-100">3.x</strong>generation. This version changed several functions, which is why many 2022 or 2023 tutorials produce compilation errors: they were written for API 2.x.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-3-t1-p2"><strong>IDE</strong> (integrated development environment) is the editor with buttons to compile and upload. <strong>Compiling</strong> means translating your C++ text into the chip's machine language. A <strong>board package</strong> (core) is the set of tools and libraries that teaches the IDE how to communicate with a family of chips. <strong>API</strong> is the list of functions you can call, such as <span class="font-mono text-xs">digitalWrite()</span>; when it changes, old code may stop compiling.</p>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-4">Step-by-step installation</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Download IDE 2.x</h4><p class="text-neutral-300 text-sm">At arduino.cc/en/software, choose your system (Windows, macOS, or Linux AppImage). Install and open it.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Open Boards Manager</h4><p class="text-neutral-300 text-sm">Click the board icon in the left sidebar (or Tools → Board → Boards Manager). Type <span class="font-mono text-xs">esp32</span>.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Install "esp32 by Espressif Systems" 3.x</h4><p class="text-neutral-300 text-sm">Choose the latest version 3 and click Install. If the package doesn't appear, go to File → Preferences and paste this into "Additional URLs": <span class="font-mono text-xs break-all">https://espressif.github.io/arduino-esp32/package_esp32_index.json</span></p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">4</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Check the version</h4><p class="text-neutral-300 text-sm">In Boards Manager, the package should show "INSTALLED" with a number starting with 3. This is the number to include when you ask for help on a forum.</p></div></div>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="PWM API comparison: in 2.x, the code configured a numbered channel and then connected the pin to that channel; in 3.x, ledcAttach connects the pin directly with its frequency and resolution, and ledcWrite takes the pin itself." class="w-full h-auto" role="img" viewbox="0 0 640 270">
+<defs><pattern height="32" id="m13-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern><marker id="m13-ah1" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#a8a8b3"></path></marker>
+<marker id="m13-ah1g" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#34d399"></path></marker><filter height="180%" id="m13-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m13-grid1)" height="270" width="640"></rect><g font-family="Inter,sans-serif" text-anchor="middle"><text fill="#a8a8b3" font-size="17" font-weight="600" x="160" y="30">API 2.x (old)</text>
+<rect fill="#1c1c26" height="56" rx="10" stroke="#6b7280" stroke-dasharray="5 4" stroke-width="2" width="120" x="30" y="50"></rect><text fill="#d1d5db" font-size="15" x="90" y="76">channel 0</text><text fill="#a8a8b3" font-size="14" x="90" y="96">frequency + bits</text>
+<rect fill="#1c1c26" height="56" rx="10" stroke="#6b7280" stroke-dasharray="5 4" stroke-width="2" width="100" x="190" y="50"></rect><text fill="#d1d5db" font-size="15" x="240" y="83">pin 2</text><path d="M150,78 L182,78" marker-end="url(#m13-ah1)" stroke="#a8a8b3" stroke-width="2"></path>
+<text fill="#d1d5db" font-size="14" x="160" y="140">write to the CHANNEL, not the pin</text><text fill="#fca5a5" font-size="14" x="160" y="162">doesn't compile with package 3.x</text><line stroke="#272730" stroke-width="2" x1="320" x2="320" y1="20" y2="250"></line>
+<text fill="#34d399" font-size="17" font-weight="600" x="480" y="30">API 3.x (current)</text><g filter="url(#m13-glow1)"><rect fill="#13261d" height="56" rx="10" stroke="#10b981" stroke-width="2.5" width="240" x="360" y="50"></rect></g><text fill="#34d399" font-size="15" font-weight="600" x="480" y="76">ledcAttach(2, 5000, 8)</text>
+<text fill="#d1fae5" font-size="14" x="480" y="96">pin, frequency, bits</text><path d="M480,108 L480,128" marker-end="url(#m13-ah1g)" stroke="#34d399" stroke-width="2"></path><rect fill="#0e2018" height="56" rx="10" stroke="#34d399" stroke-width="2" width="240" x="360" y="134"></rect>
+<text fill="#34d399" font-size="15" font-weight="600" x="480" y="160">ledcWrite(2, 128)</text><text fill="#d1fae5" font-size="14" x="480" y="180">takes the PIN</text><text fill="#7dd3fc" font-size="14" x="480" y="222">the channel is chosen automatically</text>
+<text fill="#a8a8b3" font-size="14" x="160" y="222">tutorial mentions "channel" = old tutorial</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">How to read this map:</strong> On the left, the old path (dashed gray) went through a numbered channel that you created and then connected to the pin. On the right, the current path: one call sets up the pin, and the write uses the pin itself. If a tutorial asks you to choose "channel 0" for PWM, it's using API 2.x; translate it into the two green functions.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-5">
+<h4 class="font-bold text-emerald-400 mb-3">✓ Signs of a current tutorial</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Uses <span class="font-mono text-xs">ledcAttach(pin, freq, bits)</span> e <span class="font-mono text-xs">ledcWrite(pin, value)</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Mentions "arduino-esp32 3.x" or ESP-IDF 5.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Uses a servo with the ESP32Servo library, not the Uno's Servo.h.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Signs of an old tutorial</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>PWM functions with a channel number separate from the pin.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Tells you to "go back to package version 2.0.x" to compile.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Claims that the ESP32 doesn't have <span class="font-mono text-xs">analogWrite</span> (the current package does).</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-3-t1-p3">Knowing the package version saves you from the worst early frustration: copying code "that worked" and seeing ten red errors. With the rule "separate channel = old API," you can adapt any tutorial in a minute.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Boards Manager</div><div class="text-xs text-neutral-400">where you install the package</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">esp32 package</div><div class="text-xs text-neutral-400">Espressif, generation 3.x</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">API version</div><div class="text-xs text-neutral-400">determines whether the code compiles</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Compiling</div><div class="text-xs text-neutral-400">text → machine code</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-1-3#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🔌 Board, port, and first upload</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-3-t2-p1">To upload a program, the IDE needs two pieces of information: <strong class="text-neutral-100">which board</strong> (so it compiles for the right chip) and <strong class="text-neutral-100">which port</strong> (where to send it). For a standard DevKit (WROOM-32), select <span class="font-mono text-xs">ESP32 Dev Module</span>; for boards with ESP32-S3, select <span class="font-mono text-xs">ESP32S3 Dev Module</span> or your board’s exact name. The port appears when you plug in the USB cable.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-3-t2-p2">A <strong>port</strong> is the cable’s “address” on the computer: COM3, COM4 on Windows; <span class="font-mono text-xs">/dev/ttyUSB0</span> or <span class="font-mono text-xs">/dev/ttyACM0</span> on Linux; <span class="font-mono text-xs">/dev/cu.usbserial…</span> on macOS. Many boards have a USB-to-serial converter chip (CP2102 or CH340) that may need a <strong>driver</strong> on Windows. The <strong>BOOT button</strong> puts the ESP32 in program-receiving mode; the <strong>EN</strong> (or RST) restarts the board.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Upload path: the sketch is compiled in the IDE, travels through the USB data cable to the board’s converter, the ESP32 enters programming mode, receives the program, and restarts running the code; each step has its typical failure marked below." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs><pattern height="32" id="m13-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern><marker id="m13-ah2" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#34d399"></path></marker>
+<filter height="180%" id="m13-glow2" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs><rect fill="url(#m13-grid2)" height="260" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle"><rect fill="#0e2018" height="70" rx="12" stroke="#34d399" stroke-width="2" width="140" x="14" y="40"></rect><text fill="#34d399" font-size="16" font-weight="600" x="84" y="70">1 compile</text>
+<text fill="#d1fae5" font-size="14" x="84" y="92">IDE + package</text><rect fill="#0e2018" height="70" rx="12" stroke="#34d399" stroke-width="2" width="140" x="170" y="40"></rect><text fill="#34d399" font-size="16" font-weight="600" x="240" y="70">2 USB cable</text>
+<text fill="#d1fae5" font-size="14" x="240" y="92">selected port</text><rect fill="#0e2018" height="70" rx="12" stroke="#34d399" stroke-width="2" width="140" x="326" y="40"></rect><text fill="#34d399" font-size="16" font-weight="600" x="396" y="70">3 upload</text>
+<text fill="#d1fae5" font-size="14" x="396" y="92">BOOT mode</text><g filter="url(#m13-glow2)"><rect fill="#13261d" height="70" rx="12" stroke="#10b981" stroke-width="2.5" width="144" x="482" y="40"></rect></g><text fill="#34d399" font-size="16" font-weight="600" x="554" y="70">4 run</text>
+<text fill="#d1fae5" font-size="14" x="554" y="92">restarts automatically</text><path d="M154,75 L164,75" marker-end="url(#m13-ah2)" stroke="#34d399" stroke-width="2"></path><path d="M310,75 L320,75" marker-end="url(#m13-ah2)" stroke="#34d399" stroke-width="2"></path>
+<path d="M466,75 L476,75" marker-end="url(#m13-ah2)" stroke="#34d399" stroke-width="2"></path><text fill="#fca5a5" font-size="14" font-weight="600" x="320" y="146">where failures usually happen</text><rect fill="#1f0e10" height="74" rx="10" stroke="#f87171" stroke-width="1.5" width="140" x="14" y="160"></rect>
+<text fill="#fecaca" font-size="14" x="84" y="190">red error:</text><text fill="#fecaca" font-size="14" x="84" y="210">wrong board or API</text><rect fill="#1f0e10" height="74" rx="10" stroke="#f87171" stroke-width="1.5" width="140" x="170" y="160"></rect>
+<text fill="#fecaca" font-size="14" x="240" y="190">no port:</text><text fill="#fecaca" font-size="14" x="240" y="210">charge-only cable</text><rect fill="#1f0e10" height="74" rx="10" stroke="#f87171" stroke-width="1.5" width="140" x="326" y="160"></rect>
+<text fill="#fecaca" font-size="14" x="396" y="190">“Connecting...”:</text><text fill="#fecaca" font-size="14" x="396" y="210">hold BOOT</text><rect fill="#1f0e10" height="74" rx="10" stroke="#f87171" stroke-width="1.5" width="144" x="482" y="160"></rect>
+<text fill="#fecaca" font-size="14" x="554" y="190">garbled text:</text><text fill="#fecaca" font-size="14" x="554" y="210">different baud rate</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">How to read this map:</strong> The green row shows the program’s path from left to right. Under each step is the failure that most often occurs there. When an upload fails, read the IDE’s last message and find the box you’re in: that tells you what to try.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-3-t2-p3"><strong class="text-neutral-100">Goal:</strong> upload to the real board the same LED blink you ran in Wokwi in module 1.1 (the external LED on GPIO 2 with 220 Ω, or just the board’s blue LED, if it has one).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">pisca-led.ino</span></div>
+<pre><code><span class="c">// First upload to the real board (ESP32, esp32 3.x package)</span>
+<span class="k">const int</span> PINO_LED = 2;
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_LED, OUTPUT);
+  Serial.println(<span class="s">"Upload OK: o ESP32 esta rodando seu programa"</span>);
+}
+
+<span class="k">void</span> loop() {
+  digitalWrite(PINO_LED, HIGH);
+  delay(500);
+  digitalWrite(PINO_LED, LOW);
+  delay(500);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>The IDE finishes with "Hard resetting via RTS pin..." and the LED starts blinking.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>The Serial Monitor (115200 baud) shows "Upload OK..."; if it doesn’t, press EN to restart.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>On Linux, if you get "Permission denied" on the port, run <span class="font-mono text-xs">sudo usermod -aG dialout $USER</span>, then log out and back into your session.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-5">
+<h4 class="font-bold text-emerald-400 mb-3">✓ When it gets stuck, try these in order</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Switch to a known data cable.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Check whether the port disappears and reappears when you unplug the cable.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Hold BOOT when "Connecting..." appears, and release it when you see the percentage.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ What won’t help</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Reinstalling the entire IDE before testing the cable.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Leaving another program’s Serial Monitor using the same port.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Connecting something to GPIO 0 or 12 that forces a level at startup, then blaming the IDE.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-3-t2-p4">The first upload is where most people give up, almost always because of the cable or port. With a map of the four steps, the error becomes predictable and the fix takes minutes.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">COM/tty port</div><div class="text-xs text-neutral-400">cable address</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">USB driver</div><div class="text-xs text-neutral-400">CP2102 or CH340</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">BOOT button</div><div class="text-xs text-neutral-400">upload mode</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Data cable</div><div class="text-xs text-neutral-400">not charge-only</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-1-3#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🧱 setup, loop, variables, and functions</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-3-t3-p1">Every sketch has two required functions. <span class="font-mono text-xs">setup()</span> runs once when the board starts: this is where you configure pins and Serial. <span class="font-mono text-xs">loop()</span> runs again as soon as it finishes, forever: it’s the “thinking” part of the sense-think-act cycle. Inside them, you use <strong class="text-emerald-400">variables</strong> to store values, <strong class="text-emerald-400">if</strong> to make decisions, <strong class="text-emerald-400">for</strong> to repeat, and <strong class="text-emerald-400">your own functions</strong> to give each part of the behavior a name.</p>
+<figure class="fig mb-3">
+<svg aria-label="Sketch flow: when powered on, the global variables are created, setup runs once, and then loop repeats forever, calling your functions such as lerSensor, decidir, and mover." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs><pattern height="32" id="m13-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern><marker id="m13-ah3" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#34d399"></path></marker>
+<marker id="m13-ah3c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker><filter height="180%" id="m13-glow3" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m13-grid3)" height="260" width="640"></rect><g font-family="Inter,sans-serif" text-anchor="middle"><rect fill="#1c1c26" height="60" rx="12" stroke="#9ca3af" stroke-width="2" width="120" x="14" y="80"></rect>
+<text fill="#e5e7eb" font-size="15" font-weight="600" x="74" y="106">starts</text><text fill="#a8a8b3" font-size="14" x="74" y="126">global variables</text><rect fill="#0e2018" height="60" rx="12" stroke="#34d399" stroke-width="2" width="120" x="160" y="80"></rect>
+<text fill="#34d399" font-size="15" font-weight="600" x="220" y="106">setup()</text><text fill="#d1fae5" font-size="14" x="220" y="126">once</text><g filter="url(#m13-glow3)"><rect fill="#13261d" height="80" rx="12" stroke="#10b981" stroke-width="2.5" width="140" x="306" y="70"></rect></g>
+<text fill="#34d399" font-size="17" font-weight="600" x="376" y="104">loop()</text><text fill="#d1fae5" font-size="14" x="376" y="126">forever</text><path d="M134,110 L152,110" marker-end="url(#m13-ah3)" stroke="#34d399" stroke-width="2"></path>
+<path d="M280,110 L298,110" marker-end="url(#m13-ah3)" stroke="#34d399" stroke-width="2"></path><path d="M376,152 C376,200 300,200 300,170 C300,150 330,150 340,152" fill="none" marker-end="url(#m13-ah3c)" stroke="#38bdf8" stroke-dasharray="6 5" stroke-width="2"></path><text fill="#7dd3fc" font-size="14" x="300" y="222">repeats</text>
+<rect fill="#0e1b26" height="44" rx="10" stroke="#38bdf8" stroke-width="2" width="146" x="480" y="30"></rect><text fill="#bfe6ff" font-size="14" x="553" y="58">lerDistancia()</text><rect fill="#0e1b26" height="44" rx="10" stroke="#38bdf8" stroke-width="2" width="146" x="480" y="88"></rect>
+<text fill="#bfe6ff" font-size="14" x="553" y="116">decidir()</text><rect fill="#0e1b26" height="44" rx="10" stroke="#38bdf8" stroke-width="2" width="146" x="480" y="146"></rect><text fill="#bfe6ff" font-size="14" x="553" y="174">mover()</text>
+<path d="M446,95 L476,55 M446,110 L476,110 M446,125 L476,165" opacity="0.6" stroke="#38bdf8" stroke-width="1.8"></path><text fill="#9ad6ff" font-size="14" x="553" y="222">your functions</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">How to read this map:</strong> From left to right is the order in time. The dashed arrow shows that the <span class="font-mono">loop()</span> never ends. On the right, the cyan boxes are functions you write and loop calls: loop stays short, and each function does just one thing, with a name that explains it.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3">Type</th><th class="text-left p-3">Stores</th><th class="text-left p-3">Robot example</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3 font-mono text-xs">int</td><td class="p-3">whole number</td><td class="p-3">pin, ADC reading</td></tr>
+<tr><td class="p-3 font-mono text-xs">float</td><td class="p-3">decimal number</td><td class="p-3">distance in cm, voltage</td></tr>
+<tr><td class="p-3 font-mono text-xs">bool</td><td class="p-3">true or false</td><td class="p-3">obstacle ahead?</td></tr>
+<tr><td class="p-3 font-mono text-xs">unsigned long</td><td class="p-3">large, unsigned integer</td><td class="p-3">time in ms with <span class="font-mono text-xs">millis()</span></td></tr>
+<tr><td class="p-3 font-mono text-xs">const</td><td class="p-3">value that doesn’t change</td><td class="p-3">pin number, limits</td></tr>
+</tbody>
+</table>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-3-t3-p2"><strong class="text-neutral-100">Goal:</strong> a one-LED traffic light, written with functions and a <span class="font-mono text-xs">for</span>, so you can see how readable loop can be. Run it in Wokwi with an LED on GPIO 2.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">funcoes.ino</span></div>
+<pre><code><span class="c">// Variables, if, for, and functions (ESP32, esp32 3.x package)</span>
+<span class="k">const int</span> PINO_LED = 2;
+<span class="k">int</span> ciclo = 0;                 <span class="c">// global variable: available throughout the program</span>
+
+<span class="k">void</span> piscar(<span class="k">int</span> vezes, <span class="k">int</span> intervaloMs) {
+  <span class="k">for</span> (<span class="k">int</span> i = 0; i &lt; vezes; i++) {
+    digitalWrite(PINO_LED, HIGH); delay(intervaloMs);
+    digitalWrite(PINO_LED, LOW);  delay(intervaloMs);
+  }
+}
+
+<span class="k">bool</span> cicloPar(<span class="k">int</span> n) {         <span class="c">// function that returns a value</span>
+  <span class="k">return</span> (n % 2 == 0);
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_LED, OUTPUT);
+}
+
+<span class="k">void</span> loop() {
+  ciclo++;
+  <span class="k">if</span> (cicloPar(ciclo)) {
+    Serial.println(<span class="s">"ciclo par: 2 piscadas lentas"</span>);
+    piscar(2, 400);
+  } <span class="k">else</span> {
+    Serial.println(<span class="s">"ciclo impar: 4 piscadas rapidas"</span>);
+    piscar(4, 120);
+  }
+  delay(1000);
+}</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-emerald-400">How to check:</strong> The LED alternates between 4 fast blinks and 2 slow blinks, with a 1 s pause between groups; the Serial Monitor alternates between displaying "ciclo impar..." and "ciclo par...".</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-3-t3-p3">The rover in module 1.6 will have a loop with just a few lines calling <span class="font-mono text-xs">lerDistancia()</span>, <span class="font-mono text-xs">decidir()</span> e <span class="font-mono text-xs">mover()</span>. Organizing code this way lets you adjust one part without breaking the others.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Variable type</div><div class="text-xs text-neutral-400">int, float, bool</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">const</div><div class="text-xs text-neutral-400">fixed name for a value</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">if / for</div><div class="text-xs text-neutral-400">make decisions and repeat</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Function</div><div class="text-xs text-neutral-400">one name, one task</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-1-3#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🔍 Serial Monitor for debugging</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-3-t4-p1">A robot has no screen. The <strong class="text-emerald-400">Serial Monitor</strong> is your window into it: the program writes using <span class="font-mono text-xs">Serial.print()</span> and you read it on the computer. The <strong class="text-emerald-400">Serial Plotter</strong>, in the same Tools menu, displays numbers as a live graph, making noise and trends visible at a glance. <strong class="text-neutral-100">Debugging</strong> is exactly that: printing what the program is thinking until you find where it’s thinking wrong.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-3-t4-p2"><strong>Baud rate</strong> is the speed of serial communication, in bits per second. The number in <span class="font-mono text-xs">Serial.begin(115200)</span> must match the one selected in the Serial Monitor’s corner; if they differ, you’ll see meaningless symbols. <span class="font-mono text-xs">print</span> writes and continues on the same line; <span class="font-mono text-xs">println</span> writes and moves to the next line.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-3-t4-p3"><strong class="text-neutral-100">Goal:</strong> generate two curves (a wave and a ramp) in the format the Serial Plotter understands, <span class="font-mono text-xs">name:value</span> separated by commas, and a status message in the Serial Monitor. It works in Wokwi without connecting anything.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">serial-plotter.ino</span></div>
+<pre><code><span class="c">// Serial Monitor and Serial Plotter (ESP32, esp32 3.x package)</span>
+<span class="k">unsigned long</span> amostra = 0;
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);           <span class="c">// same value as in the Monitor/Plotter corner</span>
+  delay(500);
+  Serial.println(<span class="s">"Depuracao iniciada"</span>);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">float</span> onda  = 50.0 * sin(amostra * 0.1);   <span class="c">// moves up and down between -50 and 50</span>
+  <span class="k">int</span>   rampa = amostra % 100;               <span class="c">// counts up from 0 to 99 and starts over</span>
+
+  <span class="c">// Plotter format: name:value,name:value and newline</span>
+  Serial.print(<span class="s">"onda:"</span>);  Serial.print(onda);
+  Serial.print(<span class="s">",rampa:"</span>); Serial.println(rampa);
+
+  amostra++;
+  delay(50);                      <span class="c">// 20 points per second</span>
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>In Serial Monitor: "Debugging started" followed by lines like "wave:29.55,ramp:6".</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Close the Monitor and open Tools → Serial Plotter: a sine wave and a sawtooth, with the legends "wave" and "ramp".</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Strange symbols? The Monitor baud rate is not set to 115200.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Debugging that helps</h3>
+<p class="text-neutral-300 text-sm">Print the name and value ("dist=23.4", not just "23.4") and a message in each if branch so you know which path the code took. Avoid thousands of lines per second without a delay (the window will freeze), and remember that the Monitor and Plotter cannot use the port at the same time.</p>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-3-t4-p4">When the robot does something unexpected, the serial output is how you’ll find out whether the sensor read incorrectly, the decision was wrong, or the motor didn’t respond. In Track 2, this same habit becomes Wi-Fi telemetry.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Baud rate</div><div class="text-xs text-neutral-400">115200 on both ends</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">print / println</div><div class="text-xs text-neutral-400">same line / new line</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Serial Plotter</div><div class="text-xs text-neutral-400">live graph</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">name:value</div><div class="text-xs text-neutral-400">graph legend</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-1-3#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🔘 Inputs: button and analog reading</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-3-t5-p1">So far, the board has only "spoken." Now it listens. A <strong class="text-emerald-400">button</strong> with <span class="font-mono text-xs">INPUT_PULLUP</span> (covered in module 1.2) is read with <span class="font-mono text-xs">digitalRead()</span>; a <strong class="text-emerald-400">potentiometer</strong> (a resistor with a knob) is read with <span class="font-mono text-xs">analogRead()</span>, which returns a value from 0 to 4095. Mechanical buttons have one catch: the contact "bounces" for a few milliseconds, and the program may count one press several times.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-3-t5-p2"><strong>Debouncing</strong> means ignoring changes that last less than a minimum amount of time (about 30 ms), so only real presses are counted. <span class="font-mono text-xs">millis()</span> returns how many milliseconds have passed since the board started; comparing two values of <span class="font-mono text-xs">millis()</span> measures intervals without stopping the program. The <strong>potentiometer</strong> has three legs: the outer ones connect to 3.3 V and GND, and the middle one provides the variable voltage.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Input connections: button between GPIO 4 and GND using the internal pull-up; potentiometer with its outer pins connected to 3.3 volts and GND and its middle pin to GPIO 34; LED with 220 ohms on GPIO 2 to show the result." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs><pattern height="32" id="m13-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern><filter height="180%" id="m13-glow5" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs><rect fill="url(#m13-grid5)" height="280" width="640"></rect><g filter="url(#m13-glow5)"><rect fill="#13261d" height="220" rx="14" stroke="#10b981" stroke-width="2.5" width="180" x="230" y="30"></rect></g>
+<g font-family="Inter,sans-serif"><text fill="#34d399" font-size="18" font-weight="600" text-anchor="middle" x="320" y="62">ESP32</text><text fill="#d1fae5" font-size="15" x="242" y="104">GPIO 4</text>
+<text fill="#d1fae5" font-size="15" x="242" y="174">GND</text><text fill="#d1fae5" font-size="15" text-anchor="end" x="398" y="104">GPIO 34</text><text fill="#d1fae5" font-size="15" text-anchor="end" x="398" y="144">3,3 V</text>
+<text fill="#d1fae5" font-size="15" text-anchor="end" x="398" y="184">GND</text><text fill="#d1fae5" font-size="15" text-anchor="end" x="398" y="230">GPIO 2</text><path d="M230,100 L120,100" stroke="#34d399" stroke-width="3"></path>
+<circle cx="116" cy="100" fill="#38bdf8" r="4"></circle><circle cx="116" cy="150" fill="#38bdf8" r="4"></circle><path d="M104,104 L92,146" stroke="#38bdf8" stroke-width="3"></path><path d="M116,154 L116,170 L230,170" fill="none" stroke="#38bdf8" stroke-width="3"></path>
+<text fill="#bfe6ff" font-size="15" text-anchor="middle" x="70" y="132">button</text><text fill="#a8a8b3" font-size="14" text-anchor="middle" x="70" y="210">internal pull-up</text><rect fill="#0e1b26" height="80" rx="6" stroke="#38bdf8" stroke-width="2" width="40" x="500" y="110"></rect>
+<path d="M480,150 L498,150" stroke="#38bdf8" stroke-width="2.5"></path><path d="M486,140 L498,150 L486,160" fill="none" stroke="#38bdf8" stroke-width="2.5"></path><path d="M410,100 L470,100 L470,150 L480,150" fill="none" stroke="#34d399" stroke-width="3"></path>
+<path d="M410,140 L450,140 L450,80 L520,80 L520,110" fill="none" stroke="#f87171" stroke-width="3"></path><path d="M410,180 L520,180 L520,190" fill="none" stroke="#38bdf8" stroke-width="3"></path><text fill="#bfe6ff" font-size="14" text-anchor="middle" x="580" y="140">potentio-</text>
+<text fill="#bfe6ff" font-size="14" text-anchor="middle" x="580" y="158">meter</text><path d="M410,226 L470,226" stroke="#34d399" stroke-width="3"></path><path d="M470,226 l6,-9 l9,18 l9,-18 l9,18 l6,-9" fill="none" stroke="#fbbf24" stroke-width="2.5"></path>
+<polygon fill="#3b0f10" points="520,214 520,238 544,226" stroke="#f87171" stroke-width="2"></polygon><path d="M546,226 L600,226 L600,262" fill="none" stroke="#38bdf8" stroke-width="3"></path><text fill="#7dd3fc" font-size="14" text-anchor="middle" x="600" y="278">GND</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">How to read this map:</strong> On the left, the button connects GPIO 4 to GND when pressed (no external resistor: the pull-up is inside the chip). On the right, the potentiometer gets 3.3 V (red) and GND (cyan) on its outer legs; the arrow is the middle wiper, which connects to GPIO 34. Below, the LED on GPIO 2 shows the result. Never connect the potentiometer to 5 V: GPIO 34 would receive more than 3.3 V at the end of its range.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-3-t5-p3"><strong class="text-neutral-100">Goal:</strong> Count button presses with debouncing (each press toggles the LED) and show the potentiometer position as a percentage. Build it like the figure in Wokwi ("Pushbutton", "Potentiometer", "LED" and "Resistor").</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">button-and-potentiometer.ino</span></div>
+<pre><code><span class="c">// Button with debouncing + potentiometer (ESP32, esp32 3.x package)</span>
+<span class="k">const int</span> PINO_BOTAO = 4;    <span class="c">// button to GND, internal pull-up</span>
+<span class="k">const int</span> PINO_POT   = 34;   <span class="c">// ADC1, input only</span>
+<span class="k">const int</span> PINO_LED   = 2;
+<span class="k">const unsigned long</span> DEBOUNCE_MS = 30;
+
+<span class="k">int</span> estadoEstavel = HIGH;     <span class="c">// released</span>
+<span class="k">int</span> ultimaLeitura = HIGH;
+<span class="k">unsigned long</span> mudouEm = 0;
+<span class="k">int</span> apertos = 0;
+<span class="k">bool</span> ledLigado = <span class="k">false</span>;
+<span class="k">unsigned long</span> ultimoPrint = 0;
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_BOTAO, INPUT_PULLUP);
+  pinMode(PINO_LED, OUTPUT);
+  Serial.println(<span class="s">"Press the button and turn the potentiometer"</span>);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">int</span> leitura = digitalRead(PINO_BOTAO);
+  <span class="k">if</span> (leitura != ultimaLeitura) { mudouEm = millis(); ultimaLeitura = leitura; }
+  <span class="k">if</span> (millis() - mudouEm &gt; DEBOUNCE_MS &amp;&amp; leitura != estadoEstavel) {
+    estadoEstavel = leitura;
+    <span class="k">if</span> (estadoEstavel == LOW) {          <span class="c">// just pressed</span>
+      apertos++;
+      ledLigado = !ledLigado;
+      digitalWrite(PINO_LED, ledLigado ? HIGH : LOW);
+      Serial.print(<span class="s">"Press number "</span>); Serial.println(apertos);
+    }
+  }
+  <span class="k">if</span> (millis() - ultimoPrint &gt;= 500) {   <span class="c">// potentiometer every half second, without delay</span>
+    ultimoPrint = millis();
+    <span class="k">int</span> bruto = analogRead(PINO_POT);    <span class="c">// 0 a 4095</span>
+    <span class="k">int</span> pct = map(bruto, 0, 4095, 0, 100);
+    Serial.print(<span class="s">"pot="</span>); Serial.print(bruto);
+    Serial.print(<span class="s">" ("</span>); Serial.print(pct); Serial.println(<span class="s">"%)"</span>);
+  }
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Each press toggles the LED and adds 1 to "Press number N"—never 2 or 3 at once.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Turning the potentiometer from end to end makes "pot=" go from close to 0 (0%) to 4095 (100%).</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Counting presses by itself? Check that the button is in different breadboard columns and that the pin is 4.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-3-t5-p4">This is the same reading you’ll use with real sensors in module 1.4: digital for the obstacle IR sensor, analog for the line sensor. And the trick of using <span class="font-mono text-xs">millis()</span> instead of <span class="font-mono text-xs">delay()</span> returns in a big way in the last sensor topic.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">INPUT_PULLUP</div><div class="text-xs text-neutral-400">button with no external resistor</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">analogRead</div><div class="text-xs text-neutral-400">0 to 4095 on the ESP32</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Debouncing</div><div class="text-xs text-neutral-400">ignore the bounce</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">map()</div><div class="text-xs text-neutral-400">converts ranges</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-1-3#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🎚️ PWM in API 3.x: brightness and sound</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-3-t6-p1">A digital pin can only output 0 or 3.3 V. To make an LED glow at half brightness, the trick is to switch it on and off very quickly: if it stays on half the time, your eye sees half the brightness. This is <strong class="text-emerald-400">PWM</strong> (pulse-width modulation). On the ESP32, the LEDC peripheral generates PWM, and in API 3.x you only need two functions: <span class="font-mono text-xs">ledcAttach(pin, frequency, bits)</span> e <span class="font-mono text-xs">ledcWrite(pin, value)</span>. For sound, <span class="font-mono text-xs">ledcWriteTone(pin, frequency)</span> changes the frequency and keeps the pulse at half duty.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-3-t6-p2"><strong>Duty cycle</strong> is the percentage of time the signal stays on. <strong>Frequency</strong> is how many times per second the cycle repeats (Hz). <strong>Resolution</strong> is how many steps you divide the cycle into: with 8 bits, from 0 to 255; with 10 bits, from 0 to 1023. A <strong>passive buzzer</strong> only makes a sound when it receives a frequency; an active buzzer beeps by itself when switched on.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Three PWM signals with the same frequency: at a 25 percent duty cycle the LED is dim, at 50 percent medium, and at 75 percent bright; at 8 bits, these correspond to ledcWrite values of 64, 128, and 191." class="w-full h-auto" role="img" viewbox="0 0 640 290">
+<defs><pattern height="32" id="m13-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern><radialgradient id="m13-led1"><stop offset="0" stop-color="#34d399" stop-opacity="0.35"></stop><stop offset="1" stop-color="#34d399" stop-opacity="0"></stop></radialgradient>
+<radialgradient id="m13-led2"><stop offset="0" stop-color="#34d399" stop-opacity="0.65"></stop><stop offset="1" stop-color="#34d399" stop-opacity="0"></stop></radialgradient><radialgradient id="m13-led3"><stop offset="0" stop-color="#6ee7b7" stop-opacity="1"></stop><stop offset="1" stop-color="#34d399" stop-opacity="0"></stop></radialgradient></defs>
+<rect fill="url(#m13-grid6)" height="290" width="640"></rect><g fill="none" stroke-width="3"><path d="M30,80 L30,40 L60,40 L60,80 L150,80 L150,40 L180,40 L180,80 L270,80 L270,40 L300,40 L300,80 L390,80" opacity="0.6" stroke="#34d399"></path>
+<path d="M30,170 L30,130 L90,130 L90,170 L150,170 L150,130 L210,130 L210,170 L270,170 L270,130 L330,130 L330,170 L390,170" opacity="0.8" stroke="#34d399"></path><path d="M30,260 L30,220 L120,220 L120,260 L150,260 L150,220 L240,220 L240,260 L270,260 L270,220 L360,220 L360,260 L390,260" stroke="#34d399"></path></g>
+<circle cx="450" cy="60" fill="url(#m13-led1)" r="26"></circle><circle cx="450" cy="60" fill="#0e2018" r="9" stroke="#34d399" stroke-width="2"></circle><circle cx="450" cy="150" fill="url(#m13-led2)" r="30"></circle><circle cx="450" cy="150" fill="#13261d" r="9" stroke="#34d399" stroke-width="2"></circle><circle cx="450" cy="240" fill="url(#m13-led3)" r="34"></circle><circle cx="450" cy="240" fill="#34d399" r="9" stroke="#34d399" stroke-width="2"></circle>
+<g font-family="Inter,sans-serif"><text fill="#d1fae5" font-size="15" x="500" y="56">25% · low</text><text fill="#7dd3fc" font-size="14" x="500" y="76">ledcWrite(p, 64)</text>
+<text fill="#d1fae5" font-size="15" x="500" y="146">50% · medium</text><text fill="#7dd3fc" font-size="14" x="500" y="166">ledcWrite(p, 128)</text><text fill="#d1fae5" font-size="15" x="500" y="236">75% · high</text>
+<text fill="#7dd3fc" font-size="14" x="500" y="256">ledcWrite(p, 191)</text><text fill="#a8a8b3" font-size="14" text-anchor="middle" x="210" y="24">same period, different pulse width</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">How to read this map:</strong> All three lines have the same rhythm (frequency); only the amount of time each pulse stays high changes. On the right, the brightness your eye perceives and the value of <span class="font-mono">ledcWrite</span> in 8 bits (255 = 100%). In module 1.5, the same number will represent motor speed.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-3-t6-p3"><strong class="text-neutral-100">Goal:</strong> The potentiometer from topic 5 controls the brightness of the LED on GPIO 2, and the button plays a short scale on a passive buzzer connected to GPIO 25. In Wokwi, use the "Buzzer" part (it is passive).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">pwm-brightness-and-sound.ino</span></div>
+<pre><code><span class="c">// PWM in API 3.x: potentiometer-controlled brightness and sound on the buzzer (ESP32)</span>
+<span class="k">const int</span> PINO_LED    = 2;
+<span class="k">const int</span> PINO_BUZZER = 25;
+<span class="k">const int</span> PINO_POT    = 34;
+<span class="k">const int</span> PINO_BOTAO  = 4;
+<span class="k">const int</span> NOTAS[] = {262, 294, 330, 349, 392};   <span class="c">// C, D, E, F, G (Hz)</span>
+
+<span class="k">void</span> tocarEscala() {
+  <span class="k">for</span> (<span class="k">int</span> i = 0; i &lt; 5; i++) {
+    ledcWriteTone(PINO_BUZZER, NOTAS[i]);   <span class="c">// changes the frequency, 50% duty cycle</span>
+    delay(180);
+  }
+  ledcWrite(PINO_BUZZER, 0);                <span class="c">// silence</span>
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_BOTAO, INPUT_PULLUP);
+  ledcAttach(PINO_LED, 5000, 8);      <span class="c">// LED: 5 kHz, 8 bits (0 to 255)</span>
+  <span class="c">// channels 0-1, 2-3, 4-5, 6-7 share a timer, and ledcWriteTone changes the</span>
+  <span class="c">// frequency of the entire timer: the buzzer goes on channel 2, away from the LED</span>
+  ledcAttachChannel(PINO_BUZZER, 2000, 10, 2);
+  ledcWrite(PINO_BUZZER, 0);
+  Serial.println(<span class="s">"PWM ready: turn the potentiometer, press the button"</span>);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">int</span> bruto = analogRead(PINO_POT);            <span class="c">// 0 a 4095</span>
+  <span class="k">int</span> brilho = map(bruto, 0, 4095, 0, 255);    <span class="c">// 0 a 255</span>
+  ledcWrite(PINO_LED, brilho);                  <span class="c">// receives the PIN</span>
+
+  <span class="k">if</span> (digitalRead(PINO_BOTAO) == LOW) {
+    Serial.println(<span class="s">"Playing scale"</span>);
+    tocarEscala();
+    <span class="k">while</span> (digitalRead(PINO_BOTAO) == LOW) delay(10);  <span class="c">// wait for release</span>
+  }
+
+  Serial.print(<span class="s">"brilho:"</span>); Serial.println(brilho);
+  delay(50);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Turning the potentiometer smoothly changes the brightness without flickering; the Serial Plotter shows "brightness" from 0 to 255.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Pressing the button plays five ascending notes, and the Monitor displays "Playing scale".</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Compilation error in <span class="font-mono text-xs">ledcAttach</span>? The installed package is 2.x: update to 3.x (topic 1).</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 The right frequency for each use</h3>
+<p class="text-neutral-300 text-sm">LED: above 1 kHz (5 kHz is a good default) to avoid flickering on camera. DC motor: between 1 and 20 kHz, depending on the driver. Servo: 50 Hz, but use the ESP32Servo library in module 1.5. The higher the frequency, the lower the maximum resolution available; 8 to 10 bits is plenty for robots.</p>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-3-t6-p4">PWM is how the ESP32 controls motor speed through the H-bridge in module 1.5 and servo angles. The rover’s horn, in the next steps of module 1.6, uses the same <span class="font-mono text-xs">ledcWriteTone</span> from this example.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Duty cycle</div><div class="text-xs text-neutral-400">% of time on</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Frequency</div><div class="text-xs text-neutral-400">pulses per second</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Resolution in bits</div><div class="text-xs text-neutral-400">8 bits = 0 to 255</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">ledcWriteTone</div><div class="text-xs text-neutral-400">note on the buzzer</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 rounded-xl border border-emerald-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">IDE 2.x + esp32 package 3.x</strong><span class="text-neutral-400">: tutorial using a separate PWM channel is for the old API.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Upload in 4 steps</strong><span class="text-neutral-400">: compile, data cable, BOOT, run; each with its typical failure.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">setup once, loop forever</strong><span class="text-neutral-400">, and functions named for each task.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Serial at 115200</strong><span class="text-neutral-400">: Monitor for text, Plotter for curves in name:value format.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Inputs</strong><span class="text-neutral-400">: button with INPUT_PULLUP and debounce; potentiometer on ADC1 from 0 to 4095.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">PWM 3.x</strong><span class="text-neutral-400">: ledcAttach(pin, freq, bits) and ledcWrite(pin, value); ledcWriteTone for sound.</span></div></div>
+</div>
+<h3 class="font-semibold text-emerald-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html" rel="noopener" target="_blank">Install Arduino-ESP32 (Espressif)</a> <span class="text-neutral-500">— Board Manager and official URL</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/ledc.html" rel="noopener" target="_blank">LEDC (PWM) in API 3.x</a> <span class="text-neutral-500">— ledcAttach, ledcWrite, ledcWriteTone</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/migration_guides/2.x_to_3.0.html" rel="noopener" target="_blank">Migration guide 2.x → 3.0</a> <span class="text-neutral-500">— what changed and how to translate</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.arduino.cc/software/ide-v2/tutorials/ide-v2-serial-plotter/" rel="noopener" target="_blank">IDE 2 Serial Plotter</a> <span class="text-neutral-500">— variable format and labels</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.arduino.cc/language-reference/" rel="noopener" target="_blank">Arduino Language Reference</a> <span class="text-neutral-500">— if, for, millis, map</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-emerald-400 mb-1">Next module</h3>
+<p class="text-neutral-300">1.4 · Sensors: the robot perceives. Measure distance with the HC-SR04, detect lines and obstacles with infrared, filter noise, use I2C, and read multiple sensors without blocking.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-1-2.html">← Previous: 1.2 Essential electronics</a>
+<a class="inline-flex items-center px-5 py-3 bg-emerald-700 text-white rounded-lg font-semibold hover:bg-emerald-600 transition-colors" href="modulo-1-4.html">Next: 1.4 Sensors →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

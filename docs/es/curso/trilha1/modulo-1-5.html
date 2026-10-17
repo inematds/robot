@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Módulo 1.5 · Motores y energía | Robótica desde cero hasta experto</title>
+<meta content="Motor DC, servo o motor paso a paso; puente H con TB6612FNG y DRV8833; velocidad y sentido con PWM en la API 3.x del ESP32; servo con ESP32Servo; baterías NiMH, 18650 y LiPo de forma segura; regulador buck, GND común y ruido del motor." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Primeros pasos",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "Qué es un robot y su kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Electrónica esencial",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: el primer programa",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensores: el robot percibe",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motores y energía",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Proyecto: rover que esquiva obstáculos",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Robot autónomo",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control desde el celular: Wi-Fi y BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU y encoders: saber dónde está",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "Control PID en la práctica",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Varias tareas al mismo tiempo",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetría y registro de datos",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Proyecto: seguidor de línea con PID",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Visión e IA integrada",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 y Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Cámara y OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detectar objetos con YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "IA dentro del microcontrolador",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi se comunica con el ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Proyecto: robot que sigue un objeto",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 y navegación",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 sin miedo",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describir y simular el robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS en el ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR y mapas (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navegación con Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Proyecto: robot que mapea y navega",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "IA moderna y brazo robótico",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "Modelo de lenguaje como cerebro",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Voz local: escuchar y hablar",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "Brazo SO-101 y LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Aprender por demostración",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simular antes de hacerlo en la realidad",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Proyecto final: robot asistente",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "Para el docente",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "Cómo impartir este curso",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha1/modulo-1-5.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha1/modulo-1-5.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha1/modulo-1-5.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha1/modulo-1-5.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha1/modulo-1-5.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha1/modulo-1-5.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="../../../en/curso/trilha1/modulo-1-5.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">EN</a><a href="modulo-1-5.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">ES</a></div>
+<a class="skip" href="#conteudo">Saltar al contenido</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T1 ativa -->
+<nav aria-label="Navegación principal" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robótica desde cero hasta experto — inicio" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a aria-current="page" class="nav-trail text-emerald-400 bg-emerald-500/10" href="index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeros pasos</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autónomo</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visión e IA</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Docente</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="Mi recorrido" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Mi recorrido</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Apariencia" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Apariencia</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Oscuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Enfoque</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fuente</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Lectura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamaño</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Ancho</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estrecho</button><button data-inema-set-linewidth="68" type="button">Mediano</button><button data-inema-set-linewidth="75" type="button">Ancho</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Interlineado</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Cómodo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento morado" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento ámbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/oscuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="1-5" data-inema-track="1" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Ruta de navegación" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-emerald-400" href="../../index.html">Inicio</a><span aria-hidden="true">/</span>
+<a class="hover:text-emerald-400" href="index.html">Ruta 1</a><span aria-hidden="true">/</span>
+<span class="text-emerald-400">Módulo 1.5</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full mb-4">MÓDULO 1.5 · PRÁCTICA</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">⚙️ Motores y energía</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Hasta aquí, el robot siente y piensa. Ahora <strong class="text-neutral-100">actúa</strong>: tú eliges el motor adecuado, conectas un puente H moderno, controlas la velocidad y el sentido con PWM, orientas un servo y, sobre todo, montas una <strong class="text-emerald-400">alimentación segura y limpia</strong>, que es donde fallan la mayoría de los primeros robots.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">6</div><div class="text-xs text-neutral-400">Temas</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">Principiante</div><div class="text-xs text-neutral-400">Nivel</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">Práctica</div><div class="text-xs text-neutral-400">Tipo</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">Motor + driver</div><div class="text-xs text-neutral-400">Hardware necesario</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progreso del módulo 1.5" class="inema-ring" data-inema-meter="modulo:1-5"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:1-5"><strong data-inema-meter-frac="">0 de 0</strong> temas leídos · <span data-inema-section-counter="">Sección 1 de 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Índice de la página" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">En este módulo</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-1">1. DC, servo o paso a paso</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-2">2. Puente H</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-3">3. Velocidad con PWM</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-4">4. Servo con ESP32Servo</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-5">5. Baterías</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-6">6. Regulador y GND común</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Contenido detallado</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-1-5#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4"><span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">1</span><h2 class="text-2xl font-bold pt-1">🔄 Motor DC, servo o paso a paso: cuál usar</h2></div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-5-t1-p1">Casi todo el movimiento de un robot de mesa viene de tres tipos de motor. El <strong class="text-emerald-400">motor DC</strong> gira sin parar mientras recibe energía: es la rueda del rover. El <strong class="text-emerald-400">servo</strong> llega hasta un ángulo y se queda allí: es el «cuello» que gira el sensor. El <strong class="text-emerald-400">motor paso a paso</strong> avanza en pasos pequeños y exactos: es el eje de la impresora 3D. La pregunta correcta no es «cuál es mejor», sino «qué movimiento requiere la tarea».</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-5-t1-p2"><strong>Torque</strong> es la fuerza de giro: cuánto puede empujar el motor al robot cuesta arriba. <strong>RPM</strong> es la velocidad, en revoluciones por minuto. La <strong>caja reductora</strong> (los engranajes amarillos del motor TT) intercambia velocidad por torque: el eje gira más despacio, pero con más fuerza. Sin reducción, un motor DC pequeño gira rápido y no puede mover ni su propio peso.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Tres motores uno al lado del otro: el motor DC gira sin parar y define la velocidad; el servo va hasta un ángulo entre 0 y 180 grados y se mantiene allí; el motor paso a paso avanza en pasos iguales y sabe cuántos dio." class="w-full h-auto" role="img" viewbox="0 0 640 270">
+<defs>
+<pattern height="32" id="m15-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m15-ah1" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#34d399"></path></marker>
+<marker id="m15-ah1c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs>
+<rect fill="url(#m15-grid1)" height="270" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0e2018" height="230" rx="14" stroke="#34d399" stroke-width="2" width="190" x="15" y="20"></rect><text fill="#34d399" font-size="19" font-weight="600" x="110" y="50">MOTOR DC</text>
+<circle cx="110" cy="115" fill="#13261d" r="38" stroke="#10b981" stroke-width="2.5"></circle><path d="M78,92 A40,40 0 1 1 74,128" fill="none" marker-end="url(#m15-ah1)" stroke="#34d399" stroke-width="3"></path>
+<text fill="#d1fae5" font-size="15" x="110" y="185">gira sin parar</text><text fill="#a7f3d0" font-size="14" x="110" y="207">tú controlas</text><text fill="#a7f3d0" font-size="14" x="110" y="227">la velocidad y el sentido</text>
+<rect fill="#0e1b26" height="230" rx="14" stroke="#38bdf8" stroke-width="2" width="190" x="225" y="20"></rect><text fill="#7dd3fc" font-size="19" font-weight="600" x="320" y="50">SERVO</text>
+<path d="M265,140 A55,55 0 0 1 375,140" fill="none" stroke="#38bdf8" stroke-dasharray="5 5" stroke-width="2"></path><line stroke="#7dd3fc" stroke-linecap="round" stroke-width="5" x1="320" x2="358" y1="140" y2="102"></line><circle cx="320" cy="140" fill="#38bdf8" r="8"></circle>
+<text fill="#bfe6ff" font-size="14" x="258" y="162">0°</text><text fill="#bfe6ff" font-size="14" x="384" y="162">180°</text><text fill="#bfe6ff" font-size="15" x="320" y="195">llega hasta un ángulo</text>
+<text fill="#7dd3fc" font-size="14" x="320" y="217">y se mantiene allí</text><rect fill="#0e2018" height="230" rx="14" stroke="#34d399" stroke-width="2" width="190" x="435" y="20"></rect><text fill="#34d399" font-size="19" font-weight="600" x="530" y="50">PASO A PASO</text>
+<circle cx="530" cy="115" fill="#13261d" r="38" stroke="#10b981" stroke-width="2.5"></circle>
+<g stroke="#34d399" stroke-width="3"><line x1="530" x2="530" y1="70" y2="80"></line><line x1="575" x2="565" y1="115" y2="115"></line><line x1="530" x2="530" y1="160" y2="150"></line><line x1="485" x2="495" y1="115" y2="115"></line><line x1="562" x2="555" y1="83" y2="90"></line><line x1="562" x2="555" y1="147" y2="140"></line><line x1="498" x2="505" y1="147" y2="140"></line><line x1="498" x2="505" y1="83" y2="90"></line></g>
+<text fill="#d1fae5" font-size="15" x="530" y="185">avanza en pasos</text><text fill="#a7f3d0" font-size="14" x="530" y="207">sabe cuántos avanzó,</text><text fill="#a7f3d0" font-size="14" x="530" y="227">sin sensor adicional</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">Cómo leer:</strong> La flecha continua del motor DC indica giro libre; el arco discontinuo del servo muestra que solo se mueve dentro de un rango (0° a 180°); las pequeñas marcas del motor paso a paso son las posiciones fijas en las que se detiene. Las dos tarjetas verdes giran sin límite; la cian funciona por posición.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm text-left">
+<thead class="bg-dark-700 text-neutral-200"><tr><th class="p-3 font-semibold">Motor</th><th class="p-3 font-semibold">Úsalo para</th><th class="p-3 font-semibold">Necesita</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr class="bg-dark-800"><td class="p-3 font-semibold text-emerald-400">DC con reducción (TT, N20)</td><td class="p-3">ruedas del rover, oruga, ventilador</td><td class="p-3">puente H (driver) y PWM; encoder si quieres medir las vueltas (Trilha 2)</td></tr>
+<tr class="bg-dark-800"><td class="p-3 font-semibold text-emerald-400">Servo (SG90, MG90S)</td><td class="p-3">girar el sensor, pinza, timón, brazo pequeño</td><td class="p-3">un pin de señal y 5 V con suficiente corriente</td></tr>
+<tr class="bg-dark-800"><td class="p-3 font-semibold text-emerald-400">Paso a paso (28BYJ-48, NEMA 17)</td><td class="p-3">posición exacta: plotter, impresora, mesa giratoria</td><td class="p-3">driver específico (ULN2003, A4988, TMC2209) y más energía cuando está detenido</td></tr>
+</tbody>
+</table>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Servo de rotación continua</h3>
+<p class="text-neutral-300 text-sm">Hay servos «360°» que giran sin parar: el ángulo se convierte en velocidad (90 = detenido, 0 y 180 = máxima en cada sentido). No necesitan puente H y son una buena opción para un rover muy sencillo. El costo es menor fuerza y menos control preciso de la velocidad que con un motor TT con driver.</p>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-5-t1-p3">Un motor inadecuado deja al robot débil, lento o impreciso, y ningún código lo corrige. Elegir según el tipo de movimiento también determina lo demás: qué driver comprar, cuánta corriente debe suministrar la batería y cuántos pines del ESP32 se usarán.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Torque</div><div class="text-xs text-neutral-400">fuerza de giro</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Rotación</div><div class="text-xs text-neutral-400">velocidad en RPM</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Posición</div><div class="text-xs text-neutral-400">el servo y el motor paso a paso saben dónde están</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Reducción</div><div class="text-xs text-neutral-400">intercambia velocidad por fuerza</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-1-5#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4"><span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">2</span><h2 class="text-2xl font-bold pt-1">🔀 Puente H: TB6612FNG y DRV8833</h2></div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-5-t2-p1">Un pin del ESP32 entrega pocos miliamperios a 3,3 V; un motor TT consume cientos de miliamperios y más de 1 A al arrancar. Conectar el motor directamente al pin lo quema. Entre ambos va un <strong class="text-emerald-400">driver de motor</strong>: el ESP32 solo envía la señal y el driver abre el paso para la corriente que viene de la batería.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-5-t2-p2">A <strong>puente H</strong> es un conjunto de cuatro interruptores electrónicos alrededor del motor, dispuestos como la letra H. Al cerrar dos interruptores en diagonal, la corriente pasa por el motor en un sentido; al cerrar los otros dos, pasa en el sentido contrario. Así, el mismo motor avanza y retrocede. El TB6612FNG y el DRV8833 son chips con dos puentes H cada uno: un chip controla las dos ruedas.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Puente H con cuatro interruptores S1 a S4 alrededor del motor M. Con S1 y S4 cerrados, la corriente atraviesa el motor de izquierda a derecha y gira hacia adelante. Con S2 y S3 cerrados, la corriente lo atraviesa en sentido contrario y gira hacia atrás." class="w-full h-auto" role="img" viewbox="0 0 640 350">
+<defs>
+<pattern height="32" id="m15-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern>
+<marker id="m15-ah2" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#34d399"></path></marker>
+<marker id="m15-ah2c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs>
+<rect fill="url(#m15-grid2)" height="350" width="640"></rect>
+<g fill="none" stroke="#6b7280" stroke-width="3"><path d="M140,45 H500"></path><path d="M140,265 H500"></path><path d="M180,45 V265"></path><path d="M460,45 V265"></path><path d="M180,155 H460"></path></g>
+<path d="M200,62 V140 H440 V250" fill="none" marker-end="url(#m15-ah2)" stroke="#34d399" stroke-width="3"></path><path d="M440,62 V170 H200 V250" fill="none" marker-end="url(#m15-ah2c)" stroke="#38bdf8" stroke-dasharray="8 6" stroke-width="3"></path>
+<g font-family="Inter,sans-serif" font-size="16" font-weight="600" text-anchor="middle">
+<rect fill="#13261d" height="34" rx="7" stroke="#34d399" stroke-width="2.5" width="44" x="158" y="80"></rect><text fill="#34d399" x="180" y="103">S1</text>
+<rect fill="#0e1b26" height="34" rx="7" stroke="#38bdf8" stroke-width="2.5" width="44" x="438" y="80"></rect><text fill="#7dd3fc" x="460" y="103">S2</text>
+<rect fill="#0e1b26" height="34" rx="7" stroke="#38bdf8" stroke-width="2.5" width="44" x="158" y="196"></rect><text fill="#7dd3fc" x="180" y="219">S3</text>
+<rect fill="#13261d" height="34" rx="7" stroke="#34d399" stroke-width="2.5" width="44" x="438" y="196"></rect><text fill="#34d399" x="460" y="219">S4</text>
+<circle cx="320" cy="155" fill="#16161e" r="34" stroke="#e6e6e6" stroke-width="2.5"></circle><text fill="#e6e6e6" font-size="20" x="320" y="162">M</text><text fill="#fde68a" font-size="15" x="320" y="33">VM (batería +)</text>
+<text fill="#a8a8b3" font-size="15" x="320" y="288">GND (batería −)</text>
+</g>
+<g font-family="Inter,sans-serif" font-size="15" text-anchor="middle">
+<text fill="#6ee7b7" x="320" y="316">S1 + S4 cerradas: corriente →, el motor gira hacia adelante</text><text fill="#7dd3fc" x="320" y="338">S2 + S3 cerradas: corriente ←, el motor gira hacia atrás</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">Cómo leer:</strong> sigue la flecha verde: entra por S1, atraviesa el motor de izquierda a derecha y sale por S4. La flecha cian discontinua muestra el recorrido en espejo (S2, motor en sentido contrario, S3). Cerrar S1 y S3 a la vez conectaría la batería directamente a GND y causaría un cortocircuito; el chip del driver existe precisamente para que los pines IN1/IN2 nunca lo permitan.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm text-left">
+<thead class="bg-dark-700 text-neutral-200"><tr><th class="p-3 font-semibold">Pin del driver</th><th class="p-3 font-semibold">TB6612FNG</th><th class="p-3 font-semibold">DRV8833</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr class="bg-dark-800"><td class="p-3 font-semibold text-emerald-400">Alimentación de los motores</td><td class="p-3">VM (de la batería)</td><td class="p-3">VM / VCC del módulo (de la batería)</td></tr>
+<tr class="bg-dark-800"><td class="p-3 font-semibold text-emerald-400">Lógica</td><td class="p-3">VCC = 3V3 del ESP32</td><td class="p-3">no tiene: lee 3,3 V directamente</td></tr>
+<tr class="bg-dark-800"><td class="p-3 font-semibold text-emerald-400">Sentido</td><td class="p-3">AIN1, AIN2 (digitales)</td><td class="p-3">AIN1, AIN2 (ambos reciben PWM)</td></tr>
+<tr class="bg-dark-800"><td class="p-3 font-semibold text-emerald-400">Velocidad</td><td class="p-3">PWMA (pin dedicado)</td><td class="p-3">PWM en el propio AIN1 o AIN2</td></tr>
+<tr class="bg-dark-800"><td class="p-3 font-semibold text-emerald-400">Encender el chip</td><td class="p-3">STBY en nivel alto</td><td class="p-3">nSLEEP (o EEP) en alto; muchos módulos ya vienen activados</td></tr>
+<tr class="bg-dark-800"><td class="p-3 font-semibold text-emerald-400">Salida al motor</td><td class="p-3">AO1/AO2 y BO1/BO2</td><td class="p-3">AOUT1/AOUT2 y BOUT1/BOUT2</td></tr>
+</tbody>
+</table>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-5">
+<h4 class="font-bold text-emerald-400 mb-3">✓ Hazlo</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Usa TB6612FNG o DRV8833: transistores MOSFET, poca pérdida, aceptan lógica de 3,3 V.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Revisa en la hoja de datos la corriente continua y de pico de tu módulo y compáralas con las del motor.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Conecta el GND del driver, de la batería y del ESP32 en el mismo punto.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Evita</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>L298N: todavía se vende, pero es ineficiente; pierde cerca de 2 V en forma de calor y el motor queda débil.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Conectar el motor directamente al pin del ESP32, incluso «solo para probar».</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Mover los cables del driver con la batería conectada.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-5-t2-p3">El driver es el puente entre el código y la fuerza. Entender sus pines (potencia, lógica, sentido, velocidad, encendido y apagado) hace que el cableado del rover de la 1.6 deje de ser una receta memorizada: sabes por qué está cada cable ahí y puedes cambiar de driver sin miedo.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Puente H</div><div class="text-xs text-neutral-400">4 interruptores, 2 sentidos</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">VM y VCC</div><div class="text-xs text-neutral-400">potencia separada de la lógica</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">STBY</div><div class="text-xs text-neutral-400">alto = driver encendido</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Corriente de pico</div><div class="text-xs text-neutral-400">el tirón del arranque</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-1-5#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4"><span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">3</span><h2 class="text-2xl font-bold pt-1">🎚️ Velocidad y sentido con PWM</h2></div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-5-t3-p1">El sentido viene de los pines IN1/IN2. La velocidad viene del <strong class="text-emerald-400">PWM</strong>, que ya usaste en el módulo 1.3 para el brillo del LED: el driver conecta y desconecta la batería al motor miles de veces por segundo, y el motor responde al promedio. Cuanto mayor sea la fracción «encendida» de cada ciclo, el <strong class="text-neutral-100">duty cycle</strong>, más rápido gira.</p>
+<figure class="fig mb-3">
+<svg aria-label="Tres señales PWM con la misma amplitud de voltaje: con 25 por ciento del ciclo encendido, el motor TT queda en la zona muerta y no gira; con 50 por ciento gira a media velocidad; con 90 por ciento gira casi al máximo." class="w-full h-auto" role="img" viewbox="0 0 640 290">
+<defs><pattern height="32" id="m15-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m15-grid3)" height="290" width="640"></rect>
+<g fill="none" stroke-linejoin="round" stroke-width="3">
+<path d="M110,76 V40 H135 V76 H210 V40 H235 V76 H310 V40 H335 V76 H410 V40 H435 V76 H510" stroke="#f87171"></path><path d="M110,156 V120 H160 V156 H210 V120 H260 V156 H310 V120 H360 V156 H410 V120 H460 V156 H510" stroke="#38bdf8"></path>
+<path d="M110,236 V200 H200 V236 H210 V200 H300 V236 H310 V200 H400 V236 H410 V200 H500 V236 H510" stroke="#34d399"></path>
+</g>
+<g font-family="Inter,sans-serif" font-size="18" font-weight="600">
+<text fill="#fca5a5" x="20" y="66">25%</text><text fill="#7dd3fc" x="20" y="146">50%</text><text fill="#34d399" x="20" y="226">90%</text>
+</g>
+<g font-family="Inter,sans-serif" font-size="15">
+<text fill="#fecaca" x="522" y="56">zona muerta</text><text fill="#fecaca" x="522" y="76">(zumba)</text><text fill="#bfe6ff" x="522" y="144">media potencia</text><text fill="#d1fae5" x="522" y="224">casi todo</text>
+<text fill="#a8a8b3" text-anchor="middle" x="320" y="276">el mismo voltaje; solo cambia el tiempo que permanece encendido en cada ciclo</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">Cómo leer:</strong> las tres ondas tienen la misma altura (el voltaje de la batería) y el mismo ritmo; lo que cambia es el ancho del tramo alto. Con 25%, el motor TT suele solo zumbar: la fuerza promedio no vence la fricción de la caja reductora. Esta franja inútil es la <strong>zona muerta</strong>, y el código de abajo la evita.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-5-t3-p2">A <strong>rampa</strong> aumenta la velocidad poco a poco en vez de saltar de 0 a 100%: el robot no da un tirón y la batería no sufre una caída brusca. La <strong>frecuencia</strong> del PWM es la cantidad de ciclos por segundo; usamos 20 kHz (20 mil), por encima de lo que percibe el oído, para que el motor no «píe». En la API 3.x, <span class="font-mono text-xs">ledcAttach(pino, 20000, 8)</span> prepara el pin y <span class="font-mono text-xs">ledcWrite(pino, 0..255)</span> define la velocidad.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-5-t3-p3"><strong class="text-neutral-100">Objetivo:</strong> crear los «verbos» del rover (adelante, reversa, girar, parar y rampa) con un TB6612FNG y ver cada uno en el Monitor Serie. Los pines son los mismos del proyecto 1.6: motor izquierdo en PWMA 25, AIN1 26, AIN2 27; derecho en PWMB 33, BIN1 32, BIN2 4; STBY en el 13.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">motores-prueba.ino</span></div>
+<pre><code><span class="c">// Prueba de motores con TB6612FNG (ESP32, paquete esp32 3.x)</span>
+<span class="c">// Adelante, reversa, giro y parada, con rampa de aceleración.</span>
+<span class="c">// La primera vez, deja el robot SUSPENDIDO (ruedas en el aire).</span>
+
+<span class="k">const int</span> PINO_PWMA = 25, PINO_AIN1 = 26, PINO_AIN2 = 27;  <span class="c">// motor izquierdo</span>
+<span class="k">const int</span> PINO_PWMB = 33, PINO_BIN1 = 32, PINO_BIN2 = 4;   <span class="c">// motor derecho</span>
+<span class="k">const int</span> PINO_STBY = 13;
+<span class="k">const int</span> PWM_FREQ = 20000;  <span class="c">// 20 kHz: fuera del rango que oye el oído</span>
+<span class="k">const int</span> PWM_BITS = 8;      <span class="c">// velocidad de 0 a 255</span>
+<span class="k">const int</span> VEL_MIN  = 90;     <span class="c">// por debajo de esto el motor TT zumba y no gira</span>
+<span class="c">// vel de -255 (reversa) a 255 (adelante); 0 = detenido</span>
+<span class="k">void</span> motor(<span class="k">int</span> in1, <span class="k">int</span> in2, <span class="k">int</span> pinoPwm, <span class="k">int</span> vel) {
+  vel = constrain(vel, -255, 255);
+  <span class="k">int</span> forca = abs(vel);
+  <span class="k">if</span> (forca &gt; 0 &amp;&amp; forca &lt; VEL_MIN) forca = VEL_MIN;  <span class="c">// evita la zona muerta</span>
+  digitalWrite(in1, vel &gt; 0 ? HIGH : LOW);
+  digitalWrite(in2, vel &lt; 0 ? HIGH : LOW);
+  ledcWrite(pinoPwm, forca);                  <span class="c">// API 3.x: recibe el PIN</span>
+}
+<span class="k">void</span> andar(<span class="k">int</span> esq, <span class="k">int</span> dir) {
+  motor(PINO_AIN1, PINO_AIN2, PINO_PWMA, esq);
+  motor(PINO_BIN1, PINO_BIN2, PINO_PWMB, dir);
+}
+<span class="k">void</span> frente(<span class="k">int</span> v)       { andar(v, v); }
+<span class="k">void</span> re(<span class="k">int</span> v)           { andar(-v, -v); }
+<span class="k">void</span> girarDireita(<span class="k">int</span> v) { andar(v, -v); }  <span class="c">// ruedas en sentidos opuestos</span>
+<span class="k">void</span> parar()            { andar(0, 0); }
+<span class="c">// aumenta (o reduce) la velocidad de 5 en 5: sin tirones</span>
+<span class="k">void</span> rampa(<span class="k">int</span> de, <span class="k">int</span> ate, <span class="k">int</span> passoMs) {
+  <span class="k">int</span> passo = (ate &gt; de) ? 5 : -5;
+  <span class="k">for</span> (<span class="k">int</span> v = de; (passo &gt; 0) ? (v &lt; ate) : (v &gt; ate); v += passo) { frente(v); delay(passoMs); }
+  frente(ate);
+}
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_AIN1, OUTPUT); pinMode(PINO_AIN2, OUTPUT);
+  pinMode(PINO_BIN1, OUTPUT); pinMode(PINO_BIN2, OUTPUT);
+  pinMode(PINO_STBY, OUTPUT);
+  ledcAttach(PINO_PWMA, PWM_FREQ, PWM_BITS);   <span class="c">// canal elegido automáticamente</span>
+  ledcAttach(PINO_PWMB, PWM_FREQ, PWM_BITS);
+  digitalWrite(PINO_STBY, HIGH);               <span class="c">// saca al driver del modo de espera</span>
+  parar();
+  Serial.println(<span class="s">"Prueba de motores: adelante, reversa, giro, parar"</span>);
+  delay(2000);
+}
+<span class="k">void</span> loop() {
+  Serial.println(<span class="s">"rampa hasta adelante 200"</span>); rampa(0, 200, 20); delay(1000);
+  Serial.println(<span class="s">"parar"</span>);                parar();           delay(800);
+  Serial.println(<span class="s">"re 160"</span>);               re(160);           delay(1000);
+  Serial.println(<span class="s">"parar"</span>);                parar();           delay(800);
+  Serial.println(<span class="s">"girar a la derecha"</span>); girarDireita(160); delay(700);
+  Serial.println(<span class="s">"parar"</span>);                parar();           delay(2000);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Con el robot suspendido, las dos ruedas aceleran juntas hacia adelante, se detienen, giran hacia atrás y luego en sentidos opuestos.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>El Monitor Serie (115200) muestra cada etapa justo cuando ocurre.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿Una rueda gira al revés al ir «adelante»? Invierte los dos cables de ese motor en AO1/AO2 (o BO1/BO2), no el código.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿No gira nada ni se calienta? Revisa que STBY esté en 3,3 V, que VM esté conectado a la batería y que haya una conexión común a GND.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Uso del DRV8833</h3>
+<p class="text-neutral-300 text-sm">En el DRV8833 no hay un pin de velocidad separado: los dos pines de entrada de cada motor reciben PWM. Para avanzar, PWM en AIN1 y 0 en AIN2; para retroceder, al contrario; poner ambos en 0 deja el motor libre. El sketch del rover en el módulo 1.6 incluye ambas versiones, que se eligen con una línea al inicio del código.</p>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-5-t3-p4">Adelante, reversa, girar y parar son los verbos que usará la máquina de estados del rover. Al escribirlos una sola vez en funciones pequeñas, el código del proyecto queda corto y legible: «si la pared está cerca, <span class="font-mono text-xs">parar()</span>, después <span class="font-mono text-xs">re()</span>".</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Duty cycle</div><div class="text-xs text-neutral-400">fracción encendida del ciclo</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Rampa</div><div class="text-xs text-neutral-400">acelera sin tirones</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Freno x libre</div><div class="text-xs text-neutral-400">se detiene firme o rueda</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Zona muerta</div><div class="text-xs text-neutral-400">Un PWM bajo no lo mueve</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-1-5#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4"><span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">4</span><h2 class="text-2xl font-bold pt-1">📐 Servo en el ESP32 con ESP32Servo</h2></div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-5-t4-p1">El servo tiene tres cables: marrón (GND), rojo (5 V) y naranja (señal). No interpreta el duty cycle como el motor DC; interpreta el <strong class="text-emerald-400">ancho del pulso</strong>. Cada 20 ms (50 veces por segundo) llega un pulso, y su duración indica el ángulo. La biblioteca <strong class="text-neutral-100">ESP32Servo</strong> calcula estos pulsos por ti. La <span class="font-mono text-xs">Servo.h</span> de Arduino Uno no funciona en el ESP32.</p>
+<figure class="fig mb-3">
+<svg aria-label="Pulsos del servo: llega un pulso cada 20 milisegundos. Un pulso de 0,5 milisegundo lleva el brazo a 0 grado, uno de 1,5 milisegundo a 90 grados y uno de 2,4 milisegundos a 180 grados." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs><pattern height="32" id="m15-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m15-grid4)" height="280" width="640"></rect>
+<g fill="none" stroke-linejoin="round" stroke-width="3">
+<path d="M30,80 H60 V45 H72 V80 H300" stroke="#34d399"></path><path d="M30,150 H60 V115 H96 V150 H300" stroke="#38bdf8"></path><path d="M30,220 H60 V185 H118 V220 H300" stroke="#fbbf24"></path>
+</g>
+<g font-family="Inter,sans-serif" font-size="15">
+<text fill="#d1fae5" x="132" y="68">0,5 ms</text><text fill="#bfe6ff" x="132" y="138">1,5 ms</text><text fill="#fde68a" x="132" y="208">2,4 ms</text><text fill="#a8a8b3" text-anchor="middle" x="165" y="258">un pulso cada 20 ms (50 Hz)</text>
+</g>
+<path d="M370,200 A130,130 0 0 1 630,200" fill="none" stroke="#272730" stroke-dasharray="5 5" stroke-width="2"></path>
+<g stroke-linecap="round" stroke-width="5">
+<line stroke="#34d399" x1="500" x2="610" y1="200" y2="200"></line><line stroke="#38bdf8" x1="500" x2="500" y1="200" y2="90"></line><line stroke="#fbbf24" x1="500" x2="390" y1="200" y2="200"></line>
+</g>
+<circle cx="500" cy="200" fill="#e6e6e6" r="10"></circle>
+<g font-family="Inter,sans-serif" font-size="16" font-weight="600" text-anchor="middle">
+<text fill="#34d399" x="600" y="228">0°</text><text fill="#7dd3fc" x="500" y="76">90°</text><text fill="#fbbf24" x="400" y="228">180°</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">Cómo leer:</strong> cada color del pulso, a la izquierda, corresponde al brazo del mismo color, a la derecha. El pulso corto (verde) pone el brazo en un extremo, el medio (cian) en el centro y el largo (ámbar) en el otro extremo. El espacio después del pulso completa los 20 ms. Tu servo puede tener un rango un poco diferente; los números 500 y 2400 del código lo ajustan.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-4">Paso a paso</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Instala la biblioteca</h4><p class="text-neutral-300 text-sm">En Arduino IDE 2.x, abre el Administrador de bibliotecas, busca «ESP32Servo» (autor Kevin Harrington) e instala la versión más reciente, compatible con el paquete esp32 3.x.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Conecta los tres cables</h4><p class="text-neutral-300 text-sm">Naranja en GPIO 23, marrón en GND común, rojo en los 5 V del regulador (tema 6). Para una prueba rápida sin carga, sirve el pin 5V de la placa conectada por USB.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Pruébalo antes en Wokwi, si quieres</h4><p class="text-neutral-300 text-sm">Wokwi tiene un servo y la biblioteca ESP32Servo: arma el mismo circuito, pega el código y observa cómo se mueve el brazo virtual.</p></div></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-5-t4-p2"><strong class="text-neutral-100">Objetivo:</strong> hacer que el servo «mire» hacia adelante, hacia la derecha, de nuevo hacia adelante y hacia la izquierda, como lo hará el cuello del rover en la 1.6.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">servo-olhar.ino</span></div>
+<pre><code><span class="c">// Servo SG90 en ESP32 con la biblioteca ESP32Servo (paquete esp32 3.x)</span>
+<span class="k">#include</span> &lt;ESP32Servo.h&gt;
+
+<span class="k">const int</span> PINO_SERVO = 23;  <span class="c">// cable naranja (señal)</span>
+Servo cabeca;   <span class="c">// el servo que gira el sensor del rover</span>
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  cabeca.setPeriodHertz(50);             <span class="c">// un pulso cada 20 ms</span>
+  cabeca.attach(PINO_SERVO, 500, 2400);  <span class="c">// 0,5 ms = 0 grados ... 2,4 ms = 180 grados</span>
+  cabeca.write(90);                      <span class="c">// comienza mirando hacia adelante</span>
+  Serial.println(<span class="s">"Servo listo en GPIO 23"</span>);
+  delay(1000);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">int</span> angulos[] = {90, 20, 90, 160};    <span class="c">// adelante, derecha, adelante, izquierda</span>
+  <span class="k">for</span> (<span class="k">int</span> i = 0; i &lt; 4; i++) {
+    cabeca.write(angulos[i]);
+    Serial.printf(<span class="s">"ángulo: %d\n"</span>, angulos[i]);
+    delay(800);                          <span class="c">// tiempo para que el servo llegue</span>
+  }
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>El brazo va al centro, a un lado, vuelve al centro y va al otro lado, y se detiene firme en cada posición.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>El Serial Monitor repite "angulo: 90", "angulo: 20", "angulo: 90", "angulo: 160".</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿Error de compilación que menciona funciones de PWM? Actualiza ESP32Servo; las versiones antiguas eran de la API 2.x.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿El servo tiembla o el ESP32 se reinicia? Falta corriente en los 5 V: usa el regulador del tema 6.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-5-t4-p3">Con el sensor de distancia sobre el servo, el rover mira hacia ambos lados antes de decidir hacia dónde girar, en vez de girar siempre hacia el mismo lado. Es la misma técnica de «apuntar» que usarás en la pinza, en la cámara que sigue un objeto y en el brazo de la Trilha 5.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">50 Hz</div><div class="text-xs text-neutral-400">un pulso cada 20 ms</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Ancho del pulso</div><div class="text-xs text-neutral-400">define el ángulo</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">ESP32Servo</div><div class="text-xs text-neutral-400">la biblioteca del ESP32</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">5 V por separado</div><div class="text-xs text-neutral-400">nunca del pin 3V3</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-1-5#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4"><span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">5</span><h2 class="text-2xl font-bold pt-1">🔋 Baterías: NiMH, 18650, LiPo y BMS</h2></div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-5-t5-p1">Una batería para robot necesita dos cosas: la <strong class="text-neutral-100">voltaje</strong> adecuada para los motores y <strong class="text-neutral-100">corriente</strong> suficiente para el arranque. Aquí es donde falla la batería cuadrada de 9 V: el voltaje parece bueno, pero entrega poca corriente, cae en la primera aceleración y el ESP32 se reinicia. Para la Trilha 1, la opción segura es usar 4 pilas AA recargables (NiMH) o 2 celdas 18650 con una placa de protección.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-5-t5-p2"><strong>mAh</strong> (miliamperios-hora) es la capacidad: en teoría, una batería de 2000 mAh alimenta un consumo de 500 mA durante unos 240 minutos. <strong>2S</strong> significa dos celdas de litio en serie: 2 × 3,7 V = 7,4 V nominales, 8,4 V cargadas. El <strong>BMS</strong> (sistema de gestión de batería) es la pequeña placa que corta la energía si la celda se descarga demasiado, se carga demasiado o entra en cortocircuito.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Comparación de baterías según la corriente que pueden suministrar: una batería cuadrada de 9 volts suministra muy poco y no sirve para un motor; 4 pilas AA NiMH suministran lo suficiente para empezar; dos celdas 18650 con BMS suministran bastante; una LiPo 2S suministra mucha corriente, pero requiere más cuidado." class="w-full h-auto" role="img" viewbox="0 0 640 290">
+<defs><pattern height="32" id="m15-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m15-grid5)" height="290" width="640"></rect>
+<g font-family="Inter,sans-serif" font-size="15">
+<text fill="#a8a8b3" x="20" y="40">corriente que entrega (comparación, no está a escala exacta) →</text>
+<text fill="#fecaca" font-weight="600" x="20" y="84">9 V cuadrada</text><rect fill="#f87171" height="22" rx="5" width="30" x="200" y="68"></rect><text fill="#fecaca" x="242" y="84">no sirve para motores</text>
+<text fill="#d1fae5" font-weight="600" x="20" y="134">4× AA NiMH</text><rect fill="#10b981" height="22" rx="5" width="170" x="200" y="118"></rect><text fill="#d1fae5" x="382" y="134">4,8 V · inicio seguro</text>
+<text fill="#d1fae5" font-weight="600" x="20" y="184">2× 18650 + BMS</text><rect fill="#34d399" height="22" rx="5" width="260" x="200" y="168"></rect><text fill="#d1fae5" x="472" y="184">7,4 V · rover</text>
+<text fill="#bfe6ff" font-weight="600" x="20" y="234">LiPo 2S</text><rect fill="#38bdf8" height="22" rx="5" width="330" x="200" y="218"></rect><text fill="#fde68a" x="542" y="234">precaución</text>
+<text fill="#7dd3fc" x="20" y="274">más corriente = más fuerza y más energía en un cortocircuito</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">Cómo leer:</strong> cuanto más larga es la barra, más corriente entrega la batería sin que el voltaje se desplome. La diminuta barra roja explica por qué la batería de 9 V reinicia el robot. La LiPo tiene la barra más larga, y por eso mismo es la más peligrosa: en un cortocircuito entrega toda esa corriente en forma de calor.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-5">
+<h4 class="font-bold text-emerald-400 mb-3">✓ Litio con seguridad</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Usa las 18650 solo en un soporte con BMS y de una marca reconocida; las celdas deben ser iguales y tener la misma carga.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Carga la LiPo con un cargador balanceador, dentro de una bolsa ignífuga, sobre una superficie que no se queme.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Coloca un interruptor de encendido y apagado en el cable positivo, cerca de la batería.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Guárdala con carga media, lejos del sol y de objetos metálicos sueltos.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Nunca</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Dejes una batería de litio cargando sin que haya alguien cerca.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Uses una LiPo hinchada, abollada o perforada: deséchala en un punto de recolección.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Pongas en contacto los dos polos con una herramienta o un cable sin aislante.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Uses una batería cuadrada de 9 V para un motor o un servo.</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-2">⚠️ Voltaje demasiado alto para el motor TT</h3>
+<p class="text-neutral-300 text-sm">Los motores TT están diseñados para unos 3 a 6 V. Dos 18650 cargadas entregan 8,4 V: el motor funciona, pero se calienta y se desgasta. El código del rover tiene un límite de velocidad (cerca del 70% del PWM) para que el voltaje promedio quede cerca de 6 V. Con 4 pilas NiMH, el límite puede llegar al 100%.</p>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-5-t5-p3">La alimentación incorrecta es la causa número uno de que un robot «se reinicie solo», y la batería de litio es el mayor riesgo real en la mesa de trabajo. Saber leer el voltaje, la capacidad y la protección hace que el rover funcione más tiempo y que el laboratorio (y tu casa) sean más seguros.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">mAh</div><div class="text-xs text-neutral-400">cuánto dura</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Corriente de descarga</div><div class="text-xs text-neutral-400">cuánto puede entregar</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">BMS</div><div class="text-xs text-neutral-400">corta antes de que haya peligro</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Bolsa ignífuga</div><div class="text-xs text-neutral-400">dónde se carga la LiPo</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-1-5#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4"><span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">6</span><h2 class="text-2xl font-bold pt-1">⚡ Regulador, GND común y ruido del motor</h2></div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-5-t6-p1">La batería tiene 7,4 V; el ESP32, el sensor y el servo necesitan 5 V. Quien hace esta conversión es un <strong class="text-emerald-400">regulador buck</strong>, una pequeña placa que baja el voltaje y pierde poca energía en forma de calor. La conexión queda dividida en dos ramas: la batería va directamente a VM del driver (potencia de los motores) y, a través del buck, a los 5 V de la electrónica. Y todos los negativos se conectan en un solo punto: el <strong class="text-neutral-100">GND común</strong>.</p>
+<figure class="fig mb-3">
+<svg aria-label="Distribución de energía del rover: la batería pasa por el interruptor y se divide en dos ramas. Una va a VM del driver, que alimenta los motores con capacitores. La otra pasa por el regulador buck de 5 volts y alimenta el ESP32, el HC-SR04 y el servo. El 3V3 del ESP32 alimenta la lógica del driver. Todas las conexiones GND van a un punto común." class="w-full h-auto" role="img" viewbox="0 0 640 360">
+<defs>
+<pattern height="32" id="m15-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern>
+<marker id="m15-ah6" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#fbbf24"></path></marker>
+<marker id="m15-ah6g" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#34d399"></path></marker>
+</defs>
+<rect fill="url(#m15-grid6)" height="360" width="640"></rect>
+<g fill="none" stroke-width="2.5">
+<path d="M130,70 H170" marker-end="url(#m15-ah6)" stroke="#fbbf24"></path><path d="M240,70 H270 V40 H330" marker-end="url(#m15-ah6)" stroke="#fbbf24"></path><path d="M270,70 V150 H330" marker-end="url(#m15-ah6)" stroke="#fbbf24"></path>
+<path d="M450,40 H490" marker-end="url(#m15-ah6)" stroke="#fbbf24"></path><path d="M450,150 H490" marker-end="url(#m15-ah6g)" stroke="#34d399"></path><path d="M560,172 V200 H400 V214" stroke="#38bdf8" stroke-dasharray="6 5"></path>
+</g>
+<g fill="none" opacity="0.9" stroke="#a8a8b3" stroke-dasharray="3 4" stroke-width="1.8">
+<path d="M75,95 L310,302"></path><path d="M392,64 L328,298"></path><path d="M392,174 L326,297"></path><path d="M560,172 L334,306"></path><path d="M400,250 L330,300"></path>
+</g>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#2a2110" height="50" rx="10" stroke="#fbbf24" stroke-width="2" width="110" x="20" y="45"></rect><text fill="#fde68a" font-size="15" font-weight="600" x="75" y="68">batería</text><text fill="#fde68a" font-size="14" x="75" y="86">7,4 V</text>
+<rect fill="#16161e" height="40" rx="8" stroke="#a8a8b3" stroke-width="2" width="65" x="175" y="50"></rect><text fill="#e6e6e6" font-size="15" x="207" y="76">interruptor</text>
+<rect fill="#13261d" height="46" rx="10" stroke="#34d399" stroke-width="2" width="115" x="335" y="18"></rect><text fill="#34d399" font-size="15" font-weight="600" x="392" y="47">VM del driver</text>
+<rect fill="#13261d" height="46" rx="10" stroke="#34d399" stroke-width="2" width="130" x="495" y="18"></rect><text fill="#d1fae5" font-size="15" x="560" y="40">motores</text><text fill="#a7f3d0" font-size="13" x="560" y="58">+ 100 nF cada uno</text>
+<rect fill="#0e2018" height="46" rx="10" stroke="#34d399" stroke-width="2.5" width="115" x="335" y="128"></rect><text fill="#34d399" font-size="15" font-weight="600" x="392" y="157">buck 5 V</text>
+<rect fill="#13261d" height="60" rx="10" stroke="#34d399" stroke-width="2" width="130" x="495" y="112"></rect><text fill="#d1fae5" font-size="14" x="560" y="134">ESP32 (5V/VIN)</text><text fill="#a7f3d0" font-size="14" x="560" y="154">HC-SR04 · servo</text>
+<text fill="#7dd3fc" font-size="13" x="470" y="194">3V3 → VCC del driver</text><rect fill="#0e1b26" height="34" rx="8" stroke="#38bdf8" stroke-width="2" width="130" x="335" y="216"></rect><text fill="#bfe6ff" font-size="14" x="400" y="238">lógica del driver</text>
+<circle cx="320" cy="310" fill="#0b0b10" r="14" stroke="#e6e6e6" stroke-width="2.5"></circle><text fill="#e6e6e6" font-size="15" font-weight="600" x="320" y="345">GND común (un solo punto)</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">Cómo leer:</strong> el camino ámbar es el voltaje de la batería, que solo va al driver y al buck. El verde es el 5 V limpio de la electrónica. La línea cian discontinua es el 3,3 V que el ESP32 envía a la lógica del driver. Las líneas grises punteadas son los GND: todas terminan en el mismo círculo. Si falta una, las señales pierden la referencia y el robot se comporta de manera aleatoria.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-5-t6-p2"><strong>Brownout</strong> es la caída rápida de voltaje: el motor arranca, consume un pico de corriente, el voltaje cae durante milisegundos y el ESP32 se reinicia para protegerse. El <strong>capacitor de desacoplamiento</strong> es una pequeña reserva de energía cerca de quien la consume: un capacitor cerámico de 100 nF soldado a los terminales de cada motor absorbe las chispas eléctricas de las escobillas, y un capacitor electrolítico de 470 µF a 1000 µF en VM del driver contiene los picos.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-5-t6-p3"><strong class="text-neutral-100">Objetivo:</strong> descubrir por qué se reinició el ESP32. Ejecuta el sketch solo para ver el motivo «normal». Después copia la función <span class="font-mono text-xs">motivo()</span> y las líneas de <span class="font-mono text-xs">setup()</span> al inicio de la prueba de motores del tema 3: cada vez que se reinicie, la primera línea del Serial Monitor indicará la causa.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">motivo-reset.ino</span></div>
+<pre><code><span class="c">// ¿Por qué se reinició el ESP32? (paquete esp32 3.x)</span>
+<span class="k">#include</span> <span class="s">"esp_system.h"</span>
+
+<span class="k">const char</span>* motivo(esp_reset_reason_t r) {
+  <span class="k">switch</span> (r) {
+    <span class="k">case</span> ESP_RST_POWERON:  <span class="k">return</span> <span class="s">"encendiste el equipo o presionaste EN (normal)"</span>;
+    <span class="k">case</span> ESP_RST_SW:       <span class="k">return</span> <span class="s">"reinicio solicitado por el programa"</span>;
+    <span class="k">case</span> ESP_RST_PANIC:    <span class="k">return</span> <span class="s">"error en el programa (panic)"</span>;
+    <span class="k">case</span> ESP_RST_BROWNOUT: <span class="k">return</span> <span class="s">"BROWNOUT: bajó el voltaje (motor, batería baja, cable)"</span>;
+    <span class="k">default</span>:               <span class="k">return</span> <span class="s">"otro motivo"</span>;
+  }
+}
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  delay(500);
+  Serial.print(<span class="s">"Último reinicio: "</span>);
+  Serial.println(motivo(esp_reset_reason()));
+}
+
+<span class="k">void</span> loop() {}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Al encender normalmente, aparece «encendiste el equipo o presionaste EN (normal)».</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿Aparece «BROWNOUT» (o el mensaje «Brownout detector was triggered» antes)? La alimentación es débil: revisa el buck, los capacitores, la batería y la conexión común de GND.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-5">
+<h4 class="font-bold text-emerald-400 mb-3">✓ Alimentación limpia</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Ajusta el buck a 5,0 V con el multímetro antes de conectar cualquier placa.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Conecta los 5 V del buck al pin 5V/VIN del ESP32; el regulador de la placa genera los 3,3 V.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Usa cables cortos y trenzados en par para los motores; mantenlos lejos de los cables del sensor.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Ruido garantizado</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Servo o motor tomando energía del pin 3V3 del ESP32.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Batería directa (7,4 V) al pin 3V3 o a un GPIO: quema la placa.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Driver con GND propio, sin conectarlo al GND del ESP32.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-5-t6-p4">Sin regulador, capacitores y GND común, el ruido del motor reinicia el ESP32 justo cuando más necesitas que funcione: al frenar y girar frente a la pared. Esta falla parece un «bug de código» y hace que mucha gente se rinda; ahora sabes que primero debes revisar la alimentación.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Buck</div><div class="text-xs text-neutral-400">reduce el voltaje sin calentarse</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Desacoplamiento</div><div class="text-xs text-neutral-400">capacitor cerca de la carga</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Brownout</div><div class="text-xs text-neutral-400">caída que reinicia</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">GND común</div><div class="text-xs text-neutral-400">una referencia para todos</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 rounded-xl border border-emerald-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Resumen del módulo</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Motor según el movimiento</strong><span class="text-neutral-400">: el motor DC gira, el servo apunta y el motor paso a paso se posiciona con exactitud.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Puente H moderno</strong><span class="text-neutral-400">: TB6612FNG o DRV8833 entre el ESP32 y el motor; nunca conectes el motor al pin.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">PWM en la API 3.x</strong><span class="text-neutral-400">: <span class="font-mono text-xs">ledcAttach</span> + <span class="font-mono text-xs">ledcWrite(pino, valor)</span>, con rampa y salto de la zona muerta.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Servo con ESP32Servo</strong><span class="text-neutral-400">: 50 Hz, ancho de pulso, 5 V del regulador.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Alimentación segura y limpia</strong><span class="text-neutral-400">: NiMH o 18650 con BMS, buck de 5 V, capacitores y GND común; nada de 9 V.</span></div></div>
+</div>
+<h3 class="font-semibold text-emerald-400 mb-3">Para profundizar</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/ledc.html" rel="noopener" target="_blank">LEDC (PWM) en Arduino-ESP32</a> <span class="text-neutral-500">— referencia oficial de la API 3.x</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/madhephaestus/ESP32Servo" rel="noopener" target="_blank">Biblioteca ESP32Servo</a> <span class="text-neutral-500">— código fuente y ejemplos</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.pololu.com/product/713" rel="noopener" target="_blank">TB6612FNG (Pololu)</a> <span class="text-neutral-500">— distribución de pines, límites y hoja de datos</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.ti.com/product/DRV8833" rel="noopener" target="_blank">DRV8833 (Texas Instruments)</a> <span class="text-neutral-500">— hoja de datos oficial</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/migration_guides/2.x_to_3.0.html" rel="noopener" target="_blank">Migración 2.x → 3.0</a> <span class="text-neutral-500">— por qué no compila el código antiguo de PWM</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-emerald-400 mb-1">Siguiente módulo</h3>
+<p class="text-neutral-300">1.6 · Proyecto: rover que esquiva obstáculos. Todo lo aprendido en la ruta, junto: planificar, montar, probar por partes y programar la máquina de estados.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-1-4.html">← Anterior: 1.4 Sensores</a>
+<a class="inline-flex items-center px-5 py-3 bg-emerald-700 text-white rounded-lg font-semibold hover:bg-emerald-600 transition-colors" href="modulo-1-6.html">Siguiente: 1.6 Proyecto rover →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica de cero a experto · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licencia MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 4.5 · Navigation with Nav2 | Robotics from Zero to Expert</title>
+<meta content="Nav2 in practice: localization with AMCL, costmaps, planners, sending the robot to a point through RViz2 and Python (nav2_simple_commander), recovery, and waypoint patrols." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha4/modulo-4-5.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha4/modulo-4-5.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha4/modulo-4-5.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha4/modulo-4-5.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha4/modulo-4-5.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha4/modulo-4-5.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-4-5.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha4/modulo-4-5.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T4 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a aria-current="page" class="nav-trail text-amber-400 bg-amber-500/10" href="index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="4-5" data-inema-track="4" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-amber-400" href="../../index.html">Home</a><span aria-hidden="true">/</span>
+<a class="hover:text-amber-400" href="index.html">Track 4</a><span aria-hidden="true">/</span>
+<span class="text-amber-400">Module 4.5</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full mb-4">MODULE 4.5 · HANDS-ON</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🧭 Navigation with Nav2</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">With the map saved in module 4.4, the robot gets a goal: you click a point (or send it through Python), and it <strong class="text-neutral-100">Nav2</strong> localizes itself, plans a route, avoids anything in its way, and tries to recover when it gets stuck. In the end, the robot makes a <strong class="text-amber-400">round of the house</strong> on its own.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Advanced</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Practice</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Saved map</div><div class="text-xs text-neutral-400">Prerequisite (4.4)</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 4.5 progress" class="inema-ring" data-inema-meter="modulo:4-5"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:4-5"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-1">1. The Nav2 stack</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-2">2. Localization with AMCL</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-3">3. Costs and planners</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-4">4. Go to a point</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-5">5. Recovery</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-6">6. Waypoints: the round</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-4-5#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🧱 Nav2: the navigation stack</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t1-p1">O <strong class="text-amber-400">Nav2</strong> is the set of ROS 2 navigation packages. It isn't a single node: it's a team of servers, each with a task. One loads the map, another figures out where the robot is, another plots the route across the whole map, another decides the speed at each moment, and another tries to free the robot if it gets stuck. The team is coordinated by the <strong class="text-neutral-100">BT Navigator</strong>, following a behavior tree.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-5-t1-p2">A <strong>action</strong> in ROS 2 (module 4.1) is a long-running request with partial feedback: “go over there” and, while moving, “2 m remaining.” Nav2 receives your goals through the <span class="font-mono text-xs">navigate_to_pose</span>. At the end, it publishes velocities on <span class="font-mono text-xs">/cmd_vel</span>, the same topic that the ESP32 with micro-ROS listens to in module 4.3.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Nav2 architecture: the goal goes to the BT Navigator, which calls the planner (global route on the global costmap), the controller (velocity at each moment on the local costmap), and the behavior server (recovery); the map server and AMCL provide the map and position; the output is /cmd_vel for the motors." class="w-full h-auto" role="img" viewbox="0 0 640 340">
+<defs><pattern height="32" id="m45-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<filter height="180%" id="m45-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter><marker id="m45-ah1" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#fbbf24"></path></marker>
+<marker id="m45-ah1c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker></defs>
+<rect fill="url(#m45-grid1)" height="340" width="640"></rect><g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0e1b26" height="54" rx="10" stroke="#38bdf8" stroke-width="2" width="150" x="20" y="20"></rect><text fill="#bfe6ff" font-size="16" x="95" y="53">goal (x, y)</text><g filter="url(#m45-glow1)"><rect fill="#2a1d0a" height="66" rx="12" stroke="#fbbf24" stroke-width="2.5" width="180" x="230" y="14"></rect></g>
+<text fill="#fbbf24" font-size="17" font-weight="600" x="320" y="42">BT Navigator</text><text fill="#fef3c7" font-size="14" x="320" y="64">behavior tree</text><rect fill="#261a08" height="70" rx="12" stroke="#f59e0b" stroke-width="2" width="180" x="20" y="130"></rect><text fill="#fbbf24" font-size="16" font-weight="600" x="110" y="160">Planner</text><text fill="#fef3c7" font-size="14" x="110" y="182">route across the whole map</text>
+<rect fill="#261a08" height="70" rx="12" stroke="#f59e0b" stroke-width="2" width="180" x="230" y="130"></rect><text fill="#fbbf24" font-size="16" font-weight="600" x="320" y="160">Controller</text><text fill="#fef3c7" font-size="14" x="320" y="182">speed right now</text><rect fill="#261a08" height="70" rx="12" stroke="#f59e0b" stroke-width="2" width="180" x="440" y="130"></rect><text fill="#fbbf24" font-size="16" font-weight="600" x="530" y="160">Behaviors</text><text fill="#fef3c7" font-size="14" x="530" y="182">turn, back up, wait</text>
+<rect fill="#0e1b26" height="60" rx="12" stroke="#38bdf8" stroke-width="2" width="180" x="20" y="250"></rect><text fill="#bfe6ff" font-size="15" x="110" y="276">map server + AMCL</text><text fill="#7dd3fc" font-size="13" x="110" y="296">map and position</text><rect fill="#0e1b26" height="60" rx="12" stroke="#38bdf8" stroke-width="2" width="180" x="230" y="250"></rect><text fill="#bfe6ff" font-size="15" x="320" y="276">costmaps</text><text fill="#7dd3fc" font-size="13" x="320" y="296">global and local</text>
+<rect fill="#2a1d0a" height="60" rx="12" stroke="#fbbf24" stroke-width="2" width="150" x="470" y="250"></rect><text fill="#fde68a" font-size="16" font-weight="600" x="545" y="286">/cmd_vel</text></g>
+<g fill="none" stroke-width="2"><path d="M170,47 L222,47" marker-end="url(#m45-ah1c)" stroke="#38bdf8"></path>
+<path d="M290,80 L130,124" marker-end="url(#m45-ah1)" stroke="#fbbf24"></path><path d="M320,80 L320,122" marker-end="url(#m45-ah1)" stroke="#fbbf24"></path>
+<path d="M350,80 L510,124" marker-end="url(#m45-ah1)" stroke="#fbbf24"></path><path d="M110,244 L110,208" marker-end="url(#m45-ah1c)" stroke="#38bdf8" stroke-dasharray="5 4"></path>
+<path d="M320,244 L320,208" marker-end="url(#m45-ah1c)" stroke="#38bdf8" stroke-dasharray="5 4"></path><path d="M410,165 C450,165 470,220 520,244" marker-end="url(#m45-ah1)" stroke="#fbbf24"></path>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> the goal comes in at the top, and the BT Navigator assigns work to the three amber servers. The dashed cyan arrows show supporting data (map, position, and costs). The only thing that leaves Nav2 for the outside world is the speed on <span class="font-mono">/cmd_vel</span>.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t1-p3"><strong class="text-neutral-100">Goal:</strong> see the whole stack working in the simulated TurtleBot before using your robot. If you installed the packages in module 4.4, skip <span class="font-mono text-xs">apt</span>.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal</span></div>
+<pre><code><span class="c"># &lt;distro&gt; = jazzy ou lyrical</span>
+sudo apt install ros-&lt;distro&gt;-navigation2 ros-&lt;distro&gt;-nav2-bringup ros-&lt;distro&gt;-nav2-minimal-tb*
+source /opt/ros/&lt;distro&gt;/setup.bash
+
+<span class="c"># Gazebo + RViz2 + Nav2 completo, já com um mapa de exemplo</span>
+<span class="c"># (se não existir, liste a pasta launch do nav2_bringup e use o tb3_simulation_launch.py)</span>
+ros2 launch nav2_bringup tb4_simulation_launch.py headless:=False
+
+<span class="c"># em outro terminal: os servidores que subiram</span>
+ros2 node list | grep -E "planner|controller|bt_navigator|amcl|behavior"</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-amber-400">How to check:</strong> RViz2 opens with the map, the robot, and the “2D Pose Estimate” and “Nav2 Goal” buttons in the toolbar; the node list shows <span class="font-mono">planner_server</span>, <span class="font-mono">controller_server</span>, <span class="font-mono">bt_navigator</span>, <span class="font-mono">amcl</span> e <span class="font-mono">behavior_server</span>.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t1-p4">When the robot “doesn't move,” knowing what each server does turns a mystery into a clear question: does it not know where it is (AMCL), can't find a route (planner), or can it find a route but not follow it (controller)?</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">BT Navigator</div><div class="text-xs text-neutral-400">the coordinator</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Planner</div><div class="text-xs text-neutral-400">global route</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Controller</div><div class="text-xs text-neutral-400">local speed</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">/cmd_vel</div><div class="text-xs text-neutral-400">the only output</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-4-5#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">📍 Localization with AMCL on the saved map</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t2-p1">With the map ready, the robot no longer needs SLAM: it only needs to figure out <strong class="text-neutral-100">where it is within a map it already knows</strong>. In Nav2, the component that does this is <strong class="text-amber-400">AMCL</strong>. It spreads hundreds of position “guesses” (particles) across the map, compares what the LiDAR should see at each guessed position with what it actually sees, and keeps the guesses that match. As the robot moves, the cloud shrinks around its real position.</p>
+<figure class="fig mb-3">
+<svg aria-label="Three AMCL frames: at first, the particles are spread across the room; after moving a little, they gather into two groups; finally, they form a small cloud around the robot." class="w-full h-auto" role="img" viewbox="0 0 640 230">
+<defs><pattern height="32" id="m45-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern></defs><rect fill="url(#m45-grid2)" height="230" width="640"></rect>
+<g fill="none" stroke="#a8a8b3" stroke-width="2.5"><rect height="150" width="190" x="15" y="20"></rect><rect height="150" width="190" x="225" y="20"></rect><rect height="150" width="190" x="435" y="20"></rect></g><g fill="#fbbf24" opacity="0.85">
+<circle cx="40" cy="45" r="3"></circle><circle cx="90" cy="60" r="3"></circle><circle cx="160" cy="40" r="3"></circle><circle cx="185" cy="100" r="3"></circle><circle cx="60" cy="120" r="3"></circle><circle cx="120" cy="150" r="3"></circle><circle cx="150" cy="110" r="3"></circle><circle cx="35" cy="160" r="3"></circle><circle cx="110" cy="90" r="3"></circle><circle cx="175" cy="150" r="3"></circle><circle cx="260" cy="60" r="3"></circle><circle cx="268" cy="70" r="3"></circle><circle cx="252" cy="72" r="3"></circle><circle cx="270" cy="55" r="3"></circle><circle cx="370" cy="130" r="3"></circle><circle cx="380" cy="122" r="3"></circle><circle cx="362" cy="138" r="3"></circle><circle cx="376" cy="140" r="3"></circle><circle cx="388" cy="132" r="3"></circle>
+<circle cx="560" cy="110" r="3"></circle><circle cx="566" cy="104" r="3"></circle><circle cx="554" cy="116" r="3"></circle><circle cx="570" cy="114" r="3"></circle><circle cx="558" cy="100" r="3"></circle></g>
+<circle cx="562" cy="110" fill="none" r="12" stroke="#38bdf8" stroke-width="2.5"></circle><g font-family="Inter,sans-serif" font-size="15" text-anchor="middle">
+<text fill="#fef3c7" x="110" y="196">1. I don't know where I am</text><text fill="#fef3c7" x="320" y="196">2. two similar places</text><text fill="#7dd3fc" x="530" y="196">3. localized</text><text fill="#a8a8b3" font-size="14" x="320" y="220">each amber dot is a position guess; the real robot is the cyan circle</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> from left to right, the robot moves and AMCL discards the guesses that don't match the LiDAR. The middle panel shows the tricky case: two identical corners. Moving farther (or setting the initial position) resolves the uncertainty.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-5-t2-p2"><strong>Pose</strong> is position plus orientation: (x, y) on the floor and which way the robot is facing (the angle, called <em>yaw</em>). <strong>Initial position</strong> is the guess you give AMCL at startup; with it, the cloud starts out small and the robot localizes itself in seconds.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t2-p3"><strong class="text-neutral-100">Goal:</strong> start Nav2 with your saved map and tell it where the robot is. In simulation, add <span class="font-mono text-xs">use_sim_time:=True</span>.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal</span></div>
+<pre><code><span class="c"># terminal 1: Nav2 with the map from module 4.4 (the robot already publishes /scan, /odom and TF)</span>
+source /opt/ros/&lt;distro&gt;/setup.bash
+ros2 launch nav2_bringup bringup_launch.py map:=$HOME/mapas/mapa.yaml
+
+<span class="c"># terminal 2: RViz2 with the Nav2 configuration</span>
+ros2 launch nav2_bringup rviz_launch.py
+
+<span class="c"># alternativa ao botão "2D Pose Estimate": robô na origem do mapa, virado para x</span>
+ros2 topic pub --once /initialpose geometry_msgs/msg/PoseWithCovarianceStamped \
+  "{header: {frame_id: map}, pose: {pose: {position: {x: 0.0, y: 0.0}, orientation: {w: 1.0}}}}"</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>After the initial position is set, RViz2 shows the LiDAR points <strong class="text-neutral-100">on top of the walls</strong> on the map, with a small particle cloud around the robot.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Drive around a little with teleop, and the points stay aligned with the walls.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>LiDAR points “rotated” relative to the map? The initial position was given with the wrong angle: drag the “2D Pose Estimate” arrow in the direction the robot is facing.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t2-p4">All navigation depends on accurate localization. If the robot thinks it’s half a meter to the left, it will plan a perfect route to somewhere it isn’t—and hit the doorframe.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">AMCL</div><div class="text-xs text-neutral-400">particle localization</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Pose</div><div class="text-xs text-neutral-400">x, y, and angle</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">/initialpose</div><div class="text-xs text-neutral-400">starting guess</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">map_server</div><div class="text-xs text-neutral-400">loads the .yaml</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-4-5#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🧮 Costmaps and planners</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t3-p1">The saved map only says “free” or “wall.” To plan, Nav2 needs more: <strong class="text-neutral-100">the cost of passing through each cell</strong>. This is the <strong class="text-amber-400">costmap</strong> It’s built from stacked layers: the static layer comes from the saved map, the obstacle layer comes from the live LiDAR (the chair that moved), and the inflation layer creates a “buffer” around everything—expensive near the wall and cheap in the middle of the corridor.</p>
+<figure class="fig mb-3">
+<svg aria-label="Three costmap layers stacked together: static (walls from the saved map), obstacles (what the LiDAR sees now), and inflation (a buffer around them); together, they form the costmap used by the planner." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><pattern height="32" id="m45-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<radialgradient id="m45-infl"><stop offset="0.35" stop-color="#f59e0b" stop-opacity="0.9"></stop><stop offset="1" stop-color="#f59e0b" stop-opacity="0"></stop></radialgradient></defs>
+<rect fill="url(#m45-grid3)" height="300" width="640"></rect><g font-family="Inter,sans-serif" font-size="15">
+<polygon fill="#16161e" points="60,40 300,40 260,90 20,90" stroke="#a8a8b3" stroke-width="2"></polygon><rect fill="#e6e6e6" height="8" transform="skewX(-38)" width="150" x="70" y="52"></rect><text fill="#fef3c7" x="320" y="70">static: walls from the saved map</text>
+<polygon fill="#16161e" points="60,115 300,115 260,165 20,165" stroke="#38bdf8" stroke-width="2"></polygon><circle cx="170" cy="140" fill="#38bdf8" r="8"></circle><text fill="#bfe6ff" x="320" y="145">obstacles: what the LiDAR sees now</text>
+<polygon fill="#16161e" points="60,190 300,190 260,240 20,240" stroke="#f59e0b" stroke-width="2"></polygon><ellipse cx="160" cy="215" fill="url(#m45-infl)" rx="46" ry="20"></ellipse><text fill="#fde68a" x="320" y="220">inflation: safety buffer</text>
+<text fill="#7dd3fc" font-weight="600" text-anchor="middle" x="320" y="276">static + obstacles + inflation = costmap</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> Think of three transparent sheets stacked on top of each other. The top one never changes; the middle one changes with every LiDAR scan; the bottom one “spreads” cost around whatever the others mark. The radius of this amber band is the parameter you’ll adjust most often.</p>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t3-p2">There are two costmaps. The <strong class="text-neutral-100">global</strong> covers the whole map and is used by the <strong class="text-neutral-100">planner</strong>, which plots the route from point A to B (algorithms such as NavFn or Smac). The <strong class="text-neutral-100">local</strong> is a small window that moves with the robot and is used by the <strong class="text-neutral-100">controller</strong>, which chooses the speed at each moment to follow the route without colliding (algorithms such as DWB, MPPI, or Regulated Pure Pursuit).</p>
+<figure class="fig mb-3">
+<svg aria-label="The robot’s dashed global route to the goal passes through the doorway; within the local window around the robot, the controller avoids a box that wasn’t on the map." class="w-full h-auto" role="img" viewbox="0 0 640 250">
+<defs><pattern height="32" id="m45-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern></defs><rect fill="url(#m45-grid4)" height="250" width="640"></rect>
+<path d="M20,20 H620 V230 H20 Z M330,20 V100 M330,150 V230" fill="none" stroke="#a8a8b3" stroke-width="3"></path><path d="M80,180 C160,170 260,130 330,125 C420,120 520,90 570,60" fill="none" stroke="#fbbf24" stroke-dasharray="8 6" stroke-width="2.5"></path>
+<rect fill="#38bdf8" height="110" opacity="0.07" rx="8" stroke="#38bdf8" stroke-dasharray="4 4" width="170" x="50" y="110"></rect><rect fill="#0e1b26" height="24" stroke="#38bdf8" stroke-width="2" width="30" x="150" y="146"></rect>
+<path d="M80,180 C110,178 140,190 165,190 C190,190 200,160 215,150" fill="none" stroke="#38bdf8" stroke-width="3"></path><circle cx="80" cy="180" fill="#261a08" r="12" stroke="#f59e0b" stroke-width="2.5"></circle>
+<circle cx="570" cy="60" fill="none" r="10" stroke="#fbbf24" stroke-width="3"></circle><circle cx="570" cy="60" fill="#fbbf24" r="3"></circle><g font-family="Inter,sans-serif" font-size="15">
+<text fill="#fde68a" x="440" y="200">global route (planner)</text><text fill="#7dd3fc" x="60" y="104">local window (controller)</text>
+<text fill="#fef3c7" x="545" y="40">goal</text><text fill="#a8a8b3" x="345" y="88">port</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> The dashed amber line is the plan across the whole map, passing through the door. A new box has appeared inside the cyan rectangle (the local costmap): the controller takes the cyan detour around it and returns to the route without having to replan everything.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t3-p3"><strong class="text-neutral-100">Goal:</strong> Create your parameter file from the Nav2 default and adjust the robot size, buffer, and maximum speed. The names below are in the default file; their exact location varies between versions, so use your editor’s search.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal + my_nav2.yaml</span></div>
+<pre><code><span class="c"># 1) copy the default file to edit</span>
+cp $(ros2 pkg prefix nav2_bringup)/share/nav2_bringup/params/nav2_params.yaml ~/meu_nav2.yaml
+
+<span class="c"># 2) in ~/meu_nav2.yaml, find and adjust (in BOTH costmaps, global and local):</span>
+<span class="c">#    robot_radius: 0.15          robot radius in meters (measure yours)</span>
+<span class="c">#    inflation_radius: 0.35      buffer around walls and objects</span>
+<span class="c">#    cost_scaling_factor: 3.0    higher = cost drops faster farther from the wall</span>
+<span class="c"># 3) in velocity_smoother, limit the speed [x, y, rotation]:</span>
+<span class="c">#    max_velocity: [0.2, 0.0, 1.0]</span>
+
+<span class="c"># 4) start Nav2 with your file</span>
+ros2 launch nav2_bringup bringup_launch.py map:=$HOME/mapas/mapa.yaml params_file:=$HOME/meu_nav2.yaml</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-amber-400">How to check:</strong> In RViz2, enable the “Global Costmap” and “Local Costmap” layers: the colored band around the walls should grow or shrink as you change <span class="font-mono">inflation_radius</span>. With <span class="font-mono">ros2 topic echo /cmd_vel</span> during navigation, the <span class="font-mono">linear.x</span> does not exceed 0.2.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-5">
+<h4 class="font-bold text-amber-400 mb-3">✓ Good adjustment</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Set robot_radius slightly larger than the real robot (wires and wheels count).</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Inflation that still leaves the doors in your home “passable” on the costmap.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Start with a low speed; increase it gradually.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Poor adjustment</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Inflation so large that it closes off the door: the planner says there’s no path.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Zero inflation: the robot scrapes the doorframe and table leg.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Changing ten parameters at once: you won’t know which one fixed it.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t3-p4">Almost every strange Nav2 behavior (scraping past things, refusing a doorway, zigzagging down a corridor) can be explained by looking at the two costmaps in RViz2. They’re the navigation “X-ray.”</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Costmap</div><div class="text-xs text-neutral-400">cost per cell</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Inflation</div><div class="text-xs text-neutral-400">buffer around walls</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Global vs. local</div><div class="text-xs text-neutral-400">route vs. detour</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">params_file</div><div class="text-xs text-neutral-400">your adjustments</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-4-5#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🎯 Send the robot to a point (RViz and Python)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t4-p1">The quickest way to test is the <strong class="text-neutral-100">“Nav2 Goal”</strong> button in RViz2: click the destination and drag to indicate which way the robot should face. For a robot that performs tasks on its own, you’ll want to send the same request in code. The package <strong class="text-amber-400">nav2_simple_commander</strong> provides the <span class="font-mono text-xs">BasicNavigator</span>class, which wraps the ROS 2 action in simple functions such as <span class="font-mono text-xs">goToPose</span>.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-5-t4-p2">In ROS 2, the angle is stored as a <strong>quaternion</strong> (four numbers: x, y, z, w), a format that avoids problems with 3D calculations. For a robot on the ground, rotating only around the vertical axis, all you need is: <span class="font-mono text-xs">z = sin(angle/2)</span> e <span class="font-mono text-xs">w = cos(angle/2)</span>. An angle of 0 points along the map’s x-axis.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t4-p3"><strong class="text-neutral-100">Goal:</strong> A Python script that sets the initial position, waits for Nav2 to be ready, sends the robot to (1.5; 0.5) facing 90°, and shows how far it has left to go. Replace the coordinates with a free point on your map (hover over it in RViz2 to read x and y).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">ir_ate_ponto.py</span></div>
+<pre><code><span class="c">#!/usr/bin/env python3</span>
+<span class="c"># Send the robot to a point on the map with Nav2 (nav2_simple_commander)</span>
+<span class="k">import</span> math
+<span class="k">import</span> rclpy
+<span class="k">from</span> geometry_msgs.msg <span class="k">import</span> PoseStamped
+<span class="k">from</span> nav2_simple_commander.robot_navigator <span class="k">import</span> BasicNavigator, TaskResult
+
+
+<span class="k">def</span> pose(nav, x, y, angulo_graus=0.0):
+    p = PoseStamped()
+    p.header.frame_id = <span class="s">'map'</span>
+    p.header.stamp = nav.get_clock().now().to_msg()
+    p.pose.position.x = x
+    p.pose.position.y = y
+    a = math.radians(angulo_graus)
+    p.pose.orientation.z = math.sin(a / 2)
+    p.pose.orientation.w = math.cos(a / 2)
+    <span class="k">return</span> p
+
+
+<span class="k">def</span> main():
+    rclpy.init()
+    nav = BasicNavigator()
+    nav.setInitialPose(pose(nav, 0.0, 0.0, 0.0))   <span class="c"># where the robot is at the starting point</span>
+    nav.waitUntilNav2Active()                     <span class="c"># wait for AMCL and servers</span>
+
+    nav.goToPose(pose(nav, 1.5, 0.5, 90.0))        <span class="c"># destination: x, y, angle</span>
+    <span class="k">while not</span> nav.isTaskComplete():
+        fb = nav.getFeedback()
+        <span class="k">if</span> fb:
+            print(f<span class="s">'Remaining {fb.distance_remaining:.2f} m'</span>)
+
+    resultado = nav.getResult()
+    <span class="k">if</span> resultado == TaskResult.SUCCEEDED:
+        print(<span class="s">'Cheguei.'</span>)
+    <span class="k">elif</span> resultado == TaskResult.CANCELED:
+        print(<span class="s">'Cancelado.'</span>)
+    <span class="k">else</span>:
+        print(<span class="s">'Failed: Nav2 could not reach the destination.'</span>)
+    rclpy.shutdown()
+
+
+<span class="k">if</span> __name__ == <span class="s">'__main__'</span>:
+    main()</code></pre>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t4-p5"><strong class="text-neutral-100">To run:</strong> with Nav2 already running, in a terminal with <span class="font-mono text-xs">source /opt/ros/&lt;distro&gt;/setup.bash</span>, run <span class="font-mono text-xs">python3 ir_ate_ponto.py</span>. If the module is missing, install <span class="font-mono text-xs">ros-&lt;distro&gt;-nav2-simple-commander</span> with apt.</p>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>In RViz2, you’ll see the route to the point and the robot will start moving; the terminal shows “Remaining 1.43 m”, “Remaining 1.20 m”... until “I’ve arrived.”</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>At the end, the robot is facing up on the map (90°).</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Stuck on "waiting for amcl"? The initial pose hasn't arrived; check that Nav2 was started with the right map and use_sim_time setting.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t4-p4">With the goal in code, another program can decide where the robot goes: a button on your phone (Track 2), an object seen by the camera (Track 3), or a voice command interpreted by a language model (Track 5).</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Nav2 Goal</div><div class="text-xs text-neutral-400">click in RViz2</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">BasicNavigator</div><div class="text-xs text-neutral-400">Nav2 in Python</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">goToPose</div><div class="text-xs text-neutral-400">go to a point</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Quaternion</div><div class="text-xs text-neutral-400">z and w of the angle</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-4-5#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🛟 Recovery when the robot gets stuck</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t5-p1">In the real world, the robot will get stuck: a chair blocks its path, someone stops in front of it, or a wheel catches on the rug. Nav2 doesn't give up after the first failure. The <strong class="text-amber-400">behavior tree</strong> of the BT Navigator says what to try: first clear the costmap (the obstacle may have gone away), then spin in place so the LiDAR can get a better view, wait, back up a little, and replan. Only after a few attempts is the goal marked as failed.</p>
+<figure class="fig mb-3">
+<svg aria-label="Simplified behavior tree: the recovery node first tries to navigate (plan and follow); if that fails, it runs a sequence of clearing the costmap, turning, waiting, and backing up, then tries to navigate again, up to a maximum number of attempts." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><pattern height="32" id="m45-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<marker id="m45-ah5" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#a8a8b3"></path></marker></defs>
+<rect fill="url(#m45-grid5)" height="300" width="640"></rect><g fill="none" stroke="#a8a8b3" stroke-width="1.8">
+<path d="M320,74 L170,118" marker-end="url(#m45-ah5)"></path><path d="M320,74 L470,118" marker-end="url(#m45-ah5)"></path><path d="M170,172 L90,218" marker-end="url(#m45-ah5)"></path><path d="M170,172 L250,218" marker-end="url(#m45-ah5)"></path>
+<path d="M470,172 L385,218" marker-end="url(#m45-ah5)"></path><path d="M470,172 L466,218" marker-end="url(#m45-ah5)"></path><path d="M470,172 L565,218" marker-end="url(#m45-ah5)"></path></g>
+<g font-family="Inter,sans-serif" text-anchor="middle"><rect fill="#2a1d0a" height="54" rx="12" stroke="#fbbf24" stroke-width="2.5" width="220" x="210" y="20"></rect><text fill="#fbbf24" font-size="16" font-weight="600" x="320" y="44">Recovery</text><text fill="#fef3c7" font-size="13" x="320" y="64">up to N attempts</text>
+<rect fill="#261a08" height="50" rx="10" stroke="#f59e0b" stroke-width="2" width="180" x="80" y="122"></rect><text fill="#fbbf24" font-size="16" x="170" y="153">1st: navigate</text><rect fill="#0e1b26" height="50" rx="10" stroke="#38bdf8" stroke-width="2" width="180" x="380" y="122"></rect><text fill="#7dd3fc" font-size="16" x="470" y="153">if it fails: recover</text>
+<rect fill="#261a08" height="44" rx="8" stroke="#f59e0b" width="120" x="30" y="222"></rect><text fill="#fef3c7" font-size="14" x="90" y="249">plan</text><rect fill="#261a08" height="44" rx="8" stroke="#f59e0b" width="120" x="190" y="222"></rect><text fill="#fef3c7" font-size="14" x="250" y="249">follow</text>
+<rect fill="#0e1b26" height="44" rx="8" stroke="#38bdf8" width="80" x="340" y="222"></rect><text fill="#bfe6ff" font-size="14" x="380" y="249">clear</text><rect fill="#0e1b26" height="44" rx="8" stroke="#38bdf8" width="76" x="428" y="222"></rect><text fill="#bfe6ff" font-size="14" x="466" y="249">turn</text>
+<rect fill="#0e1b26" height="44" rx="8" stroke="#38bdf8" width="116" x="512" y="222"></rect><text fill="#bfe6ff" font-size="14" x="570" y="249">wait, back up</text><text fill="#a8a8b3" font-size="14" x="320" y="292">after recovery, it tries to "navigate" again</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> Read from top to bottom and left to right. The amber branch is the normal path (plan and follow). If it fails, the cyan branch runs the recovery actions in order, and the top node tells it to try navigating again until it runs out of attempts.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-5-t5-p2">A <strong>behavior tree</strong> (behavior tree) is a way to write decisions as a flowchart: each box returns "success," "failure," or "running," and the nodes above decide what to do with the response. In Nav2, it lives in an XML file that you can swap without recompiling anything. Start with the default; customize it later.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t5-p3"><strong class="text-neutral-100">Goal:</strong> don't let your script wait forever. This version cancels the goal if more than 60 seconds pass. You can test recovery by putting a box (or a block in Gazebo) in the way.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">ir_com_limite.py</span></div>
+<pre><code><span class="c">#!/usr/bin/env python3</span>
+<span class="c"># Go to a point, but cancel if it takes too long (your program's safety net)</span>
+<span class="k">import</span> rclpy
+<span class="k">from</span> rclpy.duration <span class="k">import</span> Duration
+<span class="k">from</span> geometry_msgs.msg <span class="k">import</span> PoseStamped
+<span class="k">from</span> nav2_simple_commander.robot_navigator <span class="k">import</span> BasicNavigator, TaskResult
+
+LIMITE_S = 60.0
+
+rclpy.init()
+nav = BasicNavigator()
+nav.waitUntilNav2Active()            <span class="c"># the initial pose was already set in RViz2</span>
+
+alvo = PoseStamped()
+alvo.header.frame_id = <span class="s">'map'</span>
+alvo.header.stamp = nav.get_clock().now().to_msg()
+alvo.pose.position.x = 2.0
+alvo.pose.position.y = 0.0
+alvo.pose.orientation.w = 1.0
+
+inicio = nav.get_clock().now()
+cancelado = False
+nav.goToPose(alvo)
+<span class="k">while not</span> nav.isTaskComplete():
+    <span class="k">if not</span> cancelado <span class="k">and</span> nav.get_clock().now() - inicio &gt; Duration(seconds=LIMITE_S):
+        print(<span class="s">'Took too long: canceling.'</span>)
+        nav.cancelTask()
+        cancelado = True
+
+print(<span class="s">'Resultado:'</span>, nav.getResult())
+rclpy.shutdown()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Path clear: the robot arrives and the terminal shows <span class="font-mono text-xs">TaskResult.SUCCEEDED</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>With the path blocked: recovery messages (spin, back up) appear in the Nav2 terminal, and the robot spins in place before giving up or finding another route.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>If more than 60 s pass, "Took too long: canceling." appears and the robot stops.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Backing up is movement too</h3>
+<p class="text-neutral-300 text-sm">The recovery backup moves "blindly" backward if your LiDAR doesn't cover the rear (for example, if it's mounted behind a mast). With a real robot near people or stairs, start with short backup distances and always keep a physical way to cut power to the motors.</p>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t5-p4">A robot that only works when the path is perfect never leaves the workbench. Understanding recovery and setting a limit in your own program are what make the difference between a demo and a robot that makes its rounds every day.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Behavior tree</div><div class="text-xs text-neutral-400">decisions in XML</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Spin / BackUp</div><div class="text-xs text-neutral-400">spin / back up</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Clear costmap</div><div class="text-xs text-neutral-400">forget obstacle</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">cancelTask</div><div class="text-xs text-neutral-400">your time limit</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-4-5#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🔁 Waypoints: a round through the house</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t6-p1">A round is a list of <strong class="text-amber-400">waypoints</strong> (stops along the way): living room, hallway, kitchen, back to base. Nav2 <span class="font-mono text-xs">BasicNavigator</span> has <span class="font-mono text-xs">followWaypoints</span>, which visits the points in order and reports which one it's at. If a point fails (a closed door, for example), it moves on to the next one by default and reports which points failed at the end.</p>
+<figure class="fig mb-3">
+<svg aria-label="Floor plan of a house with four rooms and a patrol route: starting point in the living room, point 1 in the hallway, point 2 in the kitchen, point 3 in the bedroom, then back to the starting point; the stairs are marked as a restricted area." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><pattern height="32" id="m45-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<pattern height="10" id="m45-hatch" patterntransform="rotate(45)" patternunits="userSpaceOnUse" width="10"><line stroke="#f87171" stroke-width="3" x1="0" x2="0" y1="0" y2="10"></line></pattern></defs>
+<rect fill="url(#m45-grid6)" height="300" width="640"></rect><g fill="none" stroke="#a8a8b3" stroke-width="3"><rect height="260" width="600" x="20" y="20"></rect><path d="M300,20 V120 M300,170 V280 M20,150 H120 M170,150 H300 M300,150 H420 M470,150 H620"></path></g>
+<rect fill="url(#m45-hatch)" height="70" opacity="0.5" width="90" x="520" y="200"></rect><g fill="#a8a8b3" font-family="Inter,sans-serif" font-size="15"><text x="40" y="45">living room</text><text x="320" y="45">kitchen</text><text x="40" y="175">bedroom</text><text x="320" y="175">hallway</text><text fill="#fca5a5" x="526" y="194">stairs</text></g>
+<path d="M150,90 C220,100 260,150 360,150 C420,150 440,90 460,80 M460,80 C380,110 340,200 160,220 C120,220 120,140 150,90" fill="none" stroke="#fbbf24" stroke-dasharray="8 5" stroke-width="2.5"></path><g font-family="Inter,sans-serif" font-size="15" font-weight="600" text-anchor="middle">
+<circle cx="150" cy="90" fill="#0e1b26" r="15" stroke="#38bdf8" stroke-width="2.5"></circle><text fill="#7dd3fc" x="150" y="95">B</text><circle cx="360" cy="150" fill="#261a08" r="14" stroke="#f59e0b" stroke-width="2.5"></circle><text fill="#fbbf24" x="360" y="155">1</text>
+<circle cx="460" cy="80" fill="#261a08" r="14" stroke="#f59e0b" stroke-width="2.5"></circle><text fill="#fbbf24" x="460" y="85">2</text><circle cx="160" cy="220" fill="#261a08" r="14" stroke="#f59e0b" stroke-width="2.5"></circle><text fill="#fbbf24" x="160" y="225">3</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> the robot leaves the base (B, cyan), passes points 1, 2, and 3 in order, and returns. The red hatched area is the stairs: no waypoint is near them. In module 4.6, you'll also block them on the map.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-5-t6-p2"><strong class="text-neutral-100">Goal:</strong> a round through three points and back to base, repeated twice. Replace the coordinates with points on your map.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">ronda.py</span></div>
+<pre><code><span class="c">#!/usr/bin/env python3</span>
+<span class="c"># Nav2 waypoint round: visits the points in order and returns to base</span>
+<span class="k">import</span> math
+<span class="k">import</span> rclpy
+<span class="k">from</span> geometry_msgs.msg <span class="k">import</span> PoseStamped
+<span class="k">from</span> nav2_simple_commander.robot_navigator <span class="k">import</span> BasicNavigator, TaskResult
+
+<span class="c"># (name, x, y, angle in degrees) in the map frame</span>
+PONTOS = [
+    (<span class="s">'corredor'</span>, 2.0, 0.0, 0.0),
+    (<span class="s">'cozinha'</span>, 3.0, 1.5, 90.0),
+    (<span class="s">'quarto'</span>, 0.5, -1.5, 180.0),
+    (<span class="s">'base'</span>, 0.0, 0.0, 0.0),
+]
+VOLTAS = 2
+
+
+<span class="k">def</span> pose(nav, x, y, graus):
+    p = PoseStamped()
+    p.header.frame_id = <span class="s">'map'</span>
+    p.header.stamp = nav.get_clock().now().to_msg()
+    p.pose.position.x, p.pose.position.y = x, y
+    p.pose.orientation.z = math.sin(math.radians(graus) / 2)
+    p.pose.orientation.w = math.cos(math.radians(graus) / 2)
+    <span class="k">return</span> p
+
+
+rclpy.init()
+nav = BasicNavigator()
+nav.waitUntilNav2Active()
+<span class="k">for</span> volta <span class="k">in</span> range(1, VOLTAS + 1):
+    nav.followWaypoints([pose(nav, x, y, g) <span class="k">for</span> _, x, y, g <span class="k">in</span> PONTOS])
+    atual = -1
+    <span class="k">while not</span> nav.isTaskComplete():
+        fb = nav.getFeedback()
+        <span class="k">if</span> fb <span class="k">and</span> fb.current_waypoint != atual:
+            atual = fb.current_waypoint
+            print(f<span class="s">'Round {volta}: going to {PONTOS[atual][0]}'</span>)
+    print(f<span class="s">'Round {volta} finished:'</span>, nav.getResult())
+    <span class="k">if</span> nav.getResult() != TaskResult.SUCCEEDED:
+        <span class="k">break</span>
+rclpy.shutdown()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>The terminal shows "Round 1: going to hallway," then kitchen, bedroom, and base, and repeats for round 2.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>In RViz2, you can see the route being recalculated at each point.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Does a point get "skipped" right away? It's inside a wall or the inflation zone; move it to the middle of the room.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-5">
+<h4 class="font-bold text-amber-400 mb-3">✓ Safe round</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Points in the middle of rooms, far from stairs, glass, and corners.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>For your first real round, walk alongside the robot.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Set a low maximum speed in velocity_smoother (topic 3).</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Risky round</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Letting the robot run on its own with children or pets in the house.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Waypoint at the top of or near the stairs: the 2D LiDAR can't see the step.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Infinite loop of rounds with no time or battery limit.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-5-t6-p3">Rounds are the basis for security robots, deliveries between rooms, and inventory checks. With a list of points, you already have a "job" for the robot, which will become the project in the next module.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Waypoint</div><div class="text-xs text-neutral-400">stop along the way</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">followWaypoints</div><div class="text-xs text-neutral-400">visits in order</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">current_waypoint</div><div class="text-xs text-neutral-400">which one it's at</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Restricted area</div><div class="text-xs text-neutral-400">far from the stairs</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 rounded-xl border border-amber-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Nav2 is a team</strong><span class="text-neutral-400">: BT Navigator coordinates the planner, controller, and behaviors; the output is /cmd_vel.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">AMCL</strong><span class="text-neutral-400"> localizes the robot on the saved map; set the correct initial pose, including the angle.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Costmaps</strong><span class="text-neutral-400">: static map + obstacles + inflation; adjust robot_radius, inflation_radius, and maximum speed.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">BasicNavigator</strong><span class="text-neutral-400">: goToPose for a point, followWaypoints for a round, cancelTask as a limit.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Recovery</strong><span class="text-neutral-400">to clean, turn, wait, back up, and try again, as defined in the behavior tree.</span></div></div>
+</div>
+<h3 class="font-semibold text-amber-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.nav2.org/" rel="noopener" target="_blank">Nav2 Documentation</a> <span class="text-neutral-500">— concepts, tutorials, and setup guide</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.nav2.org/commander_api/index.html" rel="noopener" target="_blank">Simple Commander API</a> <span class="text-neutral-500">— all BasicNavigator functions</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.nav2.org/configuration/index.html" rel="noopener" target="_blank">Nav2 Setup Guide</a> <span class="text-neutral-500">— each costmap, planner, and controller parameter</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/SteveMacenski/slam_toolbox" rel="noopener" target="_blank">slam_toolbox</a> <span class="text-neutral-500">— localization mode as an alternative to AMCL</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.ros.org/en/lyrical/" rel="noopener" target="_blank">ROS 2 documentation</a> <span class="text-neutral-500">— actions, parameters, and launch (replace with jazzy if that’s what you use)</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-amber-400 mb-1">Next module</h3>
+<p class="text-neutral-300">4.6 · Project: your real robot, with ESP32, Raspberry Pi 5, and LiDAR, maps the house and navigates between rooms.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-4-4.html">← Previous: 4.4 LiDAR and Maps</a>
+<a class="inline-flex items-center px-5 py-3 bg-amber-700 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors" href="modulo-4-6.html">Next: 4.6 Project →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 4.3 · micro-ROS on the ESP32 | Robotics from Zero to Expert</title>
+<meta content="micro-ROS on the ESP32: the agent in Docker, firmware that publishes encoder readings and follows /cmd_vel with a watchdog, odometry in Python on ROS 2, and solutions to common problems (serial, Wi-Fi, time)." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha4/modulo-4-3.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha4/modulo-4-3.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha4/modulo-4-3.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha4/modulo-4-3.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha4/modulo-4-3.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha4/modulo-4-3.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-4-3.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha4/modulo-4-3.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T4 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a aria-current="page" class="nav-trail text-amber-400 bg-amber-500/10" href="index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="4-3" data-inema-track="4" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-amber-400" href="../../index.html">Home</a><span aria-hidden="true">/</span>
+<a class="hover:text-amber-400" href="index.html">Track 4</a><span aria-hidden="true">/</span>
+<span class="text-amber-400">Module 4.3</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full mb-4">MODULE 4.3 · HANDS-ON</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🔌 micro-ROS on the ESP32</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Until now, the robot lived in Gazebo. Now the ESP32 from the previous tracks becomes <strong class="text-neutral-100">a real ROS 2 node</strong>: it publishes encoder pulses, follows the same <span class="font-mono">/cmd_vel</span> from teleop, and stops by itself if the connection drops. A Python node on the PC completes the loop with the <strong class="text-amber-400">real robot's odometry</strong>.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Intermediate</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Practice</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">ESP32</div><div class="text-xs text-neutral-400">+ motors with encoders</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 4.3 progress" class="inema-ring" data-inema-meter="modulo:4-3"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:4-3"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-1">1. What micro-ROS is</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-2">2. The agent</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-3">3. The ESP32 publishing</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-4">4. Listening to /cmd_vel</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-5">5. Real odometry</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-6">6. Common problems</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-4-3#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🧬 What micro-ROS is</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-3-t1-p1">The ESP32 has little memory and doesn't run Linux, so it can't fit the full ROS 2 stack. micro-ROS <strong class="text-amber-400">micro-ROS</strong> is a lightweight version made for microcontrollers: the ESP32 creates nodes, publishers, and subscribers with the <strong class="text-neutral-100">rclc</strong> library (the C API), and a program on the PC or Pi, the <strong class="text-amber-400">micro-ROS Agent</strong>, connects it to the rest of the graph. To other nodes, the ESP32 appears as another ROS 2 node, with topics you can read using <span class="font-mono text-sm">ros2 topic echo</span>.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-3-t1-p2">The ESP32 doesn't speak DDS directly: it speaks <strong>XRCE-DDS</strong> (DDS for extremely resource-constrained devices), a lightweight protocol in which the ESP32 is the <strong>client</strong> and the agent is the <strong>server</strong> that translates everything to DDS. That's why the agent needs to be running first: without it, the ESP32 has no one to talk to. The <strong>executor</strong> is the firmware loop that calls your callbacks when a message arrives or the timer expires.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="micro-ROS flow: the ESP32, running rclc and the XRCE-DDS client, communicates over USB serial or Wi-Fi UDP with the micro-ROS Agent on the PC or Pi, which translates to DDS. On the other side of DDS are regular ROS 2 nodes such as teleop, odometry, and RViz." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs>
+<pattern height="32" id="m43-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<filter height="180%" id="m43-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+<marker id="m43-ah1" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs>
+<rect fill="url(#m43-grid1)" height="260" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#1f1604" height="150" rx="14" stroke="#fbbf24" stroke-width="2" width="170" x="16" y="50"></rect>
+<text fill="#fbbf24" font-size="18" font-weight="600" x="101" y="80">ESP32</text><text fill="#fde68a" font-size="15" x="101" y="110">your firmware</text><text fill="#fde68a" font-size="15" x="101" y="136">rclc</text><text fill="#fde68a" font-size="15" x="101" y="162">XRCE client</text>
+<g filter="url(#m43-glow1)"><rect fill="#2a1d05" height="90" rx="14" stroke="#f59e0b" stroke-width="2.5" width="160" x="236" y="80"></rect></g>
+<text fill="#fbbf24" font-size="17" font-weight="600" x="316" y="116">Agent</text><text fill="#fde68a" font-size="15" x="316" y="142">PC or Pi</text>
+<rect fill="#0e1b26" height="150" rx="14" stroke="#38bdf8" stroke-width="2" width="178" x="446" y="50"></rect>
+<text fill="#7dd3fc" font-size="18" font-weight="600" x="535" y="80">ROS 2 graph</text><text fill="#bfe6ff" font-size="15" x="535" y="110">teleop</text><text fill="#bfe6ff" font-size="15" x="535" y="136">odometry</text><text fill="#bfe6ff" font-size="15" x="535" y="162">RViz, Nav2</text>
+<text fill="#a8a8b3" font-size="14" x="211" y="66">USB or Wi-Fi</text><text fill="#a8a8b3" font-size="14" x="421" y="66">DDS</text>
+<text fill="#a8a8b3" font-size="14" x="320" y="236">to the graph, the ESP32 is just another node: /esp32_base</text>
+</g>
+<g fill="none" stroke="#38bdf8" stroke-width="1.8"><path d="M186,112 L228,112" marker-end="url(#m43-ah1)"></path><path d="M236,140 L194,140" marker-end="url(#m43-ah1)"></path><path d="M396,112 L438,112" marker-end="url(#m43-ah1)"></path><path d="M446,140 L404,140" marker-end="url(#m43-ah1)"></path></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> the path has two segments. On the left, the ESP32 and agent communicate over the lightweight protocol (cable or Wi-Fi). On the right, the agent passes everything to DDS, and regular nodes don't even know there's a microcontroller. If the agent (the glowing box) goes down, the ESP32 is isolated.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-5"><h4 class="font-bold text-amber-400 mb-3">✓ Keep on the ESP32</h4><ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Motor PWM and encoder readings.</span></li><li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>The safety stop when the command disappears.</span></li><li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Fast readings from the IMU and simple sensors.</span></li></ul></div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5"><h4 class="font-bold text-red-400 mb-3">✗ Don't put on the ESP32</h4><ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>SLAM, maps, or route planning.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Large messages (images, point clouds).</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Dozens of topics: each one uses memory.</span></li></ul></div>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-3-t1-p3">It’s the same division of labor as in Track 3 (the Pi thinks, the ESP32 acts), but now there’s no need to invent a protocol: the ESP32 speaks ROS. What works with the Gazebo robot (teleop, SLAM, Nav2) also works with the real robot by changing only who publishes and subscribes to the topics.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">micro-ROS</div><div class="text-xs text-neutral-400">ROS 2 for microcontrollers</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Agent</div><div class="text-xs text-neutral-400">bridge to DDS</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">rclc</div><div class="text-xs text-neutral-400">C firmware API</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Executor</div><div class="text-xs text-neutral-400">calls the callbacks</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-4-3#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🛰️ Install the micro-ROS Agent</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-3-t2-p1">The simplest way to run the agent is with the official Docker image <span class="font-mono text-sm">microros/micro-ros-agent:&lt;distro&gt;</span>: nothing to compile. The agent, ESP32 library, and your ROS 2 installation must all use the same distro. The agent listens on a <strong class="text-neutral-100">transport</strong>: <strong class="text-amber-400">serial</strong> (the ESP32’s USB cable) or <strong class="text-amber-400">UDP</strong> (Wi-Fi, on the port you choose, conventionally 8888). Start with the cable: it’s easier to diagnose.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal (PC or Pi)</span></div>
+<pre><code><span class="c"># find the ESP32 port (DevKit: ttyUSB0; S3 with native USB: ttyACM0)</span>
+ls /dev/ttyUSB* /dev/ttyACM*
+<span class="c"># agent over the serial port (USB cable)</span>
+docker run -it --rm -v /dev:/dev --privileged --net=host \
+  microros/micro-ros-agent:&lt;distro&gt; serial --dev /dev/ttyUSB0 -b 115200
+<span class="c"># OR agent over Wi-Fi (UDP), for the ESP32 without a cable</span>
+docker run -it --rm --net=host microros/micro-ros-agent:&lt;distro&gt; udp4 --port 8888</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>The agent prints "TermiosAgentLinux.cpp | init | running..." (serial) or "UDPv4AgentLinux.cpp | init | running..." (UDP), then waits.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>When the ESP32 connects, lines like "create_client", "create_topic", and "create_publisher" appear.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"Unable to find image"? The tag for your distro hasn’t been published yet. Check Docker Hub.</span></li>
+</ul>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Transport comparison: over USB serial, the connection is stable and the ESP32 gets power, but the robot is tethered to the computer; over Wi-Fi UDP, the robot can move freely, but it depends on the network and requires knowing the agent's IP address." class="w-full h-auto" role="img" viewbox="0 0 640 240">
+<defs><pattern height="32" id="m43-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m43-grid2)" height="240" width="640"></rect>
+<g font-family="Inter,sans-serif">
+<rect fill="#1f1604" height="200" rx="14" stroke="#fbbf24" stroke-width="2" width="296" x="16" y="20"></rect>
+<text fill="#fbbf24" font-size="18" font-weight="600" x="36" y="52">serial (USB cable)</text>
+<g fill="#fde68a" font-size="15"><text x="36" y="88">+ stable, no network setup needed</text><text x="36" y="116">+ ideal for the first test</text><text x="36" y="144">+ with the Pi on board, it stays on the robot</text><text x="36" y="172">− with the PC, the robot is tethered</text><text x="36" y="200">− occupied port = no uploading</text></g>
+<rect fill="#0e1b26" height="200" rx="14" stroke="#38bdf8" stroke-width="2" width="296" x="328" y="20"></rect>
+<text fill="#7dd3fc" font-size="18" font-weight="600" x="348" y="52">UDP (Wi-Fi)</text>
+<g fill="#bfe6ff" font-size="15"><text x="348" y="88">+ robot moves freely, no cable</text><text x="348" y="116">+ agent can run on the PC</text><text x="348" y="144">− requires the agent’s IP address</text><text x="348" y="172">− poor network = delayed commands</text><text x="348" y="200">− the radio uses more battery</text></g>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> The amber column is the cable; the cyan one is Wi-Fi. For the robot in Track 3, the best of both worlds is a USB cable between the ESP32 and Raspberry Pi, with the agent running on the Pi: it’s stable, and the robot stays free to move. Wi-Fi makes sense when there’s no Pi on board.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-3-t2-p2">Almost every case of “the ESP32 doesn’t show up in ROS” comes down to the agent being off, the wrong port, or a different distro. Knowing how to start the agent and read its messages solves most problems before you open the firmware.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Transport</div><div class="text-xs text-neutral-400">serial or UDP</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">/dev/ttyUSB0</div><div class="text-xs text-neutral-400">the cable port</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">udp4 8888</div><div class="text-xs text-neutral-400">agent on the network</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Same distro</div><div class="text-xs text-neutral-400">agent, ESP32, and ROS</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-4-3#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">📤 ESP32 publishing data (encoders, IMU)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-3-t3-p1">The firmware below is for the whole robot: this topic explains the part that <strong class="text-neutral-100">publishes</strong>, and the next one explains the part that <strong class="text-neutral-100">subscribes</strong>. Every 50 ms, a timer copies the counts from both encoders into a <span class="font-mono text-sm">std_msgs/msg/Int32MultiArray</span> message and publishes it on <span class="font-mono text-sm">/ticks</span>. The position calculation happens on the PC (topic 5): the ESP32 just measures, quickly and without missing pulses.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-4">Library setup, step by step</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Download the release for your distro</h4><p class="text-neutral-300 text-sm">On the repository’s releases page <span class="font-mono text-xs">micro-ROS/micro_ros_arduino</span> on GitHub, download the .zip marked with your distro (there are releases for Jazzy; check whether one is available for Lyrical).</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Install it in Arduino IDE 2.x</h4><p class="text-neutral-300 text-sm">Sketch → Include Library → Add .ZIP Library. The release README specifies which versions of the esp32 package it supports; if it doesn’t compile with the 3.x package you have installed, follow its instructions or use the ESP-IDF component <span class="font-mono text-xs">micro_ros_espidf_component</span> (Jazzy = 24.x, Lyrical = 26.x).</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Connect and upload</h4><p class="text-neutral-300 text-sm">Wire the TB6612FNG as in Track 1 (pins are at the top of the code), connect the encoders to GPIO 18 and 19, and use a common GND. Upload with the agent OFF (it occupies the port), then start the agent.</p></div></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-3-t3-p2"><strong class="text-neutral-100">Goal:</strong> ESP32 as a node <span class="font-mono text-xs">/esp32_base</span>, publishing <span class="font-mono text-xs">/ticks</span> and following <span class="font-mono text-xs">/cmd_vel</span>, with automatic stopping. PWM uses the 3.x API (<span class="font-mono text-xs">ledcAttach</span> e <span class="font-mono text-xs">ledcWrite</span> takes the pin).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">robo_microros.ino</span></div>
+<pre><code><span class="c">// Robot base with micro-ROS (micro_ros_arduino library for YOUR distro, esp32 package 3.x)</span>
+<span class="c">// Publishes /ticks (encoders) every 50 ms and subscribes to /cmd_vel (geometry_msgs/Twist).</span>
+<span class="k">#include</span> &lt;micro_ros_arduino.h&gt;
+<span class="k">#include</span> &lt;rcl/rcl.h&gt;
+<span class="k">#include</span> &lt;rclc/rclc.h&gt;
+<span class="k">#include</span> &lt;rclc/executor.h&gt;
+<span class="k">#include</span> &lt;std_msgs/msg/int32_multi_array.h&gt;
+<span class="k">#include</span> &lt;geometry_msgs/msg/twist.h&gt;
+
+<span class="k">const int</span> PINO_LED = 2;
+<span class="k">const int</span> AIN1 = 26, AIN2 = 27, PWMA = 25;   <span class="c">// left motor (TB6612FNG)</span>
+<span class="k">const int</span> BIN1 = 16, BIN2 = 17, PWMB = 4;    <span class="c">// right motor</span>
+<span class="k">const int</span> STBY = 23;
+<span class="k">const int</span> ENC_ESQ = 18, ENC_DIR = 19;       <span class="c">// channel A of each encoder</span>
+<span class="k">const float</span> SEPARACAO = 0.15;              <span class="c">// distance between wheels in m: MEASURE your robot</span>
+<span class="k">const float</span> V_MAX = 0.40;                  <span class="c">// m/s at PWM 255: measure with a tape measure</span>
+<span class="k">const unsigned long</span> TIMEOUT_MS = 500;      <span class="c">// no command for 0.5 s = stop</span>
+
+<span class="k">volatile</span> int32_t ticksEsq = 0, ticksDir = 0;
+<span class="k">volatile int</span> sentidoEsq = 1, sentidoDir = 1;
+<span class="k">unsigned long</span> ultimoCmd = 0;
+
+rcl_publisher_t pubTicks;
+rcl_subscription_t subCmd;
+std_msgs__msg__Int32MultiArray msgTicks;
+int32_t bufTicks[2];
+geometry_msgs__msg__Twist msgCmd;
+rclc_executor_t executor;
+rclc_support_t support;
+rcl_allocator_t allocator;
+rcl_node_t node;
+rcl_timer_t timer;
+
+<span class="k">#define</span> RCCHECK(fn) { rcl_ret_t rc = fn; <span class="k">if</span> (rc != RCL_RET_OK) erro(); }
+<span class="k">#define</span> RCSOFT(fn)  { rcl_ret_t rc = fn; (<span class="k">void</span>)rc; }
+
+<span class="k">void</span> erro() {                               <span class="c">// rapidly blinking LED = failed to create something</span>
+  ledcWrite(PWMA, 0); ledcWrite(PWMB, 0);
+  <span class="k">while</span> (<span class="k">true</span>) { digitalWrite(PINO_LED, !digitalRead(PINO_LED)); delay(100); }
+}
+
+<span class="k">void</span> IRAM_ATTR isrEsq() { ticksEsq += sentidoEsq; }
+<span class="k">void</span> IRAM_ATTR isrDir() { ticksDir += sentidoDir; }
+
+<span class="c">// v in m/s (negative = reverse) becomes direction + PWM from 0 to 255</span>
+<span class="k">void</span> motor(<span class="k">int</span> in1, <span class="k">int</span> in2, <span class="k">int</span> pwm, <span class="k">float</span> v, <span class="k">volatile int</span> &amp;sentido) {
+  <span class="k">int</span> duty = constrain((<span class="k">int</span>)(fabs(v) / V_MAX * 255.0), 0, 255);
+  digitalWrite(in1, v &gt;= 0 ? HIGH : LOW);
+  digitalWrite(in2, v &gt;= 0 ? LOW : HIGH);
+  ledcWrite(pwm, duty);
+  sentido = (v &gt;= 0) ? 1 : -1;               <span class="c">// single-channel encoder: direction comes from the command</span>
+}
+
+<span class="c">// Topic 4: a Twist arrives on /cmd_vel</span>
+<span class="k">void</span> aoReceberCmd(<span class="k">const void</span> *msgin) {
+  <span class="k">const</span> geometry_msgs__msg__Twist *cmd = (<span class="k">const</span> geometry_msgs__msg__Twist *)msgin;
+  <span class="k">float</span> v = cmd-&gt;linear.x, w = cmd-&gt;angular.z;
+  motor(AIN1, AIN2, PWMA, v - w * SEPARACAO / 2.0, sentidoEsq);
+  motor(BIN1, BIN2, PWMB, v + w * SEPARACAO / 2.0, sentidoDir);
+  ultimoCmd = millis();
+}
+
+<span class="c">// Topic 3: publishes ticks every 50 ms and checks the watchdog</span>
+<span class="k">void</span> aoTimer(rcl_timer_t *t, int64_t ultimo) {
+  (<span class="k">void</span>)ultimo; <span class="k">if</span> (t == NULL) <span class="k">return</span>;
+  bufTicks[0] = ticksEsq; bufTicks[1] = ticksDir;
+  RCSOFT(rcl_publish(&amp;pubTicks, &amp;msgTicks, NULL));
+  <span class="k">if</span> (millis() - ultimoCmd &gt; TIMEOUT_MS) { ledcWrite(PWMA, 0); ledcWrite(PWMB, 0); }
+}
+
+<span class="k">void</span> setup() {
+  pinMode(PINO_LED, OUTPUT);
+  set_microros_transports();                <span class="c">// USB serial at 115200 (do not use Serial.print!)</span>
+  <span class="k">int</span> saidas[] = {AIN1, AIN2, BIN1, BIN2, STBY};
+  <span class="k">for</span> (<span class="k">int</span> p : saidas) pinMode(p, OUTPUT);
+  digitalWrite(STBY, HIGH);                 <span class="c">// take the driver out of standby mode</span>
+  ledcAttach(PWMA, 20000, 8);               <span class="c">// 20 kHz, 8 bits (API 3.x)</span>
+  ledcAttach(PWMB, 20000, 8);
+  pinMode(ENC_ESQ, INPUT_PULLUP); pinMode(ENC_DIR, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(ENC_ESQ), isrEsq, RISING);
+  attachInterrupt(digitalPinToInterrupt(ENC_DIR), isrDir, RISING);
+  delay(2000);                              <span class="c">// time for the agent to respond</span>
+
+  allocator = rcl_get_default_allocator();
+  RCCHECK(rclc_support_init(&amp;support, 0, NULL, &amp;allocator));
+  RCCHECK(rclc_node_init_default(&amp;node, <span class="s">"esp32_base"</span>, <span class="s">""</span>, &amp;support));
+  RCCHECK(rclc_publisher_init_default(&amp;pubTicks, &amp;node,
+          ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32MultiArray), <span class="s">"ticks"</span>));
+  RCCHECK(rclc_subscription_init_default(&amp;subCmd, &amp;node,
+          ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), <span class="s">"cmd_vel"</span>));
+  <span class="c">// Jazzy and Lyrical use timer version "2" (older distros: rclc_timer_init_default)</span>
+  RCCHECK(rclc_timer_init_default2(&amp;timer, &amp;support, RCL_MS_TO_NS(50), aoTimer, <span class="k">true</span>));
+  RCCHECK(rclc_executor_init(&amp;executor, &amp;support.context, 2, &amp;allocator));
+  RCCHECK(rclc_executor_add_subscription(&amp;executor, &amp;subCmd, &amp;msgCmd, &amp;aoReceberCmd, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_timer(&amp;executor, &amp;timer));
+
+  msgTicks.data.data = bufTicks;            <span class="c">// the message points to the fixed array of 2</span>
+  msgTicks.data.size = 2;
+  msgTicks.data.capacity = 2;
+  digitalWrite(PINO_LED, HIGH);             <span class="c">// solid LED = connected</span>
+}
+
+<span class="k">void</span> loop() {
+  RCSOFT(rclc_executor_spin_some(&amp;executor, RCL_MS_TO_NS(10)));
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>GPIO 2 LED stays on, and the agent shows "create_publisher" and "create_subscriber".</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span><span class="font-mono text-xs">ros2 node list</span> terminal <span class="font-mono text-xs">/esp32_base</span>; <span class="font-mono text-xs">ros2 topic hz /ticks</span> shows about 20 Hz.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span><span class="font-mono text-xs">ros2 topic echo /ticks</span>: turn a wheel by hand and the corresponding number in <span class="font-mono text-xs">data</span> changes.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Rapidly blinking LED: the ESP32 couldn’t find the agent. Start the agent and press EN (reset) on the ESP32.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 What about the IMU?</h3>
+<p class="text-neutral-300 text-sm">To publish the MPU-6050 from Track 2, use the type <span class="font-mono text-xs">sensor_msgs/msg/Imu</span> (linear acceleration in m/s², angular velocity in rad/s) in a second publisher on the same timer, with <span class="font-mono text-xs">header.frame_id</span> pointing to a link <span class="font-mono text-xs">imu_link</span> that you add to the URDF. Start with the encoders alone: they’re enough to map.</p>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-3-t3-p3">The pattern “timer copies the data, executor publishes” works for any sensor: distance, battery, emergency stop button. Counting pulses on the ESP32 using interrupts is what ensures no wheel rotation is missed while the Pi is busy with the map.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">/ticks</div><div class="text-xs text-neutral-400">encoder count</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">50 ms timer</div><div class="text-xs text-neutral-400">publishes at 20 Hz</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Interrupt</div><div class="text-xs text-neutral-400">doesn't miss pulses</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Int32MultiArray</div><div class="text-xs text-neutral-400">fixed-size array</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-4-3#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">📥 ESP32 listening to /cmd_vel and turning the motors</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-3-t4-p1">O <span class="font-mono text-sm">/cmd_vel</span> says how the entire robot should move: <span class="font-mono text-sm">v</span> (meters per second forward) and <span class="font-mono text-sm">ω</span> (radians per second of rotation). The ESP32 needs to convert this into the speed of each wheel. This is <strong class="text-amber-400">differential kinematics</strong>: to turn left, the right wheel moves faster than the left. In the firmware function <span class="font-mono text-sm">aoReceberCmd</span> that's two lines.</p>
+<figure class="fig mb-3">
+<svg aria-label="Differential drive kinematics: the v and omega command becomes two wheel speeds. Left wheel equals v minus omega times L over 2; right wheel equals v plus omega times L over 2, where L is the distance between the wheels. With positive omega, the right wheel is faster and the robot turns left." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs>
+<pattern height="32" id="m43-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<filter height="180%" id="m43-glow4" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+<marker id="m43-ah4" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#fbbf24"></path></marker>
+<marker id="m43-ah4c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs>
+<rect fill="url(#m43-grid4)" height="280" width="640"></rect>
+<g filter="url(#m43-glow4)"><rect fill="#1f1604" height="120" rx="12" stroke="#fbbf24" stroke-width="2" width="140" x="110" y="80"></rect></g>
+<rect fill="#0e1b26" height="22" rx="5" stroke="#38bdf8" stroke-width="2" width="104" x="128" y="56"></rect>
+<rect fill="#0e1b26" height="22" rx="5" stroke="#38bdf8" stroke-width="2" width="104" x="128" y="202"></rect>
+<g fill="none" stroke-width="2.5"><path d="M232,67 L268,67" marker-end="url(#m43-ah4c)" stroke="#38bdf8"></path><path d="M232,213 L300,213" marker-end="url(#m43-ah4c)" stroke="#38bdf8"></path><path d="M180,140 C220,140 250,125 262,112" marker-end="url(#m43-ah4)" stroke="#fbbf24"></path></g>
+<path d="M88,80 L88,200" stroke="#a8a8b3" stroke-width="1.5"></path><path d="M82,80 L94,80 M82,200 L94,200" stroke="#a8a8b3" stroke-width="1.5"></path>
+<g font-family="Inter,sans-serif" font-size="15">
+<text fill="#a8a8b3" text-anchor="end" x="74" y="146">L</text>
+<text fill="#fde68a" x="140" y="140">v, ω</text>
+<text fill="#7dd3fc" x="276" y="72">left wheel: slow</text><text fill="#7dd3fc" x="306" y="218">right wheel: fast</text>
+<text fill="#fbbf24" font-size="17" font-weight="600" x="340" y="132">v_esq = v − ω·L/2</text>
+<text fill="#fbbf24" font-size="17" font-weight="600" x="340" y="162">v_dir = v + ω·L/2</text>
+<text fill="#a8a8b3" text-anchor="middle" x="320" y="264">ω &gt; 0: turns left · v = 0 and ω ≠ 0: spins in place</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> top view, facing right; the top wheel is the robot's left wheel. The cyan arrows are proportional in length to each wheel's speed: the bottom one (right wheel) is longer, so it turns left, upward in the figure (amber arrow). L is the distance between the wheels, the firmware constant <span class="font-mono">SEPARACAO</span> in the firmware.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-3-t4-p2"><strong>Command watchdog</strong> means "if no new command arrives within 0.5 s, stop." Teleop and Nav2 publish several times per second; if Wi-Fi drops or the PC freezes, messages stop, and without a watchdog the robot would keep moving at its last speed until it hits something. In the firmware, it runs at the end of <span class="font-mono text-xs">aoTimer</span>.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-3-t4-p3"><strong class="text-neutral-100">Goal:</strong> test the subscription with the robot SUSPENDED (wheels off the ground), first with a fixed command and then with the keyboard.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal (agent running, ESP32 connected)</span></div>
+<pre><code><span class="c"># 1) both wheels forward at 0.15 m/s for 3 seconds (10 messages/s)</span>
+timeout 3 ros2 topic pub --rate 10 /cmd_vel geometry_msgs/msg/Twist <span class="s">"{linear: {x: 0.15}}"</span>
+<span class="c"># 2) spin in place: wheels in opposite directions</span>
+timeout 3 ros2 topic pub --rate 10 /cmd_vel geometry_msgs/msg/Twist <span class="s">"{angular: {z: 1.0}}"</span>
+<span class="c"># 3) drive with the keyboard, as in Gazebo 4.2</span>
+ros2 run teleop_twist_keyboard teleop_twist_keyboard</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Command 1: both wheels turn forward and STOP on their own about half a second after the <span class="font-mono text-xs">timeout</span> publish ends.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Command 2: the right wheel moves forward, the left moves backward.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>One wheel turns the wrong way? Swap that motor's wires on the driver (or the IN1/IN2 pins in the code).</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-5"><h4 class="font-bold text-amber-400 mb-3">✓ First-test safety</h4><ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Robot on a stand, with the wheels clear of the table.</span></li><li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Low speeds (0.1 to 0.2 m/s) until you are confident.</span></li><li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Keep your hand near the motor battery switch.</span></li></ul></div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5"><h4 class="font-bold text-red-400 mb-3">✗ Never</h4><ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Remove the watchdog "because it's in the way".</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Test it on the floor, near the stairs, the first time.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Power the motors through the ESP32's USB port.</span></li></ul></div>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-3-t4-p4">This is when the real robot starts obeying ROS 2. From here on, any node that publishes to <span class="font-mono text-sm">/cmd_vel</span>, from the keyboard to Nav2, drives your robot without adding a single line to the firmware.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Differential kinematics</div><div class="text-xs text-neutral-400">v, ω → two wheels</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">rclc subscriber</div><div class="text-xs text-neutral-400">callback in the executor</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Watchdog</div><div class="text-xs text-neutral-400">no command, stop</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">V_MAX</div><div class="text-xs text-neutral-400">m/s → PWM, calibrated</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-4-3#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">📍 Real robot odometry in ROS 2</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-3-t5-p1">In Gazebo, the DiffDrive plugin provided <span class="font-mono text-sm">/odom</span> and the TF <span class="font-mono text-sm">odom → base_link</span> for free. On the real robot, you do it: a Python node on the Pi or PC subscribes to <span class="font-mono text-sm">/ticks</span>, converts pulses to meters, and accumulates the position (x, y, θ)—the same odometry from Track 2, now published in the format SLAM and Nav2 expect.</p>
+<figure class="fig mb-3">
+<svg aria-label="Odometry pipeline: the ESP32 publishes /ticks; the odometry node on the PC calculates the pulse difference, converts it to meters, integrates x, y, and theta, and publishes two outputs: the /odom topic of type nav_msgs/Odometry and the TF transform from odom to base_link." class="w-full h-auto" role="img" viewbox="0 0 640 230">
+<defs>
+<pattern height="32" id="m43-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<filter height="180%" id="m43-glow5" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+<marker id="m43-ah5" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs>
+<rect fill="url(#m43-grid5)" height="230" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#1f1604" height="60" rx="12" stroke="#fbbf24" stroke-width="2" width="110" x="14" y="80"></rect><text fill="#fbbf24" font-size="16" font-weight="600" x="69" y="108">ESP32</text><text fill="#fde68a" font-size="14" x="69" y="128">/ticks</text>
+<g filter="url(#m43-glow5)"><rect fill="#2a1d05" height="140" rx="14" stroke="#f59e0b" stroke-width="2.5" width="250" x="168" y="40"></rect></g>
+<text fill="#fbbf24" font-size="17" font-weight="600" x="293" y="68">odometry node</text>
+<g fill="#fde68a" font-size="14"><text x="293" y="96">Δticks × 2πr / ticks_per_revolution</text><text x="293" y="122">d = average; Δθ = difference / L</text><text x="293" y="148">x += d·cos θ · y += d·sin θ</text></g>
+<rect fill="#0e1b26" height="54" rx="27" stroke="#38bdf8" stroke-width="2" width="164" x="462" y="44"></rect><text fill="#7dd3fc" font-size="16" x="544" y="76">/odom</text>
+<rect fill="#0e1b26" height="54" rx="27" stroke="#38bdf8" stroke-width="2" width="164" x="462" y="124"></rect><text fill="#7dd3fc" font-size="15" x="544" y="156">TF odom→base</text>
+<text fill="#a8a8b3" font-size="14" x="320" y="214">same outputs as Gazebo: the rest of the robot doesn't notice the change</text>
+</g>
+<g fill="none" stroke="#38bdf8" stroke-width="1.8"><path d="M124,110 L160,110" marker-end="url(#m43-ah5)"></path><path d="M418,90 L454,74" marker-end="url(#m43-ah5)"></path><path d="M418,130 L454,148" marker-end="url(#m43-ah5)"></path></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> pulses enter on the left; in the middle, three calculations convert pulses into displacement and displacement into accumulated position; on the right are the two outputs Gazebo provided. That's why the slam_toolbox from 4.4 works the same in simulation and on the real robot.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-3-t5-p2"><strong class="text-neutral-100">Goal:</strong> add the node <span class="font-mono text-xs">odometry</span> to the package <span class="font-mono text-xs">meu_robo</span> from 4.1. The three parameters come from your robot: pulses per wheel revolution (check the motor datasheet, or count by turning it one full revolution by hand), wheel radius, and distance between the wheels.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">meu_robo/meu_robo/odometria.py</span></div>
+<pre><code><span class="c"># Converts /ticks (ESP32) into /odom and the odom -&gt; base_link TF</span>
+<span class="k">import</span> math
+<span class="k">import</span> rclpy
+<span class="k">from</span> rclpy.node <span class="k">import</span> Node
+<span class="k">from</span> rclpy.executors <span class="k">import</span> ExternalShutdownException
+<span class="k">from</span> std_msgs.msg <span class="k">import</span> Int32MultiArray
+<span class="k">from</span> nav_msgs.msg <span class="k">import</span> Odometry
+<span class="k">from</span> geometry_msgs.msg <span class="k">import</span> TransformStamped
+<span class="k">from</span> tf2_ros <span class="k">import</span> TransformBroadcaster
+
+<span class="k">class</span> Odometria(Node):
+    <span class="k">def</span> __init__(self):
+        super().__init__(<span class="s">'odometria'</span>)
+        self.tpv = self.declare_parameter(<span class="s">'ticks_por_volta'</span>, 360).value
+        self.raio = self.declare_parameter(<span class="s">'raio'</span>, 0.033).value        <span class="c"># m</span>
+        self.sep = self.declare_parameter(<span class="s">'separacao'</span>, 0.15).value     <span class="c"># m, same as the firmware</span>
+        self.x = self.y = self.th = 0.0
+        self.anterior, self.t_anterior = None, None
+        self.pub = self.create_publisher(Odometry, <span class="s">'odom'</span>, 10)
+        self.tf = TransformBroadcaster(self)
+        self.create_subscription(Int32MultiArray, <span class="s">'ticks'</span>, self.ao_receber, 10)
+
+    <span class="k">def</span> ao_receber(self, msg):
+        <span class="k">if</span> len(msg.data) &lt; 2:
+            <span class="k">return</span>
+        agora, ticks = self.get_clock().now(), list(msg.data[:2])
+        <span class="k">if</span> self.anterior <span class="k">is</span> None:                  <span class="c"># first message: just store it</span>
+            self.anterior, self.t_anterior = ticks, agora
+            <span class="k">return</span>
+        m_por_tick = 2 * math.pi * self.raio / self.tpv
+        d_esq = (ticks[0] - self.anterior[0]) * m_por_tick
+        d_dir = (ticks[1] - self.anterior[1]) * m_por_tick
+        dt = (agora - self.t_anterior).nanoseconds / 1e9
+        self.anterior, self.t_anterior = ticks, agora
+        d = (d_esq + d_dir) / 2                      <span class="c"># how far the center moved</span>
+        dth = (d_dir - d_esq) / self.sep             <span class="c"># how much it turned</span>
+        self.x += d * math.cos(self.th + dth / 2)
+        self.y += d * math.sin(self.th + dth / 2)
+        self.th += dth
+        qz, qw = math.sin(self.th / 2), math.cos(self.th / 2)   <span class="c"># angle -&gt; quaternion</span>
+        stamp = agora.to_msg()
+
+        odom = Odometry()
+        odom.header.stamp, odom.header.frame_id, odom.child_frame_id = stamp, <span class="s">'odom'</span>, <span class="s">'base_link'</span>
+        odom.pose.pose.position.x, odom.pose.pose.position.y = self.x, self.y
+        odom.pose.pose.orientation.z, odom.pose.pose.orientation.w = qz, qw
+        <span class="k">if</span> dt &gt; 0:
+            odom.twist.twist.linear.x, odom.twist.twist.angular.z = d / dt, dth / dt
+        self.pub.publish(odom)
+
+        t = TransformStamped()
+        t.header.stamp, t.header.frame_id, t.child_frame_id = stamp, <span class="s">'odom'</span>, <span class="s">'base_link'</span>
+        t.transform.translation.x, t.transform.translation.y = self.x, self.y
+        t.transform.rotation.z, t.transform.rotation.w = qz, qw
+        self.tf.sendTransform(t)
+
+<span class="k">def</span> main(args=None):
+    rclpy.init(args=args)
+    no = Odometria()
+    <span class="k">try</span>:
+        rclpy.spin(no)
+    <span class="k">except</span> (KeyboardInterrupt, ExternalShutdownException):
+        <span class="k">pass</span>
+    <span class="k">finally</span>:
+        no.destroy_node()
+        rclpy.try_shutdown()
+
+<span class="k">if</span> __name__ == <span class="s">'__main__'</span>:
+    main()</code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal</span></div>
+<pre><code><span class="c"># 1) in meu_robo's setup.py, add to console_scripts:</span>
+<span class="c">#      'odometria = meu_robo.odometria:main',</span>
+<span class="c"># 2) in package.xml, add exec_depend for nav_msgs, geometry_msgs, and tf2_ros</span>
+cd ~/ros2_ws &amp;&amp; colcon build --symlink-install --packages-select meu_robo
+source install/setup.bash
+ros2 run meu_robo odometria --ros-args -p ticks_por_volta:=&lt;pulsos&gt; -p raio:=0.033 -p separacao:=0.15</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Push the robot 1 m straight across the floor: <span class="font-mono text-xs">ros2 topic echo /odom --field pose.pose.position</span> should show x close to 1.0. If it reads 0.9 or 1.1, adjust <span class="font-mono text-xs">radius</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Turn the robot one full revolution in place: θ should return close to its starting value. If it doesn't, adjust <span class="font-mono text-xs">separacao</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>In RViz, set Fixed Frame <span class="font-mono text-xs">odom</span> and add a TF display: the base_link frame moves with the robot.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-3-t5-p3">Calibrated odometry is half of a good map. SLAM from 4.4 gradually corrects errors, but it starts from where odometry says the robot is: if odometry is off by 10% every meter, the map bends before any correction can happen.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">nav_msgs/Odometry</div><div class="text-xs text-neutral-400">pose + velocity</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">TransformBroadcaster</div><div class="text-xs text-neutral-400">publishes to TF</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Quaternion</div><div class="text-xs text-neutral-400">angle in ROS format</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Calibration</div><div class="text-xs text-neutral-400">1 m straight, 1 revolution</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-4-3#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🩺 Common issues (Wi-Fi vs. serial, time synchronization)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-3-t6-p1">Almost every micro-ROS issue falls into four groups: <strong class="text-neutral-100">connection</strong> (agent, port, Wi-Fi), <strong class="text-neutral-100">version</strong> (different distributions across the three ends), <strong class="text-neutral-100">memory</strong> (too many topics on the ESP32), and <strong class="text-neutral-100">time</strong> (the ESP32 clock differs from the PC clock). Work down the table from top to bottom before changing the code.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3 text-neutral-200">Symptom</th><th class="text-left p-3 text-neutral-200">Likely cause and fix</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">Upload fails: "port busy"</td><td class="p-3">The agent is holding the port. Stop the agent, upload, then start it again.</td></tr>
+<tr><td class="p-3">LED flashing rapidly</td><td class="p-3">Agent turned off, wrong port, or a baud rate other than 115200. After starting the agent, press EN.</td></tr>
+<tr><td class="p-3">Node appears, but no topics</td><td class="p-3">The library distro differs from the agent and ROS. Use the same distro for all three.</td></tr>
+<tr><td class="p-3">Stops responding after restarting the agent</td><td class="p-3">The firmware does not reconnect on its own. Press EN, or implement reconnection (below).</td></tr>
+<tr><td class="p-3">"create_publisher" fails on the 5th topic</td><td class="p-3">Memory limit in the precompiled library. Combine data into a single message (like /ticks).</td></tr>
+<tr><td class="p-3">Wi-Fi: commands arrive in bursts</td><td class="p-3">Weak signal or congested network. Test with the cable; preferably run the agent on the onboard Pi.</td></tr>
+</tbody>
+</table>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-3-t6-p2"><strong class="text-neutral-100">Switching to Wi-Fi:</strong> in the firmware, replace the serial transport line with this one, filling in the three values between the angle brackets; on the PC, use the agent <span class="font-mono text-xs">udp4 --port 8888</span> from topic 2. The IP is the address of the computer running the agent (<span class="font-mono text-xs">hostname -I</span>).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">robo_microros.ino (setup snippet)</span></div>
+<pre><code><span class="k">char</span> rede[] = <span class="s">"&lt;sua_rede_wifi&gt;"</span>;
+<span class="k">char</span> senha[] = <span class="s">"&lt;sua_senha&gt;"</span>;
+<span class="k">char</span> ip_agente[] = <span class="s">"&lt;ip_do_pc_ou_pi&gt;"</span>;
+set_microros_wifi_transports(rede, senha, ip_agente, 8888);   <span class="c">// instead of set_microros_transports()</span></code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-amber-400">How to check:</strong> the UDP agent shows "create_client" with the ESP32's IP; <span class="font-mono">ros2 topic hz /ticks</span> it stays close to 20 Hz with the robot far from the PC.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-3-t6-p3"><strong>Synchronizing time</strong>: the ESP32 starts up with its clock at zero, while the PC uses real time. If the ESP32 timestamps messages with its own clock, ROS thinks they are from 1970 and TF discards them. So, in this module, the odometry node on the PC timestamps messages when they arrive. If you need to timestamp on the ESP32 (for a fast IMU, for example), call <span class="font-mono text-xs">rmw_uros_sync_session(1000)</span> after connecting and use <span class="font-mono text-xs">rmw_uros_epoch_nanos()</span> as the time, with <span class="font-mono text-xs">#include &lt;rmw_microros/rmw_microros.h&gt;</span>.</p>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Automatic reconnection</h3>
+<p class="text-neutral-300 text-sm">To keep the robot running when an agent restarts, use a state machine: <em>waiting for agent</em> (check with <span class="font-mono text-xs">rmw_uros_ping_agent(100, 1)</span> every half second), <em>create entities</em>, <em>connected</em> (spin; if the ping fails, set the motors to zero) and <em>destroy entities</em>, then return to the beginning. The library's "micro-ros_reconnection_example" shows the complete skeleton; add the parts from this firmware to it.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-5"><h4 class="font-bold text-amber-400 mb-3">✓ Diagnostic sequence</h4><ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>1. Is the agent running and showing "running"?</span></li><li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>2. <span class="font-mono text-xs">ros2 node list</span> does /esp32_base appear?</span></li><li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>3. <span class="font-mono text-xs">ros2 topic hz</span> on the ESP32 topics?</span></li></ul></div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5"><h4 class="font-bold text-red-400 mb-3">✗ Time waster</h4><ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Changing the firmware before checking the agent.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Debugging with Serial.print: the serial port is used by micro-ROS.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Starting with Wi-Fi before getting it to work over the cable.</span></li></ul></div>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-3-t6-p4">In project 4.6, the robot will run far from the PC, connected for hours. Knowing how to diagnose the connection, version, and time is what separates a robot that works on the bench from one that works in the room.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Port in use</div><div class="text-xs text-neutral-400">agent vs. upload</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Agent ping</div><div class="text-xs text-neutral-400">reconnection foundation</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Time sync</div><div class="text-xs text-neutral-400">reliable timestamp</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Wi-Fi UDP</div><div class="text-xs text-neutral-400">after the cable</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 rounded-xl border border-amber-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">micro-ROS</strong><span class="text-neutral-400"> puts the ESP32 on the graph; the agent (Docker <span class="font-mono">microros/micro-ros-agent:&lt;distro&gt;</span>) bridges to DDS.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Same distro at all three ends</strong><span class="text-neutral-400">: ESP32 library, agent, and ROS 2.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">ESP32 measures and acts</strong><span class="text-neutral-400">: publishes /ticks, subscribes to /cmd_vel, converts v and ω into wheel speeds, and stops when there is no command.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">PC calculates</strong><span class="text-neutral-400">: the odometry node publishes /odom and the odom → base_link TF, as Gazebo did.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Diagnostics</strong><span class="text-neutral-400">: agent → node list → topic hz; cable before Wi-Fi; timestamp on the PC.</span></div></div>
+</div>
+<h3 class="font-semibold text-amber-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://micro.ros.org/docs/overview/features/" rel="noopener" target="_blank">micro.ros.org</a> <span class="text-neutral-500">— overview, concepts, and official tutorials</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/micro-ROS/micro_ros_arduino" rel="noopener" target="_blank">micro_ros_arduino</a> <span class="text-neutral-500">— releases by distro and examples (including reconnection)</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/micro-ROS/micro_ros_espidf_component" rel="noopener" target="_blank">micro_ros_espidf_component</a> <span class="text-neutral-500">— the ESP-IDF route</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://hub.docker.com/r/microros/micro-ros-agent" rel="noopener" target="_blank">Docker Hub agent image</a> <span class="text-neutral-500">— check the tag for your distro</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.ros.org/en/lyrical/" rel="noopener" target="_blank">docs.ros.org</a> <span class="text-neutral-500">— nav_msgs, geometry_msgs, and tf2 messages</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-amber-400 mb-1">Next module</h3>
+<p class="text-neutral-300">4.4 · LiDAR and maps (SLAM): the laser goes on the robot, and slam_toolbox draws the map while figuring out where the robot is.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-4-2.html">← Previous: 4.2 Describe and simulate</a>
+<a class="inline-flex items-center px-5 py-3 bg-amber-700 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors" href="modulo-4-4.html">Next: 4.4 LiDAR and maps →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

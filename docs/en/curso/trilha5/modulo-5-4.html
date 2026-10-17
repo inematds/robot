@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 5.4 · Learning by demonstration | Robotics from Zero to Expert</title>
+<meta content="Teach the SO-101 arm a task by demonstrating it: record episodes with lerobot-record, create a dataset on the Hugging Face Hub, train ACT with lerobot-train, evaluate safely, and explore language-based policies (SmolVLA, pi0)." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha5/modulo-5-4.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha5/modulo-5-4.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha5/modulo-5-4.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha5/modulo-5-4.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha5/modulo-5-4.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha5/modulo-5-4.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-5-4.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha5/modulo-5-4.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T5 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a aria-current="page" class="nav-trail text-teal-400 bg-teal-500/10" href="index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="5-4" data-inema-track="5" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-teal-400" href="../../index.html">Home</a><span aria-hidden="true">/</span>
+<a class="hover:text-teal-400" href="index.html">Track 5</a><span aria-hidden="true">/</span>
+<span class="text-teal-400">Module 5.4</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-teal-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-teal-500/20 text-teal-400 text-xs font-semibold rounded-full mb-4">MODULE 5.4 · PRACTICE</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🎓 Learning by demonstration</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Instead of programming every angle, you <strong class="text-neutral-100">show the arm the task</strong> a few dozen times using the SO-101 leader, record it, train a neural network, and let the follower repeat it on its own. Here you complete the full cycle with LeRobot: <strong class="text-teal-400">record, publish, train, and evaluate</strong>, and learn about policies that understand text instructions.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">Advanced</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">Practice</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">SO-101</div><div class="text-xs text-neutral-400">+ camera and GPU</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 5.4 progress" class="inema-ring" data-inema-meter="modulo:5-4"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:5-4"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-1">1. Learning by demonstration</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-2">2. Recording episodes</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-3">3. Dataset on the Hub</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-4">4. Training ACT</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-5">5. Evaluating on the real arm</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-6">6. SmolVLA and pi0</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-5-4#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🎓 Learning by demonstration (imitation)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t1-p1">In module 5.3, you made the follower copy the leader in real time. Now the idea is to take it one step further: <strong class="text-neutral-100">record</strong> these demonstrations and train a neural network that learns the connection “what I see and where my joints are → what the next movement should be.” Once trained, it controls the follower without anyone at the leader. This is called <strong class="text-teal-400">imitation learning</strong>.</p>
+<div class="bg-dark-800 border border-teal-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-teal-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m5-4-t1-p2">A <strong>policy</strong> is the program that decides the next action based on what the robot observes. Here, it’s a neural network, not code with <span class="font-mono text-xs">if</span>. <strong>Imitation</strong> means the network learns by copying examples from a person, instead of figuring things out through trial and error (that would be reinforcement learning, which is almost always done in simulation and is covered in 5.5).</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Imitation learning cycle: demonstrate with the leader arm, record episodes with lerobot-record, train the policy with lerobot-train, and evaluate it on the real arm; when the evaluation fails, record more examples of the case that went wrong." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs>
+<filter height="180%" id="m54-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+<pattern height="32" id="m54-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.12" r="1.3"></circle></pattern>
+<marker id="m54-ah1" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#2dd4bf"></path></marker>
+<marker id="m54-ah1c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs>
+<rect fill="url(#m54-grid1)" height="300" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0b1f1d" height="110" rx="14" stroke="#2dd4bf" stroke-width="2" width="140" x="12" y="60"></rect>
+<text fill="#2dd4bf" font-size="17" font-weight="600" x="82" y="96">DEMONSTRATE</text><text fill="#ccfbf1" font-size="15" x="82" y="124">you move</text><text fill="#99f6e4" font-size="15" x="82" y="146">the leader</text>
+<rect fill="#0b1f1d" height="110" rx="14" stroke="#2dd4bf" stroke-width="2" width="140" x="170" y="60"></rect>
+<text fill="#2dd4bf" font-size="17" font-weight="600" x="240" y="96">RECORD</text><text fill="#ccfbf1" font-size="15" x="240" y="124">episodes</text><text fill="#99f6e4" font-size="15" x="240" y="146">camera + joints</text>
+<g filter="url(#m54-glow1)"><rect fill="#0f2624" height="110" rx="14" stroke="#14b8a6" stroke-width="2.5" width="140" x="328" y="60"></rect></g>
+<text fill="#2dd4bf" font-size="17" font-weight="600" x="398" y="96">TRAIN</text><text fill="#ccfbf1" font-size="15" x="398" y="124">neural network</text><text fill="#99f6e4" font-size="15" x="398" y="146">on the GPU</text>
+<rect fill="#0b1f1d" height="110" rx="14" stroke="#2dd4bf" stroke-width="2" width="140" x="486" y="60"></rect>
+<text fill="#2dd4bf" font-size="17" font-weight="600" x="556" y="96">EVALUATE</text><text fill="#ccfbf1" font-size="15" x="556" y="124">arm on its own</text><text fill="#99f6e4" font-size="15" x="556" y="146">count successes</text>
+</g>
+<g fill="none" opacity="0.85" stroke="#2dd4bf" stroke-width="2"><path d="M152,115 L164,115" marker-end="url(#m54-ah1)"></path><path d="M310,115 L322,115" marker-end="url(#m54-ah1)"></path><path d="M468,115 L480,115" marker-end="url(#m54-ah1)"></path></g>
+<path d="M556,172 C556,250 82,250 82,178" fill="none" marker-end="url(#m54-ah1c)" opacity="0.85" stroke="#38bdf8" stroke-dasharray="7 7" stroke-width="2"></path>
+<text fill="#7dd3fc" font-family="Inter,sans-serif" font-size="16" text-anchor="middle" x="320" y="272">did it fail? record more examples of the case it got wrong</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> the green arrows show one cycle; the glowing block (training) is the only part that needs a GPU. The cyan arrow marks the difference between those who succeed and those who give up: evaluation shows where the policy fails, and the fix is to record more examples of exactly that situation.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-5">
+<h4 class="font-bold text-teal-400 mb-3">✓ Good first task</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Pick up a foam cube and put it in a shallow box.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>A lightweight, colorful object that contrasts with the table.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Easy to judge success: is it in the box or not?</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Save for later</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Folding fabric, opening a screw-top lid, tight-fitting parts.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>A transparent, shiny, or heavier object than the gripper can handle.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Several different tasks in the same dataset right from the start.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t1-p3">Programming the arm to “pick and place” works until the cube moves 3 cm from its spot. The learned policy looks at the camera at every moment and adjusts its path. That’s how labs train arms today, and the SO-101 with LeRobot brings this method to your desk.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Policy</div><div class="text-xs text-neutral-400">observation → action</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Imitation</div><div class="text-xs text-neutral-400">learns from examples</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Leader / follower</div><div class="text-xs text-neutral-400">you teach, it copies</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Success rate</div><div class="text-xs text-neutral-400">successes in N attempts</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-5-4#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">⏺️ Record episodes with lerobot-record</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t2-p1">Each recorded demonstration is an <strong class="text-teal-400">episode</strong>. The command <span class="font-mono text-xs">lerobot-record</span> connects the leader, follower, and cameras, and saves three things at each frame: the images, the follower’s current joint positions (the <strong class="text-neutral-100">state</strong>) and the position the leader commanded (the <strong class="text-neutral-100">action</strong>). Between episodes, there’s a reset period so you can set up the table.</p>
+<div class="bg-dark-800 border border-teal-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-teal-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m5-4-t2-p2"><strong>Frame</strong> is a recorded moment (at 30 frames per second, one every 33 ms). <strong>State</strong> is where the arm is; <strong>action</strong> is where it was commanded to go. The network learns to predict the action from the image and the state. The 6 numbers in each are the SO-101’s joints: base, shoulder, elbow, wrist bend and rotation, gripper.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Anatomy of an episode: a timeline of frames; each frame records the camera image, the state with 6 joints, and the action with 6 target joints; at the end, the episode gets the task instruction, and the reset prepares for the next one." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs>
+<pattern height="32" id="m54-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.1" r="1.3"></circle></pattern>
+<marker id="m54-ah2" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#7dd3fc"></path></marker>
+</defs>
+<rect fill="url(#m54-grid2)" height="300" width="640"></rect>
+<g font-family="Inter,sans-serif" font-size="15">
+<text fill="#99f6e4" x="16" y="70">image</text><text fill="#99f6e4" x="16" y="128">state</text><text fill="#7dd3fc" x="16" y="182">action</text>
+<g class="rb-a"><rect fill="#0f2624" height="44" rx="6" stroke="#2dd4bf" stroke-width="2" width="70" x="110" y="44"></rect><circle cx="145" cy="66" fill="none" r="9" stroke="#5eead4" stroke-width="2"></circle></g>
+<g class="rb-a"><rect fill="#0f2624" height="44" rx="6" stroke="#2dd4bf" stroke-width="2" width="70" x="210" y="44"></rect><circle cx="252" cy="62" fill="none" r="9" stroke="#5eead4" stroke-width="2"></circle></g>
+<g class="rb-a"><rect fill="#0f2624" height="44" rx="6" stroke="#2dd4bf" stroke-width="2" width="70" x="310" y="44"></rect><circle cx="360" cy="70" fill="#14b8a6" r="9" stroke="#5eead4" stroke-width="2"></circle></g>
+<text fill="#a8a8b3" x="430" y="72">…</text>
+<rect fill="#0f2624" height="44" rx="6" stroke="#2dd4bf" stroke-width="2" width="70" x="470" y="44"></rect><rect fill="#14b8a6" height="18" width="22" x="494" y="58"></rect>
+<g fill="#99f6e4" font-family="JetBrains Mono,monospace" font-size="14" text-anchor="middle"><text x="145" y="132">6 joints</text><text x="245" y="132">6 joints</text><text x="345" y="132">6 joints</text><text x="505" y="132">6 joints</text></g>
+<g fill="#7dd3fc" font-family="JetBrains Mono,monospace" font-size="14" text-anchor="middle"><text x="145" y="186">6 targets</text><text x="245" y="186">6 targets</text><text x="345" y="186">6 targets</text><text x="505" y="186">6 targets</text></g>
+<path d="M110,218 L590,218" marker-end="url(#m54-ah2)" stroke="#7dd3fc" stroke-width="2"></path>
+<g fill="#bfe6ff" font-size="14" text-anchor="middle"><text x="145" y="240">t = 0</text><text x="245" y="240">t + 33 ms</text><text x="345" y="240">pick up</text><text x="505" y="240">release</text></g>
+<text fill="#ccfbf1" text-anchor="middle" x="320" y="282">+ instruction: “put the cube in the box” · then: reset time</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> each column is a frame. The top row shows what the camera saw (the cube gets closer, is picked up, and appears in the box). The rows below show the numbers the network will learn to connect: given the state and image, predict the action. The text instruction applies to the entire episode.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-4">Step-by-step: your first recording</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Check ports, calibration, and camera</h4><p class="text-neutral-300 text-sm">Use the same ports and the same <span class="font-mono text-xs">id</span> calibration files as in 5.3. Run <span class="font-mono text-xs">lerobot-find-cameras</span> and note the index of the front-facing camera.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Keep the scene fixed</h4><p class="text-neutral-300 text-sm">Secure the camera (with tape or a mount), keep the lighting constant, and always put the box in the same place. Only the cube’s position changes between episodes.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Record 2 test episodes</h4><p class="text-neutral-300 text-sm">Run the command below with <span class="font-mono text-xs">num_episodes=2</span>, without uploading to the cloud. If everything works, delete the test folder and record for real (50 episodes is a good start).</p></div></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-4-t2-p3"><strong class="text-neutral-100">Goal:</strong> record episodes for the task “put the cube in the box” with a front-facing camera. Replace the ports, the <span class="font-mono text-xs">id</span> and your Hugging Face username (without the &lt; &gt; symbols).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">gravar.sh</span></div>
+<pre><code><span class="c"># Record demonstrations with the SO-101 pair (Linux; on Windows the port is COM3, COM4...)</span>
+HF_USER=&lt;seu_usuario_hf&gt;          <span class="c"># replace with your Hugging Face username</span>
+DATASET=cubo-na-caixa-teste        <span class="c"># dataset name</span>
+
+lerobot-record \
+  --robot.type=so101_follower --robot.port=/dev/ttyACM0 --robot.id=seguidor \
+  --robot.cameras=<span class="s">"{ frente: {type: opencv, index_or_path: 0, width: 640, height: 480, fps: 30}}"</span> \
+  --teleop.type=so101_leader --teleop.port=/dev/ttyACM1 --teleop.id=lider \
+  --dataset.repo_id=${HF_USER}/${DATASET} \
+  --dataset.single_task=<span class="s">"Put the red cube in the gray box."</span> \
+  --dataset.num_episodes=2 \
+  --dataset.episode_time_s=20 \
+  --dataset.reset_time_s=10 \
+  --dataset.push_to_hub=false \
+  --display_data=true</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>A window opens with the camera image and joint graphs that change as you move the leader.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>The terminal announces the start of each episode and the reset; at the end, it shows the folder in <span class="font-mono text-xs">~/.cache/huggingface/lerobot/</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Port or calibration error? Go back to 5.3. Flag names change between versions: check with <span class="font-mono text-xs">lerobot-record --help</span> and in the <a class="text-sky-400 underline" href="https://huggingface.co/docs/lerobot" rel="noopener" target="_blank">current docs</a>.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-5">
+<h4 class="font-bold text-teal-400 mb-3">✓ Good demonstration</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Calm movement, done the same way every time.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Cube in varied positions, covering the entire area.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Starts and ends with the arm at rest.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Ruins the dataset</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Hesitating, backtracking, trying two different ways.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Your hand or arm appearing in front of the camera.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Moving the camera or changing the lighting during recording.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t2-p4">The policy can never be better than the demonstrations. If you record calmly and consistently, you train once; if you record in a hurry, you train five times and still don’t understand why it doesn’t work.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Episode</div><div class="text-xs text-neutral-400">a complete demonstration</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">State</div><div class="text-xs text-neutral-400">where the joints are</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Action</div><div class="text-xs text-neutral-400">where they were commanded to go</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Reset</div><div class="text-xs text-neutral-400">set up the table between episodes</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-5-4#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🗂️ Dataset on the Hugging Face Hub</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t3-p1">LeRobot saves each dataset in a standard format: tables with state and action, camera videos, and a metadata file. This same format can be uploaded to the <strong class="text-teal-400">Hugging Face Hub</strong>, where you can train on a machine with a GPU (or in Colab) without copying files by hand, and where other people can use your data if you want.</p>
+<div class="bg-dark-800 border border-teal-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-teal-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m5-4-t3-p2">O <strong>Hugging Face Hub</strong> is a free site that hosts models and datasets, similar to a GitHub for AI. The <strong>repo_id</strong> is the dataset address: <span class="font-mono text-xs">username/name</span>. To upload, create an account, generate a write token in settings, and log in once in the terminal.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Structure of a LeRobot dataset: the repo_id folder contains meta with information and statistics, data with parquet tables of state and action, and videos with one MP4 per camera; the same folder exists on your disk and on the Hugging Face Hub." class="w-full h-auto" role="img" viewbox="0 0 640 290">
+<defs>
+<pattern height="32" id="m54-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.1" r="1.3"></circle></pattern>
+<filter height="180%" id="m54-glow3" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs>
+<rect fill="url(#m54-grid3)" height="290" width="640"></rect>
+<g font-family="Inter,sans-serif">
+<g filter="url(#m54-glow3)"><rect fill="#0f2624" height="50" rx="12" stroke="#14b8a6" stroke-width="2.5" width="240" x="200" y="16"></rect></g>
+<text fill="#2dd4bf" font-size="17" font-weight="600" text-anchor="middle" x="320" y="48">username/cubo-na-caixa</text>
+<g fill="none" opacity="0.7" stroke="#2dd4bf" stroke-width="2"><path d="M320,66 L320,92 M110,92 L530,92 M110,92 L110,112 M320,92 L320,112 M530,92 L530,112"></path></g>
+<rect fill="#0b1f1d" height="120" rx="12" stroke="#2dd4bf" stroke-width="2" width="180" x="20" y="112"></rect>
+<text fill="#2dd4bf" font-size="17" font-weight="600" text-anchor="middle" x="110" y="142">meta/</text>
+<text fill="#ccfbf1" font-size="15" text-anchor="middle" x="110" y="170">fps, cameras,</text><text fill="#ccfbf1" font-size="15" text-anchor="middle" x="110" y="192">tasks, averages</text>
+<rect fill="#0b1f1d" height="120" rx="12" stroke="#2dd4bf" stroke-width="2" width="180" x="230" y="112"></rect>
+<text fill="#2dd4bf" font-size="17" font-weight="600" text-anchor="middle" x="320" y="142">data/</text>
+<text fill="#ccfbf1" font-size="15" text-anchor="middle" x="320" y="170">parquet tables</text><text fill="#ccfbf1" font-size="15" text-anchor="middle" x="320" y="192">state + action</text>
+<rect fill="#0e1b26" height="120" rx="12" stroke="#38bdf8" stroke-width="2" width="180" x="440" y="112"></rect>
+<text fill="#7dd3fc" font-size="17" font-weight="600" text-anchor="middle" x="530" y="142">videos/</text>
+<text fill="#bfe6ff" font-size="15" text-anchor="middle" x="530" y="170">one MP4</text><text fill="#bfe6ff" font-size="15" text-anchor="middle" x="530" y="192">per camera</text>
+<text fill="#7dd3fc" font-size="15" text-anchor="middle" x="320" y="270">same structure on your disk and on the Hub</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> the name at the top is the repo_id. The tables (middle) are lightweight; the videos (right, in cyan) take up almost all the space. If the dataset is too large, reduce the resolution or number of cameras, not the number of episodes.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-4-t3-p3"><strong class="text-neutral-100">Goal:</strong> log in, check a recorded episode, and upload the dataset to the Hub as private. Run this in the same Python environment where you installed LeRobot.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">conferir.sh</span></div>
+<pre><code>hf auth login                       <span class="c"># paste the write token (once per machine)</span>
+lerobot-dataset-viz --repo-id &lt;seu_usuario_hf&gt;/&lt;dataset&gt; --episode-index 0</code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">subir_dataset.py</span></div>
+<pre><code><span class="c"># Open the local dataset, show its size, and upload it to the Hub as private.</span>
+<span class="k">import</span> sys
+<span class="k">from</span> lerobot.datasets.lerobot_dataset <span class="k">import</span> LeRobotDataset
+
+repo_id = sys.argv[1]                    <span class="c"># e.g.: &lt;your_hf_username&gt;/&lt;dataset&gt;</span>
+ds = LeRobotDataset(repo_id)             <span class="c"># reads from ~/.cache/huggingface/lerobot/</span>
+print(<span class="s">"episodes:"</span>, ds.num_episodes, <span class="s">"| quadros:"</span>, ds.num_frames, <span class="s">"| fps:"</span>, ds.fps)
+print(<span class="s">"colunas:"</span>, list(ds.features))
+ds.push_to_hub(private=True)             <span class="c"># private: only you can see it</span>
+print(<span class="s">"uploaded: https://huggingface.co/datasets/"</span> + repo_id)</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>The viewer shows the video for episode 0 with the curves for all 6 joints synchronized.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span><span class="font-mono text-xs">python subir_dataset.py &lt;your_hf_username&gt;/&lt;dataset&gt;</span> prints the number of episodes (what you recorded) and the columns, including state, action, and the "front" camera.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>The dataset page opens in your logged-in browser and appears as private.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Privacy</h3>
+<p class="text-neutral-300 text-sm">The camera records whatever is in the background: faces, your home, papers on the table. In a school setting, keep the dataset private and frame only the workbench. Make it public only after reviewing it episode by episode.</p>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t3-p4">Separating "where you record" from "where you train" solves the problem for people without a GPU at home: record on the laptop next to the arm, then train in Colab or in the lab. A well-documented dataset also becomes lesson material for the whole class.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Hub</div><div class="text-xs text-neutral-400">GitHub for models and data</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">repo_id</div><div class="text-xs text-neutral-400">username/name</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Token</div><div class="text-xs text-neutral-400">Hub write password</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Private</div><div class="text-xs text-neutral-400">the default at school</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-5-4#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🏋️ Train ACT with lerobot-train</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t4-p1">A <strong class="text-teal-400">ACT</strong> (Action Chunking with Transformers) is the recommended policy to start with: it is small, trains quickly, and works well with 50 episodes of one task. The trick is in the name: instead of predicting one movement at a time, it predicts a <strong class="text-neutral-100">chunk</strong> of several consecutive movements, which makes the arm smoother and less hesitant.</p>
+<figure class="fig mb-3">
+<svg aria-label="How ACT works: camera images and joint states go into the network; it returns a chunk containing several future movements; the arm executes part of the chunk, observes again, and the network predicts the next chunk." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs>
+<pattern height="32" id="m54-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.1" r="1.3"></circle></pattern>
+<filter height="180%" id="m54-glow4" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+<marker id="m54-ah4" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#2dd4bf"></path></marker>
+<marker id="m54-ah4c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs>
+<rect fill="url(#m54-grid4)" height="280" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0b1f1d" height="50" rx="10" stroke="#2dd4bf" stroke-width="2" width="150" x="16" y="36"></rect><text fill="#ccfbf1" font-size="15" x="91" y="67">front camera</text>
+<rect fill="#0b1f1d" height="50" rx="10" stroke="#2dd4bf" stroke-width="2" width="150" x="16" y="98"></rect><text fill="#ccfbf1" font-size="15" x="91" y="129">wrist camera</text>
+<rect fill="#0b1f1d" height="50" rx="10" stroke="#2dd4bf" stroke-width="2" width="150" x="16" y="160"></rect><text fill="#ccfbf1" font-size="15" x="91" y="191">state (6)</text>
+<g filter="url(#m54-glow4)"><rect fill="#0f2624" height="110" rx="14" stroke="#14b8a6" stroke-width="2.5" width="150" x="220" y="70"></rect></g>
+<text fill="#2dd4bf" font-size="22" font-weight="600" x="295" y="118">ACT</text><text fill="#99f6e4" font-size="15" x="295" y="146">transformer</text>
+<g class="rb-a"><rect fill="#14b8a6" height="90" rx="4" width="26" x="430" y="80"></rect></g>
+<g class="rb-a"><rect fill="#14b8a6" height="90" opacity="0.85" rx="4" width="26" x="462" y="80"></rect></g>
+<g class="rb-a"><rect fill="#14b8a6" height="90" opacity="0.7" rx="4" width="26" x="494" y="80"></rect></g>
+<rect fill="#0e1b26" height="90" rx="4" stroke="#38bdf8" stroke-width="2" width="26" x="526" y="80"></rect><rect fill="#0e1b26" height="90" rx="4" stroke="#38bdf8" stroke-width="2" width="26" x="558" y="80"></rect><rect fill="#0e1b26" height="90" rx="4" stroke="#38bdf8" stroke-width="2" width="26" x="590" y="80"></rect>
+<text fill="#ccfbf1" font-size="15" x="523" y="62">chunk of future actions</text>
+<text fill="#2dd4bf" font-size="14" x="475" y="198">executes</text><text fill="#7dd3fc" font-size="14" x="572" y="198">discards</text>
+</g>
+<g fill="none" opacity="0.85" stroke="#2dd4bf" stroke-width="2"><path d="M166,61 L214,110" marker-end="url(#m54-ah4)"></path><path d="M166,123 L214,123" marker-end="url(#m54-ah4)"></path><path d="M166,185 L214,140" marker-end="url(#m54-ah4)"></path><path d="M370,125 L422,125" marker-end="url(#m54-ah4)"></path></g>
+<path d="M475,212 C475,238 91,238 91,216" fill="none" marker-end="url(#m54-ah4c)" stroke="#38bdf8" stroke-dasharray="7 7" stroke-width="2"></path>
+<text fill="#7dd3fc" font-family="Inter,sans-serif" font-size="15" text-anchor="middle" x="290" y="268">observes again and predicts the next chunk</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> on the left is everything the network sees at a given moment. On the right, the bars represent future movements: the solid ones are executed, while the outlined ones are discarded because by then the camera will have new information. The cyan arrow closes the loop, as in the sense-think-act cycle in 1.1.</p>
+<div class="bg-dark-800 border border-teal-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-teal-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m5-4-t4-p2"><strong>Training</strong> means adjusting millions of network parameters until it makes few errors when predicting the recorded actions. Each adjustment uses a batch of frames (<strong>batch</strong>) and counts as one <strong>step</strong> (step). From time to time, training saves a <strong>checkpoint</strong>: a copy of the network at that point, which you can test or resume training from.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-4-t4-p3"><strong class="text-neutral-100">Goal:</strong> train an ACT on your dataset on a machine with an NVIDIA GPU. On a Mac with an Apple chip, replace <span class="font-mono text-xs">cuda</span> with <span class="font-mono text-xs">mps</span>; without a GPU, use Colab (there’s a ready-to-use notebook in the LeRobot documentation).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">treinar.sh</span></div>
+<pre><code><span class="c"># Train the ACT policy (check the flags with: lerobot-train --help)</span>
+HF_USER=&lt;seu_usuario_hf&gt;
+DATASET=&lt;dataset&gt;
+
+lerobot-train \
+  --dataset.repo_id=${HF_USER}/${DATASET} \
+  --policy.type=act \
+  --policy.device=cuda \
+  --output_dir=outputs/train/act-${DATASET} \
+  --job_name=act-${DATASET} \
+  --batch_size=8 \
+  --steps=20000 \
+  --wandb.enable=false \
+  --policy.push_to_hub=false</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>The terminal shows lines with the current step and the <strong>loss</strong> (the error), which should drop quickly at first, then more slowly.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Folders appear in <span class="font-mono text-xs">outputs/train/…/checkpoints/</span>; the latest one is in <span class="font-mono text-xs">last/pretrained_model</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"CUDA out of memory"? Reduce <span class="font-mono text-xs">--batch_size</span> (4 or 2). Training can take anywhere from minutes to many hours, depending on the GPU and the number of steps.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 A low loss doesn’t mean success</h3>
+<p class="text-neutral-300 text-sm">Loss measures how well the network copies the recorded demonstrations, not how well it performs the task in the real world. A network can memorize the 50 episodes and fail when the cube appears in a new location. The only number that matters is the success rate on the arm, which you’ll measure in the next topic.</p>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t4-p4">Knowing how to read training results helps you avoid wasting GPU time: you learn when to stop after the loss levels off, test intermediate checkpoints, and tell the difference between "not enough data" and "not enough training."</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">ACT</div><div class="text-xs text-neutral-400">predicts chunks of actions</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Loss</div><div class="text-xs text-neutral-400">error on the examples</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Checkpoint</div><div class="text-xs text-neutral-400">network saved at a point in training</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Batch</div><div class="text-xs text-neutral-400">frames per step</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-5-4#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🧪 Evaluate the policy on the real arm</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t5-p1">Evaluation means letting the policy control the follower, without the leader, and counting how many times it succeeds. In the current version of LeRobot, you do this with <span class="font-mono text-xs">lerobot-rollout</span>; earlier versions used <span class="font-mono text-xs">lerobot-record</span> itself with the specified policy. Check which one applies to your installation with <span class="font-mono text-xs">--help</span>.</p>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5 mb-6">
+<h4 class="font-bold text-red-400 mb-2">Safety before the first test</h4>
+<p class="text-neutral-300 text-sm">A newly trained policy can make sudden, unexpected movements. The SO-101 servos are small, but they can trap a finger or knock objects over. Keep your hand on the follower’s power switch, clear the table, keep everyone out of the arm’s range, and make the first test short.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-4-t5-p2"><strong class="text-neutral-100">Goal:</strong> run the trained policy on the follower for 30 seconds, using the same camera and the same instruction as in the recording.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">avaliar.sh</span></div>
+<pre><code><span class="c"># Run the policy on the real arm (check the flags with: lerobot-rollout --help)</span>
+POLITICA=outputs/train/act-&lt;dataset&gt;/checkpoints/last/pretrained_model
+
+lerobot-rollout \
+  --strategy.type=base \
+  --policy.path=${POLITICA} \
+  --robot.type=so101_follower --robot.port=/dev/ttyACM0 --robot.id=seguidor \
+  --robot.cameras=<span class="s">"{ frente: {type: opencv, index_or_path: 0, width: 640, height: 480, fps: 30}}"</span> \
+  --task=<span class="s">"Put the red cube in the gray box."</span> \
+  --duration=30</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>The follower moves on its own toward the cube; the leader can remain turned off.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>After 30 seconds, the command ends and the arm stops.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Arm shaking or moving to a fixed corner? Did the camera move since recording, or does the camera name not match the dataset name ("front")?</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Evaluation spreadsheet (20 attempts)</h3>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3">Cube position</th><th class="text-left p-3">Attempts</th><th class="text-left p-3">Successful attempts</th><th class="text-left p-3">How it failed</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">Near the center (as seen in the recording)</td><td class="p-3">10</td><td class="p-3">record</td><td class="p-3">missed the grasp, released outside…</td></tr>
+<tr><td class="p-3">At the edges of the recorded area</td><td class="p-3">5</td><td class="p-3">record</td><td class="p-3">record</td></tr>
+<tr><td class="p-3">Outside the recorded area</td><td class="p-3">5</td><td class="p-3">record</td><td class="p-3">record</td></tr>
+</tbody>
+</table>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-5">
+<h4 class="font-bold text-teal-400 mb-3">✓ Honest evaluation</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Define "success" before you start, and don’t change it afterward.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Randomize the cube positions; don’t choose the easy ones.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Record video and note the type of failure for each mistake.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Fooling yourself</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Counting only the attempts you filmed.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Pushing the cube "just a little" to help.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Drawing a conclusion from 3 attempts.</span></li>
+</ul>
+</div>
+</div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t5-p3">When a failure pattern appears (for example, "it always misses when the cube is on the left"), record 10 to 20 new episodes in that area and train again. LeRobot also has a mode where you take control with the leader when the policy makes a mistake, and that correction becomes a new episode (<span class="font-mono text-xs">--strategy.type=dagger</span>); it’s the most efficient way to improve after the first version.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t5-p4">Without a numerical evaluation, every AI project "almost works." The spreadsheet shows you exactly where you stand, lets you compare versions, and gives you something concrete to present in your final project.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Rollout</div><div class="text-xs text-neutral-400">policy in control</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Distribution</div><div class="text-xs text-neutral-400">what appeared in the training data</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">DAgger</div><div class="text-xs text-neutral-400">correction becomes data</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Hands on the source</div><div class="text-xs text-neutral-400">always have a physical stop</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-5-4#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🗣️ SmolVLA and pi0: language-based policies</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t6-p1">ACT learns a task and ignores text. A <strong class="text-teal-400">VLA</strong> (Vision-Language-Action model, introduced in 5.1) also receives the written instruction and can perform different tasks depending on the request: "put the cube in the box" or "put the ball in the box." These models are already pretrained on many robots; you just fine-tune them <strong class="text-neutral-100">fine-tune</strong> with your episodes.</p>
+<figure class="fig mb-3">
+<svg aria-label="VLA input and output: a camera image, text instruction, and joint state go into the model; it returns the sequence of joint actions. ACT receives only the image and state." class="w-full h-auto" role="img" viewbox="0 0 640 270">
+<defs>
+<pattern height="32" id="m54-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.1" r="1.3"></circle></pattern>
+<filter height="180%" id="m54-glow6" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+<marker id="m54-ah6" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#2dd4bf"></path></marker>
+<marker id="m54-ah6c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs>
+<rect fill="url(#m54-grid6)" height="270" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0b1f1d" height="54" rx="10" stroke="#2dd4bf" stroke-width="2" width="170" x="16" y="30"></rect><text fill="#ccfbf1" font-size="15" x="101" y="63">image</text>
+<rect fill="#0e1b26" height="54" rx="10" stroke="#38bdf8" stroke-width="2.5" width="170" x="16" y="100"></rect><text fill="#7dd3fc" font-size="15" x="101" y="124">"put the ball</text><text fill="#7dd3fc" font-size="15" x="101" y="144">in the box"</text>
+<rect fill="#0b1f1d" height="54" rx="10" stroke="#2dd4bf" stroke-width="2" width="170" x="16" y="170"></rect><text fill="#ccfbf1" font-size="15" x="101" y="203">state (6)</text>
+<g filter="url(#m54-glow6)"><rect fill="#0f2624" height="110" rx="14" stroke="#14b8a6" stroke-width="2.5" width="160" x="250" y="70"></rect></g>
+<text fill="#2dd4bf" font-size="22" font-weight="600" x="330" y="116">VLA</text><text fill="#99f6e4" font-size="15" x="330" y="144">SmolVLA, pi0</text>
+<rect fill="#0b1f1d" height="60" rx="10" stroke="#2dd4bf" stroke-width="2" width="154" x="470" y="95"></rect><text fill="#ccfbf1" font-size="15" x="547" y="122">actions from</text><text fill="#ccfbf1" font-size="15" x="547" y="142">6 joints</text>
+<text fill="#a8a8b3" font-size="14" x="320" y="252">ACT receives only images and state: without the cyan box, it’s one task per model</text>
+</g>
+<g fill="none" opacity="0.85" stroke-width="2"><path d="M186,57 L244,100" marker-end="url(#m54-ah6)" stroke="#2dd4bf"></path><path d="M186,127 L244,127" marker-end="url(#m54-ah6c)" stroke="#38bdf8"></path><path d="M186,197 L244,152" marker-end="url(#m54-ah6)" stroke="#2dd4bf"></path><path d="M410,125 L464,125" marker-end="url(#m54-ah6)" stroke="#2dd4bf"></path></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> the difference between a VLA and ACT is the cyan box. With the text, the same model chooses which object to pick up. The text doesn’t become code or a list of steps: it directly conditions the joint movements.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3">Policy</th><th class="text-left p-3">Understands text</th><th class="text-left p-3">Training compute</th><th class="text-left p-3">When to use</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3 font-semibold text-teal-400">ACT</td><td class="p-3">isn’t</td><td class="p-3">lightweight</td><td class="p-3">one task, first project</td></tr>
+<tr><td class="p-3 font-semibold text-teal-400">SmolVLA</td><td class="p-3">yes</td><td class="p-3">medium (GPU with plenty of memory)</td><td class="p-3">a few tasks with the same arm</td></tr>
+<tr><td class="p-3 font-semibold text-teal-400">pi0 / pi0.5</td><td class="p-3">yes</td><td class="p-3">heavy (large GPU or cloud)</td><td class="p-3">research, varied tasks</td></tr>
+</tbody>
+</table>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-4-t6-p2"><strong class="text-neutral-100">Goal:</strong> fine-tune SmolVLA from the base model <span class="font-mono text-xs break-all">lerobot/smolvla_base</span> using your dataset. First, record episodes with different instructions (for example, half with "cube" and half with "ball").</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">smolvla.sh</span></div>
+<pre><code><span class="c"># Install the SmolVLA extra in the same LeRobot environment</span>
+pip install <span class="s">"lerobot[smolvla]"</span>
+
+<span class="c"># Fine-tune from the base model (check the current docs for the flags)</span>
+lerobot-train \
+  --policy.path=lerobot/smolvla_base \
+  --dataset.repo_id=&lt;seu_usuario_hf&gt;/&lt;dataset&gt; \
+  --policy.device=cuda \
+  --output_dir=outputs/train/smolvla-&lt;dataset&gt; \
+  --batch_size=16 \
+  --steps=20000 \
+  --wandb.enable=false \
+  --policy.push_to_hub=false</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>At the start, training downloads the base model weights from the Hub (the first time only), then shows the loss going down, as with ACT.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>For the evaluation, change only the text for <span class="font-mono text-xs">--task</span> and see whether the arm switches objects.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Running out of GPU memory? Reduce the batch size or train on Colab. The pi0 / pi0.5 family needs even more; start with ACT or SmolVLA.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 See also: simulation data</h3>
+<p class="text-neutral-300 text-sm">The INEMA project <a class="text-sky-400 underline" href="https://inematds.github.io/robotica-real2sim/guia/" rel="noopener" target="_blank">robotica-real2sim</a> generates episodes in a simulation and exports them in LeRobot format (in the test: 50 episodes with cameras, 4,361 frames, 9.7 MB). Mixing a few real episodes with many simulated ones is the topic of the next module.</p>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-4-t6-p3">The final project (5.6) needs an arm that follows different requests. With ACT, you train one policy per task and the language model chooses which one to call; with a VLA, a single policy receives the request as text. Knowing both approaches lets you choose based on the hardware you have.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">VLA</div><div class="text-xs text-neutral-400">image + text → action</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Fine-tuning</div><div class="text-xs text-neutral-400">base model + your episodes</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">SmolVLA</div><div class="text-xs text-neutral-400">LeRobot’s small VLA</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">pi0 / pi0.5</div><div class="text-xs text-neutral-400">Larger VLAs</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-teal-900/30 via-dark-800 to-dark-800 rounded-xl border border-teal-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Imitation = demonstrate, record, train, evaluate</strong><span class="text-neutral-400"> and record again where the policy makes mistakes.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Episode</strong><span class="text-neutral-400">: images + state + action at every frame, along with the task instruction; patience and consistency matter more than quantity.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Hub</strong><span class="text-neutral-400">: record in one place, train in another; private by default.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Start with ACT</strong><span class="text-neutral-400">; a lower loss doesn’t mean success; the success rate over 20 attempts does.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">SmolVLA and pi0</strong><span class="text-neutral-400"> receive text and switch tasks based on the request, at the cost of more GPU power.</span></div></div>
+</div>
+<h3 class="font-semibold text-teal-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://huggingface.co/docs/lerobot" rel="noopener" target="_blank">LeRobot documentation</a> <span class="text-neutral-500">— commands and flags for the current version</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://huggingface.co/lerobot/smolvla_base" rel="noopener" target="_blank">SmolVLA base model</a> <span class="text-neutral-500">— starting point for fine-tuning</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/huggingface/lerobot" rel="noopener" target="_blank">LeRobot on GitHub</a> <span class="text-neutral-500">— code, examples, and discussions</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://inematds.github.io/robotica-real2sim/guia/" rel="noopener" target="_blank">robotica-real2sim (INEMA)</a> <span class="text-neutral-500">— step-by-step guide for anyone with an SO-101 and simulated data</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-teal-400 mb-1">Next module</h3>
+<p class="text-neutral-300">5.5 · Simulate before going real: the SO-101 twin in MuJoCo, real2sim, and the gap between simulation and reality.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-5-3.html">← Previous: 5.3 SO-101 arm and LeRobot</a>
+<a class="inline-flex items-center px-5 py-3 bg-teal-700 text-white rounded-lg font-semibold hover:bg-teal-600 transition-colors" href="modulo-5-5.html">Next: 5.5 Simulate before going real →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

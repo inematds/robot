@@ -30,9 +30,9 @@ for p in page_list():
     if not p.exists():
         probs.append(f'FALTA {rel}'); continue
     t = p.read_text()
-    if 'name="inema-course" content="robot"' not in t:
+    if not re.search(r'<meta (?=[^>]*name="inema-course")(?=[^>]*content="robot")[^>]*>', t):
         probs.append(f'{rel}: sem meta inema-course')
-    m = re.search(r'<script type="application/json" data-inema-manifest>(.*?)</script>', t, re.S)
+    m = re.search(r'<script (?=[^>]*type="application/json")(?=[^>]*data-inema-manifest)[^>]*>(.*?)</script>', t, re.S)
     if not m:
         probs.append(f'{rel}: sem manifesto')
     elif lang == 'pt' and json.dumps(json.loads(m.group(1)), sort_keys=True) != man_txt:
@@ -50,7 +50,7 @@ for p in page_list():
             probs.append(f'{rel}: proibido /{f}/ … {ctx[:140]}')
             break
     want_lang = {'pt': 'pt-BR', 'en': 'en', 'es': 'es'}[lang]
-    if f'<html lang="{want_lang}"' not in t:
+    if not re.search(rf'<html [^>]*lang="{want_lang}"', t):
         probs.append(f'{rel}: <html lang> != {want_lang}')
 
 for tr in man['tracks']:

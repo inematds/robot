@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 2.4 · Several tasks at once | Robotics from Zero to Expert</title>
+<meta content="A robot that doesn't freeze: why delay() gets in the way, non-blocking millis() and tasks, state machines, FreeRTOS on the ESP32 (tasks, cores, queues, and semaphores), and code organized into files and classes." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha2/modulo-2-4.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha2/modulo-2-4.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha2/modulo-2-4.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha2/modulo-2-4.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha2/modulo-2-4.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha2/modulo-2-4.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-2-4.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha2/modulo-2-4.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T1 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a aria-current="page" class="nav-trail text-blue-400 bg-blue-500/10" href="index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="2-4" data-inema-track="2" id="conteudo">
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-blue-400" href="../../index.html">Home</a><span aria-hidden="true">/</span>
+<a class="hover:text-blue-400" href="index.html">Track 2</a><span aria-hidden="true">/</span>
+<span class="text-blue-400">Module 2.4</span>
+</div>
+</nav>
+<header class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full mb-4">MODULE 2.4 · PRACTICE</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🧵 Several tasks at once</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">A robot needs to read sensors, adjust motors, listen to your phone, and send data—all at once. Here you replace <strong class="text-neutral-100">delay()</strong> with <strong class="text-neutral-100">millis()</strong>, organize behavior with a <strong class="text-blue-400">state machine</strong> and use <strong class="text-blue-400">FreeRTOS</strong> on the ESP32 to divide the work among tasks and cores.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Intermediate</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Practice</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">ESP32</div><div class="text-xs text-neutral-400">Hardware (Wokwi works)</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 2.4 progress" class="inema-ring" data-inema-meter="modulo:2-4"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:2-4"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-1">1. Why delay() gets in the way</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-2">2. millis() without blocking</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-3">3. State machines</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-4">4. FreeRTOS: tasks and cores</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-5">5. Queues and semaphores</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-6">6. Files and classes</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-2-4#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">⏳ Why delay() gets in the robot’s way</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-4-t1-p1">In Track 1, <span class="font-mono text-sm">delay(500)</span> it seemed harmless: blink the LED and that’s it. But during those 500 ms, the processor <strong class="text-neutral-100">does nothing else</strong>. It doesn’t read the distance sensor, adjust the motor, or notice the stop button. A rover moving at 0.5 m/s travels 25 cm "with its eyes closed" during every half-second wait. With one sensor and an LED, you might not notice; with Wi-Fi, PID, and telemetry running together, the robot starts hitting things, oscillating, and missing commands.</p>
+<div class="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-4-t1-p2">A function <strong>blocking</strong> only returns control to the program when it finishes. <span class="font-mono text-xs">delay()</span>, <span class="font-mono text-xs">while</span> waiting for a button and <span class="font-mono text-xs">pulseIn()</span> with no timeout are blocking. A <strong>non-blocking</strong> function does a small part of the work, then exits quickly so the rest of the code can run.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="One-second timeline: with delay, the processor spends almost all its time idle and reads the sensor only twice; with millis, it runs dozens of short slices and reads the sensor continuously." class="w-full h-auto" role="img" viewbox="0 0 640 250">
+<defs><pattern height="32" id="m24-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.12" r="1.3"></circle></pattern>
+<pattern height="10" id="m24-hatch" patterntransform="rotate(45)" patternunits="userSpaceOnUse" width="10"><rect fill="#2a1416" height="10" width="10"></rect><line opacity="0.5" stroke="#f87171" stroke-width="3" x1="0" x2="0" y1="0" y2="10"></line></pattern></defs>
+<rect fill="url(#m24-grid1)" height="250" width="640"></rect>
+<g font-family="Inter,sans-serif" font-size="16">
+<text fill="#f87171" font-weight="600" x="20" y="40">with delay()</text>
+<rect fill="#3b82f6" height="44" width="16" x="20" y="52"></rect><rect fill="url(#m24-hatch)" height="44" stroke="#f87171" width="284" x="36" y="52"></rect>
+<rect fill="#3b82f6" height="44" width="16" x="320" y="52"></rect><rect fill="url(#m24-hatch)" height="44" stroke="#f87171" width="284" x="336" y="52"></rect>
+<text fill="#fecaca" text-anchor="middle" x="178" y="80">stopped: sees nothing</text><text fill="#fecaca" text-anchor="middle" x="478" y="80">stopped: sees nothing</text>
+<text fill="#60a5fa" font-weight="600" x="20" y="140">with millis()</text>
+<g fill="#3b82f6"><rect height="44" width="8" x="20" y="152"></rect><rect height="44" width="8" x="40" y="152"></rect><rect height="44" width="8" x="60" y="152"></rect><rect height="44" width="8" x="80" y="152"></rect><rect height="44" width="8" x="100" y="152"></rect><rect height="44" width="8" x="120" y="152"></rect><rect height="44" width="8" x="140" y="152"></rect><rect height="44" width="8" x="160" y="152"></rect><rect height="44" width="8" x="180" y="152"></rect><rect height="44" width="8" x="200" y="152"></rect><rect height="44" width="8" x="220" y="152"></rect><rect height="44" width="8" x="240" y="152"></rect><rect height="44" width="8" x="260" y="152"></rect><rect height="44" width="8" x="280" y="152"></rect><rect height="44" width="8" x="300" y="152"></rect></g>
+<g fill="#38bdf8"><rect height="44" width="8" x="320" y="152"></rect><rect height="44" width="8" x="340" y="152"></rect><rect height="44" width="8" x="360" y="152"></rect><rect height="44" width="8" x="380" y="152"></rect><rect height="44" width="8" x="400" y="152"></rect><rect height="44" width="8" x="420" y="152"></rect><rect height="44" width="8" x="440" y="152"></rect><rect height="44" width="8" x="460" y="152"></rect><rect height="44" width="8" x="480" y="152"></rect><rect height="44" width="8" x="500" y="152"></rect><rect height="44" width="8" x="520" y="152"></rect><rect height="44" width="8" x="540" y="152"></rect><rect height="44" width="8" x="560" y="152"></rect><rect height="44" width="8" x="580" y="152"></rect><rect height="44" width="8" x="600" y="152"></rect></g>
+<line stroke="#a8a8b3" stroke-width="1.5" x1="20" x2="620" y1="216" y2="216"></line>
+<text fill="#a8a8b3" x="20" y="238">0 ms</text><text fill="#a8a8b3" text-anchor="middle" x="320" y="238">500 ms</text><text fill="#a8a8b3" text-anchor="end" x="620" y="238">1000 ms</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">How to read this map:</strong> each blue bar represents one pass through the program, when it reads sensors and makes decisions. At the top, the <span class="font-mono">delay()</span> leaves only two slices per second; the rest (in red) is blind time. Below, the same program without waiting takes one short slice after another and sees the world all the time.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-5">
+<h4 class="font-bold text-blue-400 mb-3">✓ Signs of healthy code</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>O <span class="font-mono text-xs">loop()</span> makes thousands of passes per second.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>The stop button responds immediately, at any time.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Timed waits (<span class="font-mono text-xs">pulseIn(pino, HIGH, 25000)</span>).</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Signs of blocking code</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>The robot “takes a while” to react to an obstacle or your phone.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span><span class="font-mono text-xs">while (digitalRead(botao) == HIGH) {}</span> waiting for someone.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Wi-Fi commands arrive late or in bursts.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-4-t1-p3">The PID from module 2.3 only works if it runs at a fixed pace, and the line follower from 2.6 needs to read five sensors hundreds of times per second while sending telemetry. Without removing the blocking calls, none of these parts can work together.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Blocking</div><div class="text-xs text-neutral-400">holds the processor</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Blind time</div><div class="text-xs text-neutral-400">nobody checks the sensor</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Latency</div><div class="text-xs text-neutral-400">delay before reacting</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Timeout</div><div class="text-xs text-neutral-400">wait with a deadline</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-2-4#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">⏱️ millis() and non-blocking tasks</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-4-t2-p1"><span class="font-mono text-sm">millis()</span> returns how many milliseconds have passed since the board powered on. Instead of waiting, you <strong class="text-neutral-100">check the clock</strong>: “Have 500 ms passed since I last blinked? Then I’ll blink and note the time.” Each task gets its own timestamp and its own interval. The <span class="font-mono text-sm">loop()</span> goes through them all, does only what’s due, and moves on.</p>
+<figure class="fig mb-3">
+<svg aria-label="Schedule for three tasks over one second: the LED acts every 500 ms, the potentiometer is read every 20 ms, and the report is sent every 1000 ms; the loop cycles through them continuously." class="w-full h-auto" role="img" viewbox="0 0 640 230">
+<rect fill="url(#m24-grid1)" height="230" width="640"></rect>
+<g font-family="Inter,sans-serif" font-size="15">
+<text fill="#dbeafe" x="20" y="46">LED · 500 ms</text><text fill="#dbeafe" x="20" y="106">sensor · 20 ms</text><text fill="#dbeafe" x="20" y="166">report · 1 s</text>
+<line stroke="#272730" stroke-width="2" x1="170" x2="620" y1="40" y2="40"></line><line stroke="#272730" stroke-width="2" x1="170" x2="620" y1="100" y2="100"></line><line stroke="#272730" stroke-width="2" x1="170" x2="620" y1="160" y2="160"></line>
+<g fill="#60a5fa"><circle cx="170" cy="40" r="8"></circle><circle cx="395" cy="40" r="8"></circle><circle cx="620" cy="40" r="8"></circle></g>
+<g stroke="#38bdf8" stroke-width="3"><line x1="170" x2="170" y1="90" y2="110"></line><line x1="188" x2="188" y1="90" y2="110"></line><line x1="206" x2="206" y1="90" y2="110"></line><line x1="224" x2="224" y1="90" y2="110"></line><line x1="242" x2="242" y1="90" y2="110"></line><line x1="260" x2="260" y1="90" y2="110"></line><line x1="278" x2="278" y1="90" y2="110"></line><line x1="296" x2="296" y1="90" y2="110"></line><line x1="314" x2="314" y1="90" y2="110"></line><line x1="332" x2="332" y1="90" y2="110"></line><line x1="350" x2="350" y1="90" y2="110"></line><line x1="368" x2="368" y1="90" y2="110"></line><line x1="386" x2="386" y1="90" y2="110"></line><line x1="404" x2="404" y1="90" y2="110"></line><line x1="422" x2="422" y1="90" y2="110"></line><line x1="440" x2="440" y1="90" y2="110"></line><line x1="458" x2="458" y1="90" y2="110"></line><line x1="476" x2="476" y1="90" y2="110"></line><line x1="494" x2="494" y1="90" y2="110"></line><line x1="512" x2="512" y1="90" y2="110"></line><line x1="530" x2="530" y1="90" y2="110"></line><line x1="548" x2="548" y1="90" y2="110"></line><line x1="566" x2="566" y1="90" y2="110"></line><line x1="584" x2="584" y1="90" y2="110"></line><line x1="602" x2="602" y1="90" y2="110"></line><line x1="620" x2="620" y1="90" y2="110"></line></g>
+<g fill="#3b82f6"><rect height="24" rx="3" width="12" x="164" y="148"></rect><rect height="24" rx="3" width="12" x="614" y="148"></rect></g>
+<text fill="#7dd3fc" text-anchor="middle" x="395" y="208">if (agora − ultimaVez ≥ periodo) { faz; ultimaVez = agora; }</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">How to read this map:</strong> each line is a task with its own pace. The marks show when it actually runs. None waits for another: the same check from the last line, repeated with different clocks, fits them all into the same <span class="font-mono">loop()</span>.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-4-t2-p2"><strong class="text-neutral-100">Goal:</strong> run four tasks in the same <span class="font-mono text-xs">loop()</span>, without <span class="font-mono text-xs">delay()</span>, and measure how many times the loop runs per second. In Wokwi: ESP32 + LED on GPIO 2 + potentiometer on GPIO 34.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">multitarefa-millis.ino</span></div>
+<pre><code><span class="c">// Four tasks in the same loop, without delay() (ESP32, esp32 package 3.x)</span>
+const int PINO_LED = 2;      <span class="c">// LED blinks every 500 ms</span>
+const int PINO_BOTAO = 0;    <span class="c">// board's BOOT button (LOW = pressed)</span>
+const int PINO_POT = 34;     <span class="c">// potentiometer (input-only pin, ADC1)</span>
+unsigned long tLed = 0, tPot = 0, tSerial = 0, voltas = 0;   <span class="c">// passes: since the last report</span>
+bool ledLigado = false;
+int leituraPot = 0, botaoAntes = HIGH;
+void setup() {
+  Serial.begin(115200);
+  pinMode(PINO_LED, OUTPUT); pinMode(PINO_BOTAO, INPUT_PULLUP);
+  Serial.println(<span class="s">"Four tasks without delay: ready"</span>);
+}
+void loop() {
+  unsigned long agora = millis();
+  voltas++;
+  if (agora - tLed &gt;= 500) {          <span class="c">// task 1: blink</span>
+    tLed = agora; ledLigado = !ledLigado; digitalWrite(PINO_LED, ledLigado);
+  }
+  if (agora - tPot &gt;= 20) {           <span class="c">// task 2: read the sensor 50 times per second (0 to 4095)</span>
+    tPot = agora; leituraPot = analogRead(PINO_POT);
+  }
+  if (agora - tSerial &gt;= 1000) {      <span class="c">// task 3: report</span>
+    tSerial = agora;
+    Serial.printf(<span class="s">"pot=%d | loop passes in the last second=%lu\n"</span>, leituraPot, voltas);
+    voltas = 0;
+  }
+  int botao = digitalRead(PINO_BOTAO); <span class="c">// task 4: button, at any time</span>
+  if (botaoAntes == HIGH &amp;&amp; botao == LOW) Serial.println(<span class="s">"Button pressed"</span>);
+  botaoAntes = botao;
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>The LED blinks once per second, always at the same pace, while you turn the potentiometer.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>The report shows hundreds of thousands of passes per second, and “Button pressed” appears immediately.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Add a <span class="font-mono text-xs">delay(500)</span> at the end of the loop: the number of passes drops to 2 and the button starts missing presses.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 What happens when millis() “rolls over”?</h3>
+<p class="text-neutral-300 text-sm">The counter returns to zero after about 49 days. If you always compare using <strong class="text-neutral-100">subtraction</strong> (<span class="font-mono text-xs">agora - tLed &gt;= 500</span>) and variables <span class="font-mono text-xs">unsigned long</span>, the calculation stays correct even when it rolls over. Avoid <span class="font-mono text-xs">agora &gt;= tLed + 500</span>: this form breaks.</p>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-4-t2-p3">This is the simplest technique, and it works on any board, including ESP32-C3 and C6, which have only one core. For most robots in Track 2, a well-organized loop with millis() is enough.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">millis()</div><div class="text-xs text-neutral-400">clock since boot</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Interval</div><div class="text-xs text-neutral-400">how often</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Edge</div><div class="text-xs text-neutral-400">the moment of the change</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">unsigned long</div><div class="text-xs text-neutral-400">survives rollover</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-2-4#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🔀 A real state machine</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-4-t3-p1">As the behavior grows, the <span class="font-mono text-sm">if</span> get mixed up: “if it’s moving and sees a wall, but isn’t already turning, unless...” The <strong class="text-blue-400">state machine</strong> brings order: the robot is always in <strong class="text-neutral-100">one</strong> named state (WAITING, MOVING, BACKING UP, TURNING); each state knows what to do with the motors and which events take it to the next one. Time in each state comes from millis(), so nothing blocks.</p>
+<figure class="fig mb-3">
+<svg aria-label="Rover state diagram: ESPERANDO goes to ANDANDO when the button is pressed; ANDANDO goes to RECUANDO when the distance drops below 20 cm; RECUANDO goes to GIRANDO after 400 ms; GIRANDO returns to ANDANDO after 350 ms; the button takes any state back to ESPERANDO." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><marker id="m24-ah3" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#60a5fa"></path></marker>
+<marker id="m24-ah3r" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#f87171"></path></marker></defs>
+<rect fill="url(#m24-grid1)" height="300" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0e1a2e" height="56" rx="28" stroke="#a8a8b3" stroke-width="2" width="160" x="20" y="40"></rect><text fill="#e6e6e6" font-size="16" font-weight="600" x="100" y="74">WAITING</text>
+<rect fill="#122240" height="56" rx="28" stroke="#3b82f6" stroke-width="2.5" width="160" x="400" y="40"></rect><text fill="#dbeafe" font-size="16" font-weight="600" x="480" y="74">MOVING</text>
+<rect fill="#0e1a2e" height="56" rx="28" stroke="#38bdf8" stroke-width="2" width="160" x="400" y="200"></rect><text fill="#bfe6ff" font-size="16" font-weight="600" x="480" y="234">BACKING UP</text>
+<rect fill="#0e1a2e" height="56" rx="28" stroke="#38bdf8" stroke-width="2" width="160" x="150" y="200"></rect><text fill="#bfe6ff" font-size="16" font-weight="600" x="230" y="234">TURNING</text>
+<path d="M180,68 L393,68" fill="none" marker-end="url(#m24-ah3)" stroke="#60a5fa" stroke-width="2"></path><text fill="#bfdbfe" font-size="15" x="290" y="58">button</text>
+<path d="M480,96 L480,193" fill="none" marker-end="url(#m24-ah3)" stroke="#60a5fa" stroke-width="2"></path><text fill="#bfdbfe" font-size="15" x="545" y="152">dist &lt; 20 cm</text>
+<path d="M400,228 L317,228" fill="none" marker-end="url(#m24-ah3)" stroke="#60a5fa" stroke-width="2"></path><text fill="#bfdbfe" font-size="14" x="356" y="218">400 ms</text>
+<path d="M260,200 C300,130 360,110 398,92" fill="none" marker-end="url(#m24-ah3)" stroke="#60a5fa" stroke-width="2"></path><text fill="#bfdbfe" font-size="14" x="292" y="140">350 ms</text>
+<path d="M150,228 C80,228 70,150 90,103" fill="none" marker-end="url(#m24-ah3r)" stroke="#f87171" stroke-dasharray="6 5" stroke-width="2"></path><text fill="#fecaca" font-size="14" x="150" y="150">button</text><text fill="#fecaca" font-size="14" x="150" y="168">(any state)</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">How to read this map:</strong> each capsule is a state, and each blue arrow is a transition with its condition written beside it. The dashed red arrow applies to all states: the button stops the robot in any state. Draw this on paper before writing the <span class="font-mono">switch</span>.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-4-t3-p2"><strong class="text-neutral-100">Goal:</strong> the Track 1 rover with its obstacle-avoidance logic rewritten as a state machine. Connections: TB6612FNG (PWMA 25, AIN1 26, AIN2 27, PWMB 14, BIN1 16, BIN2 17, STBY to 3V3), HC-SR04 (TRIG 13, ECHO 4 through a voltage divider to 3.3 V), BOOT button.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">rover-estados.ino</span></div>
+<pre><code><span class="c">// Rover with a state machine (ESP32 3.x + TB6612FNG + HC-SR04)</span>
+enum Estado { ESPERANDO, ANDANDO, RECUANDO, GIRANDO };
+const char *NOMES[] = { <span class="s">"ESPERANDO"</span>, <span class="s">"ANDANDO"</span>, <span class="s">"RECUANDO"</span>, <span class="s">"GIRANDO"</span> };
+Estado estado = ESPERANDO;
+unsigned long inicioEstado = 0, tSom = 0;
+float dist = 999;
+const int PWMA = 25, AIN1 = 26, AIN2 = 27;   <span class="c">// left motor</span>
+const int PWMB = 14, BIN1 = 16, BIN2 = 17;   <span class="c">// right motor</span>
+const int TRIG = 13, ECHO = 4, BOTAO = 0, VEL = 170;   <span class="c">// VEL: cruising speed (0 to 255)</span>
+
+void motor(int pwm, int in1, int in2, int v) {   <span class="c">// v from -255 to 255; ledcWrite takes the pin (3.x)</span>
+  digitalWrite(in1, v &gt; 0); digitalWrite(in2, v &lt; 0); ledcWrite(pwm, abs(v));
+}
+void andar(int esq, int dir) { motor(PWMA, AIN1, AIN2, esq); motor(PWMB, BIN1, BIN2, dir); }
+float distanciaCm() {
+  digitalWrite(TRIG, LOW); delayMicroseconds(2); digitalWrite(TRIG, HIGH); delayMicroseconds(10); digitalWrite(TRIG, LOW);
+  unsigned long us = pulseIn(ECHO, HIGH, 25000);   <span class="c">// at most 25 ms of waiting</span>
+  return us == 0 ? 999 : us / 58.0;                <span class="c">// 0 = nothing ahead</span>
+}
+void mudarPara(Estado novo) {
+  estado = novo; inicioEstado = millis();
+  Serial.printf(<span class="s">"[%lu ms] -&gt; %s\n"</span>, inicioEstado, NOMES[novo]);
+}
+bool botaoApertado() {                             <span class="c">// press edge only</span>
+  static int antes = HIGH;
+  int agora = digitalRead(BOTAO);
+  bool borda = (antes == HIGH &amp;&amp; agora == LOW);
+  antes = agora; return borda;
+}
+void setup() {
+  Serial.begin(115200);
+  pinMode(AIN1, OUTPUT); pinMode(AIN2, OUTPUT); pinMode(BIN1, OUTPUT); pinMode(BIN2, OUTPUT);
+  ledcAttach(PWMA, 20000, 8); ledcAttach(PWMB, 20000, 8);   <span class="c">// pin, 20 kHz, 8 bits</span>
+  pinMode(TRIG, OUTPUT); pinMode(ECHO, INPUT); pinMode(BOTAO, INPUT_PULLUP);
+  mudarPara(ESPERANDO);
+}
+void loop() {
+  unsigned long noEstado = millis() - inicioEstado;
+  bool botao = botaoApertado();
+  if (millis() - tSom &gt;= 60) { tSom = millis(); dist = distanciaCm(); }   <span class="c">// ping every 60 ms</span>
+  if (botao &amp;&amp; estado != ESPERANDO) { andar(0, 0); mudarPara(ESPERANDO); return; }
+  switch (estado) {
+    case ESPERANDO: andar(0, 0);         if (botao) mudarPara(ANDANDO);           break;
+    case ANDANDO:   andar(VEL, VEL);     if (dist &lt; 20) mudarPara(RECUANDO);      break;
+    case RECUANDO:  andar(-VEL, -VEL);   if (noEstado &gt; 400) mudarPara(GIRANDO);  break;
+    case GIRANDO:   andar(VEL, -VEL);    if (noEstado &gt; 350) mudarPara(ANDANDO);  break;
+  }
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check (wheels off the ground first)</p>
+<ul class="space-y-1 text-sm text-neutral-300"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>The Serial Monitor shows each transition: <span class="font-mono text-xs">[5123 ms] -&gt; MOVING</span>, then BACKING UP and TURNING as you bring your hand closer.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Press BOOT to stop the motors immediately, in any state.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Wheels turning the wrong way? Swap that motor's wires or invert the sign of <span class="font-mono text-xs">v</span>.</span></li>
+</ul>
+</div>
+<p class="text-sm text-neutral-300 mb-6" data-inema-block="m2-4-t3-p4"><strong class="text-neutral-100">Two common mistakes:</strong> one <span class="font-mono text-xs">delay(400)</span> inside BACKING UP (brings back blind time) and unnamed states (<span class="font-mono text-xs">mode = 3</span>), which nobody remembers the meaning of a month later.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-4-t3-p3">Competition robots, vacuum cleaners, and Nav2 in Track 4 all think in states. The transition log becomes the robot’s diary: when something goes wrong, you can see what state it was in and what made it change.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">State</div><div class="text-xs text-neutral-400">what the robot is doing</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Transition</div><div class="text-xs text-neutral-400">event that changes the state</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">enum + switch</div><div class="text-xs text-neutral-400">named states</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Time in state</div><div class="text-xs text-neutral-400">millis() − start</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-2-4#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🧠 FreeRTOS on ESP32: tasks and cores</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-4-t4-p1">The ESP32 already runs a small operating system underneath Arduino: <strong class="text-blue-400">FreeRTOS</strong>. Your <span class="font-mono text-sm">loop()</span> that’s its job, on core 1; Wi-Fi and Bluetooth run on core 0. You can create your own tasks, each with an <span class="font-mono text-sm">for (;;)</span> infinite loop, priority, and core. When a task calls <span class="font-mono text-sm">vTaskDelay()</span>, it sleeps and the scheduler gives the processor to another task. Here, waiting <strong class="text-neutral-100">isn’t</strong> blind time.</p>
+<div class="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-4-t4-p2">A <strong>RTOS</strong> (real-time operating system) ensures the most important task runs when it needs to. A <strong>task</strong> is a function that runs “in parallel” with the others. The <strong>scheduler</strong> decides who uses each core at any given moment, based on <strong>priority</strong>: a higher number goes first.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="The ESP32's two cores: Wi-Fi, Bluetooth, and the telemetry task run on core 0; the control task runs every 10 ms and the Arduino loop runs on core 1; each task sleeps between runs." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<rect fill="url(#m24-grid1)" height="260" width="640"></rect>
+<g font-family="Inter,sans-serif" font-size="15">
+<rect fill="#0e1a2e" height="100" rx="14" stroke="#38bdf8" stroke-width="2" width="600" x="20" y="20"></rect>
+<text fill="#7dd3fc" font-size="16" font-weight="600" x="36" y="46">Core 0</text>
+<rect fill="#0b2233" height="44" rx="8" stroke="#38bdf8" width="150" x="36" y="60"></rect><text fill="#bfe6ff" text-anchor="middle" x="111" y="88">Wi-Fi / BT</text>
+<rect fill="#122240" height="44" rx="8" stroke="#60a5fa" width="70" x="200" y="60"></rect><text fill="#dbeafe" text-anchor="middle" x="235" y="88">telemetry</text>
+<rect fill="#0b2233" height="44" rx="8" stroke="#38bdf8" width="150" x="290" y="60"></rect><text fill="#bfe6ff" text-anchor="middle" x="365" y="88">Wi-Fi / BT</text>
+<text fill="#a8a8b3" text-anchor="middle" x="530" y="88">sleeps 500 ms</text>
+<rect fill="#0e1a2e" height="100" rx="14" stroke="#3b82f6" stroke-width="2.5" width="600" x="20" y="140"></rect>
+<text fill="#60a5fa" font-size="16" font-weight="600" x="36" y="166">Core 1</text>
+<g fill="#122240" stroke="#60a5fa"><rect height="44" rx="8" width="60" x="36" y="180"></rect><rect height="44" rx="8" width="60" x="176" y="180"></rect><rect height="44" rx="8" width="60" x="316" y="180"></rect><rect height="44" rx="8" width="60" x="456" y="180"></rect></g>
+<g fill="#dbeafe" text-anchor="middle"><text x="66" y="208">ctrl</text><text x="206" y="208">ctrl</text><text x="346" y="208">ctrl</text><text x="486" y="208">ctrl</text></g>
+<g fill="#a8a8b3" font-size="14" text-anchor="middle"><text x="136" y="208">loop()</text><text x="276" y="208">loop()</text><text x="416" y="208">free</text></g>
+<text fill="#bfdbfe" font-size="14" text-anchor="middle" x="572" y="208">10 ms</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">How to read this map:</strong> time runs from left to right. On core 1, the control task (ctrl) wakes up every 10 ms on the dot and the <span class="font-mono">loop()</span> uses the spare time. On core 0, telemetry (tele) shares time with Wi-Fi. Splitting things this way prevents a network spike from delaying motor control.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm"><thead class="bg-dark-700"><tr><th class="text-left p-3">xTaskCreatePinnedToCore parameter</th><th class="text-left p-3">What it is</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3 font-mono text-xs">tarefaControle</td><td class="p-3">the function with the <span class="font-mono text-xs">for (;;)</span></td></tr><tr><td class="p-3 font-mono text-xs">“control”</td><td class="p-3">name; appears in error messages</td></tr><tr><td class="p-3 font-mono text-xs">4096</td><td class="p-3">stack in <strong>bytes</strong> on the ESP32 (in standard FreeRTOS, it’s measured in words)</td></tr><tr><td class="p-3 font-mono text-xs">NULL</td><td class="p-3">parameter passed to the function</td></tr><tr><td class="p-3 font-mono text-xs">2</td><td class="p-3">priority (the <span class="font-mono text-xs">loop()</span> has 1)</td></tr><tr><td class="p-3 font-mono text-xs">&amp;hControle</td><td class="p-3">“handle” for pausing or deleting the task later</td></tr><tr><td class="p-3 font-mono text-xs">1</td><td class="p-3">core: 0 or 1 (C3 and C6 only have core 0)</td></tr>
+</tbody></table>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-4-t4-p3"><strong class="text-neutral-100">Goal:</strong> a control task running at exactly 100 Hz on core 1 (reads the potentiometer and adjusts the LED brightness) and a telemetry task on core 0. Same circuit as in topic 2.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">freertos-duas-tarefas.ino</span></div>
+<pre><code><span class="c">// Two FreeRTOS tasks on different cores (dual-core ESP32, esp32 package 3.x)</span>
+const int PINO_LED = 2, PINO_POT = 34;
+TaskHandle_t hControle = NULL, hTelemetria = NULL;
+volatile int brilho = 0;                  <span class="c">// written by the control task, read by telemetry</span>
+volatile unsigned long ciclos = 0;
+void tarefaControle(void *param) {
+  TickType_t ultimo = xTaskGetTickCount();
+  const TickType_t periodo = pdMS_TO_TICKS(10);   <span class="c">// 100 times per second, with no drift</span>
+  for (;;) {
+    brilho = analogRead(PINO_POT) / 16;           <span class="c">// 0..4095 becomes 0..255</span>
+    ledcWrite(PINO_LED, brilho); ciclos++;
+    vTaskDelayUntil(&amp;ultimo, periodo);            <span class="c">// sleeps until the next 10 ms tick</span>
+  }
+}
+void tarefaTelemetria(void *param) {
+  for (;;) {
+    Serial.printf(<span class="s">"core %d | brightness=%d | control cycles=%lu\n"</span>, xPortGetCoreID(), brilho, ciclos);
+    vTaskDelay(pdMS_TO_TICKS(500));               <span class="c">// yields the core for 500 ms</span>
+  }
+}
+void setup() {
+  Serial.begin(115200);
+  ledcAttach(PINO_LED, 5000, 8);
+  <span class="c">// function, name, stack (bytes), parameter, priority, handle, core</span>
+  xTaskCreatePinnedToCore(tarefaControle,   <span class="s">"controle"</span>,   4096, NULL, 2, &amp;hControle,   1);
+  xTaskCreatePinnedToCore(tarefaTelemetria, <span class="s">"telemetria"</span>, 4096, NULL, 1, &amp;hTelemetria, 0);
+  Serial.printf(<span class="s">"setup ran on core %d\n"</span>, xPortGetCoreID());
+}
+void loop() { vTaskDelay(pdMS_TO_TICKS(1000)); }   <span class="c">// loop() is also a task; here it just rests</span></code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>"setup ran on core 1" and, every half second, "core 0 | brightness=... | control cycles=..."</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>The cycle count increases by about 50 between lines (100 per second).</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 “Task watchdog got triggered”</h3>
+<p class="text-neutral-300 text-sm">If a task enters a <span class="font-mono text-xs">for (;;)</span> that never calls <span class="font-mono text-xs">vTaskDelay</span> (or waits for a queue or semaphore), it never releases the core, the idle task doesn’t run, and the watchdog restarts the board. Every task needs to sleep or wait somewhere in its loop.</p>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-4-t4-p4">With Wi-Fi, MQTT, and PID running together, control needs a clock that the network can’t disrupt. <span class="font-mono text-sm">vTaskDelayUntil</span> provides exactly that: the same dt on every cycle, which is what the PID in module 2.3 assumes.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Task</div><div class="text-xs text-neutral-400">function with its own loop</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Priority</div><div class="text-xs text-neutral-400">higher number goes first</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">vTaskDelayUntil</div><div class="text-xs text-neutral-400">fixed period, no drift</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Watchdog</div><div class="text-xs text-neutral-400">restarts a stuck task</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-2-4#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">📬 Queues and semaphores: tasks communicating</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-4-t5-p1">Two tasks changing the same variable at the same time can end up reading incomplete data. FreeRTOS provides two safe ways to pass things around. A <strong class="text-blue-400">queue</strong> (queue) delivers messages in order: the sensor task adds a reading, and the motor task removes it. If the queue is empty, the waiting task sleeps without using processor time. A <strong class="text-blue-400">mutex</strong> is a single key: only the task holding it can use the resource (Serial, the SD card, the I2C bus), and then it returns the key.</p>
+<figure class="fig mb-3">
+<svg aria-label="The sensor task puts readings in a ten-place queue, and the actuator task retrieves them in the same order; above, both tasks compete for a single key (mutex) to write to Serial." class="w-full h-auto" role="img" viewbox="0 0 640 250">
+<defs><marker id="m24-ah5" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#60a5fa"></path></marker></defs>
+<rect fill="url(#m24-grid1)" height="250" width="640"></rect>
+<g font-family="Inter,sans-serif" font-size="15" text-anchor="middle">
+<rect fill="#122240" height="70" rx="12" stroke="#3b82f6" stroke-width="2" width="130" x="20" y="130"></rect><text fill="#dbeafe" font-weight="600" x="85" y="160">sensor</text><text fill="#bfdbfe" font-size="14" x="85" y="182">every 20 ms</text>
+<rect fill="#122240" height="70" rx="12" stroke="#3b82f6" stroke-width="2" width="130" x="490" y="130"></rect><text fill="#dbeafe" font-weight="600" x="555" y="160">actuator</text><text fill="#bfdbfe" font-size="14" x="555" y="182">wakes when data arrives</text>
+<g stroke="#38bdf8" stroke-width="1.5"><rect fill="#0b2233" height="40" width="26" x="190" y="145"></rect><rect fill="#0b2233" height="40" width="26" x="216" y="145"></rect><rect fill="#0b2233" height="40" width="26" x="242" y="145"></rect><rect fill="#0b2233" height="40" width="26" x="268" y="145"></rect><rect fill="#0b2233" height="40" width="26" x="294" y="145"></rect><rect fill="#0b2233" height="40" width="26" x="320" y="145"></rect><rect fill="#1e3a5f" height="40" width="26" x="346" y="145"></rect><rect fill="#1e3a5f" height="40" width="26" x="372" y="145"></rect><rect fill="#1e3a5f" height="40" width="26" x="398" y="145"></rect><rect fill="#1e3a5f" height="40" width="26" x="424" y="145"></rect></g>
+<text fill="#7dd3fc" x="320" y="218">queue: 10 slots, items come out in the order they went in</text>
+<path d="M150,165 L184,165" marker-end="url(#m24-ah5)" stroke="#60a5fa" stroke-width="2"></path><path d="M450,165 L484,165" marker-end="url(#m24-ah5)" stroke="#60a5fa" stroke-width="2"></path>
+<rect fill="#0e1a2e" height="50" rx="10" stroke="#a8a8b3" stroke-width="2" width="140" x="250" y="24"></rect><text fill="#e6e6e6" font-weight="600" x="320" y="55">Serial</text>
+<circle cx="420" cy="49" fill="none" r="13" stroke="#38bdf8" stroke-width="3"></circle><path d="M433,49 L470,49 M458,49 L458,60" stroke="#38bdf8" stroke-width="3"></path><text fill="#7dd3fc" font-size="14" x="530" y="55">mutex: 1 key</text>
+<path d="M85,128 C85,80 180,49 244,49" fill="none" stroke="#a8a8b3" stroke-dasharray="5 5" stroke-width="1.5"></path><path d="M555,128 C555,100 520,90 480,72" fill="none" stroke="#a8a8b3" stroke-dasharray="5 5" stroke-width="1.5"></path>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">How to read this map:</strong> below, data moves from left to right through the queue (the lighter squares are already occupied). Above, the dashed lines show both tasks requesting Serial, but only the one holding the key can write; the other waits its turn.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-4-t5-p2"><strong class="text-neutral-100">Goal:</strong> the sensor task sends readings through a queue; the actuator task adjusts the LED and, if no data arrives for 100 ms, shuts everything off (safe stop). Both write to Serial protected by a mutex.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">fila-e-mutex.ino</span></div>
+<pre><code><span class="c">// Queue (sensor -&gt; actuator) and mutex (shared Serial), FreeRTOS on the ESP32</span>
+struct Leitura { uint32_t t_ms; int valor; };
+QueueHandle_t fila;
+SemaphoreHandle_t travaSerial;
+const int PINO_LED = 2, PINO_POT = 34;
+void logSeguro(const char *texto) {
+  if (xSemaphoreTake(travaSerial, pdMS_TO_TICKS(50)) == pdTRUE) {   <span class="c">// gets the key</span>
+    Serial.println(texto);
+    xSemaphoreGive(travaSerial);                                     <span class="c">// returns the key</span>
+  }
+}
+void tarefaSensor(void *p) {
+  for (;;) {
+    Leitura l = { (uint32_t)millis(), analogRead(PINO_POT) };
+    if (xQueueSend(fila, &amp;l, 0) != pdTRUE) logSeguro(<span class="s">"queue full: reading discarded"</span>);
+    vTaskDelay(pdMS_TO_TICKS(20));
+  }
+}
+void tarefaAtuador(void *p) {
+  Leitura l; bool alto = false; char msg[64];
+  for (;;) {
+    if (xQueueReceive(fila, &amp;l, pdMS_TO_TICKS(100)) == pdTRUE) {    <span class="c">// sleeps until data arrives</span>
+      ledcWrite(PINO_LED, l.valor / 16);
+      bool agoraAlto = l.valor &gt; 3500;
+      if (agoraAlto != alto) {                                       <span class="c">// reports only when it changes</span>
+        alto = agoraAlto; snprintf(msg, sizeof msg, <span class="s">"%lu ms: value %s (%d)"</span>, (unsigned long)l.t_ms, alto ? <span class="s">"alto"</span> : <span class="s">"normal"</span>, l.valor);
+        logSeguro(msg);
+      }
+    } else {
+      ledcWrite(PINO_LED, 0);                                        <span class="c">// no data for 100 ms: safe stop</span>
+      logSeguro(<span class="s">"no reading: actuator stopped"</span>);
+    }
+  }
+}
+void setup() {
+  Serial.begin(115200);
+  ledcAttach(PINO_LED, 5000, 8);
+  fila =xQueueCreate(10, sizeof(Leitura));        <span class="c">// holds 10 readings</span>
+  travaSerial = xSemaphoreCreateMutex();
+  xTaskCreatePinnedToCore(tarefaSensor,  <span class="s">"sensor"</span>,  3072, NULL, 2, NULL, 1);
+  xTaskCreatePinnedToCore(tarefaAtuador, <span class="s">"atuador"</span>, 4096, NULL, 2, NULL, 1);
+  logSeguro(<span class="s">"queue and mutex ready"</span>);
+}
+void loop() { vTaskDelay(pdMS_TO_TICKS(1000)); }</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>The LED brightness follows the potentiometer; turn it all the way up to see “high value,” then turn it back to see “normal value.”</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Comment out the <span class="font-mono text-xs">xQueueSend</span>: the LED turns off and “no reading: actuator stopped” appears. This is the safe stop from module 2.1, now between tasks.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-5">
+<h4 class="font-bold text-blue-400 mb-3">✓ Use a queue when</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>One task produces data and another consumes it (sensor → control, control → log).</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>You want the consumer to sleep until something arrives, with a timeout.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Pitfalls</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Take the mutex and forget to return it: the other tasks will block forever.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Large shared struct without protection: data gets read halfway through.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-4-t5-p3">This is how telemetry in module 2.5 will work without delaying control: the control loop only puts a packet in the queue, and another task, with no rush, writes it to the card or sends it over the network.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Queue</div><div class="text-xs text-neutral-400">messages in order</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Mutex</div><div class="text-xs text-neutral-400">one key per resource</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Race condition</div><div class="text-xs text-neutral-400">two tasks changing something at the same time</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Wait timeout</div><div class="text-xs text-neutral-400">detects when there’s no response</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-2-4#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🗂️ Organizing code into files and classes</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-4-t6-p1">A 600-line sketch in a single file turns into a maze. Arduino IDE 2.x supports multiple tabs in the same folder: the <span class="font-mono text-sm">.h</span> says <strong class="text-neutral-100">what</strong> a component knows how to do, and the <span class="font-mono text-sm">.cpp</span> says <strong class="text-neutral-100">how</strong>. A <strong class="text-blue-400">class</strong> brings together data (the motor pins) and functions (turn, brake). Creating two objects from the same class, one for each wheel, eliminates repetition.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-4">Step by step in Arduino IDE 2.x</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Save the sketch</h4><p class="text-neutral-300 text-sm">Save as <span class="font-mono text-xs">robo-organizado</span>. The IDE creates a folder with the same name and the <span class="font-mono text-xs">.ino</span> inside.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Create the tabs</h4><p class="text-neutral-300 text-sm">In the three-dot menu next to the tabs, choose "New Tab" and create <span class="font-mono text-xs">Motor.h</span> and then <span class="font-mono text-xs">Motor.cpp</span>.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Paste the three blocks and upload</h4><p class="text-neutral-300 text-sm">Each block below goes in the tab with the same name. The IDE compiles everything together. Test with the robot suspended, wheels off the ground.</p></div></div>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">Motor.h</span></div>
+<pre><code><span class="c">// Motor.h: one DC motor on a TB6612FNG H-bridge channel</span>
+<span class="c">// (the DRV8833 has no separate PWM pin: adapt velocidade() to use PWM on IN1/IN2)</span>
+#pragma once
+#include &lt;Arduino.h&gt;
+class Motor {
+public:
+  Motor(int pinoPwm, int pinoIn1, int pinoIn2, bool invertido = false);
+  void begin();                  <span class="c">// configure pins and PWM (API 3.x)</span>
+  void velocidade(int v);        <span class="c">// -255 (reverse) to 255 (forward); 0 = coast</span>
+  void freio();                  <span class="c">// lock the wheel</span>
+  int atual() const { return _v; }
+private:
+  int _pwm, _in1, _in2, _v = 0;
+  bool _inv;
+};</code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">Motor.cpp</span></div>
+<pre><code>#include <span class="s">"Motor.h"</span>
+
+Motor::Motor(int pinoPwm, int pinoIn1, int pinoIn2, bool invertido)
+  : _pwm(pinoPwm), _in1(pinoIn1), _in2(pinoIn2), _inv(invertido) {}
+void Motor::begin() {
+  pinMode(_in1, OUTPUT); pinMode(_in2, OUTPUT);
+  ledcAttach(_pwm, 20000, 8);    <span class="c">// 20 kHz (inaudible), 8 bits = 0..255</span>
+  velocidade(0);
+}
+void Motor::velocidade(int v) {
+  v = constrain(v, -255, 255); _v = v;
+  if (_inv) v = -v;              <span class="c">// motor mounted as a mirror image</span>
+  digitalWrite(_in1, v &gt; 0); digitalWrite(_in2, v &lt; 0);
+  ledcWrite(_pwm, abs(v));
+}
+void Motor::freio() {            <span class="c">// TB6612FNG: IN1 = IN2 = HIGH locks</span>
+  digitalWrite(_in1, HIGH); digitalWrite(_in2, HIGH); ledcWrite(_pwm, 255); _v = 0;
+}</code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">robo-organizado.ino</span></div>
+<pre><code><span class="c">// robo-organizado.ino: the main sketch stays short and readable</span>
+#include <span class="s">"Motor.h"</span>
+
+Motor esquerdo(25, 26, 27);          <span class="c">// PWMA, AIN1, AIN2</span>
+Motor direito(14, 16, 17, true);     <span class="c">// PWMB, BIN1, BIN2 (mounted as a mirror image)</span>
+const int SEQ[] = { 150, 0, -150, 0 };
+
+void setup() {
+  Serial.begin(115200);
+  esquerdo.begin();
+  direito.begin();
+  Serial.println(<span class="s">"Motors ready: test with the wheels off the ground"</span>);
+}
+
+void loop() {
+  for (int v : SEQ) {
+    esquerdo.velocidade(v);
+    direito.velocidade(v);
+    Serial.printf(<span class="s">"left=%d right=%d\n"</span>, esquerdo.atual(), direito.atual());
+    delay(1000);   <span class="c">// this is fine here: it's a bench test, not the robot moving around</span>
+  }
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Both wheels turn forward, stop, turn backward, and stop every second, in the same direction.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>One wheel turning the wrong way? Swap the <span class="font-mono text-xs">true</span> on that side in the constructor, without changing any wires.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-4-t6-p2">Organized code makes it possible to return to the robot after a month, split the work across a group, or replace the H-bridge without rewriting everything. One tab per component (Motor, BarraIR, Pid, Telemetria), and the <span class="font-mono text-sm">.ino</span> just connects the components: it's the same format as the libraries you install through the IDE. Keep the folder in a Git repository and commit each adjustment that works.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">.h</div><div class="text-xs text-neutral-400">what the component does</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">.cpp</div><div class="text-xs text-neutral-400">how it does it</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Class</div><div class="text-xs text-neutral-400">data + functions together</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Object</div><div class="text-xs text-neutral-400">a wheel, a motor</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 rounded-xl border border-blue-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">delay() creates dead time</strong><span class="text-neutral-400">: while it's waiting, the robot can't sense or react.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">millis() with subtraction</strong><span class="text-neutral-400"> fits multiple tasks into the same loop, each at its own pace.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">State machine</strong><span class="text-neutral-400">: enum + switch + time in the state + a stop condition that always applies.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">FreeRTOS</strong><span class="text-neutral-400">: control on core 1 with vTaskDelayUntil; networking and telemetry on core 0.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Queue and mutex</strong><span class="text-neutral-400"> pass data between tasks without race conditions; a timeout on the queue triggers a safe stop.</span></div></div>
+</div>
+<h3 class="font-semibold text-blue-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/freertos.html" rel="noopener" target="_blank">FreeRTOS on ESP-IDF (Espressif)</a> <span class="text-neutral-500">— tasks, cores, and differences from standard FreeRTOS</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/02-Queues-mutexes-and-semaphores/01-Queues" rel="noopener" target="_blank">Queues in FreeRTOS</a> <span class="text-neutral-500">— official kernel documentation</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/" rel="noopener" target="_blank">Arduino-ESP32 (Espressif)</a> <span class="text-neutral-500">— reference for package 3.x</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.arduino.cc/language-reference/en/functions/time/millis/" rel="noopener" target="_blank">millis() in the Arduino reference</a></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.wokwi.com/" rel="noopener" target="_blank">Wokwi documentation</a> <span class="text-neutral-500">— all the examples in this module run there</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-blue-400 mb-1">Next module</h3>
+<p class="text-neutral-300">2.5 · Telemetry and data logging: see what the robot senses and decides, live and in a file.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-2-3.html">← Previous: 2.3 PID Control</a>
+<a class="inline-flex items-center px-5 py-3 bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors" href="modulo-2-5.html">Next: 2.5 Telemetry →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

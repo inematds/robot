@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 1.4 · Sensors: the robot perceives | Robotics from Zero to Expert</title>
+<meta content="Sensors on the ESP32: digital, analog, pulse, and I2C; distance with the HC-SR04 and an ECHO divider; IR line and obstacle sensing; moving average filter; I2C scanner and VL53L0X; non-blocking readings with millis." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha1/modulo-1-4.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha1/modulo-1-4.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha1/modulo-1-4.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha1/modulo-1-4.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha1/modulo-1-4.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha1/modulo-1-4.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-1-4.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha1/modulo-1-4.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T1 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a aria-current="page" class="nav-trail text-emerald-400 bg-emerald-500/10" href="index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="1-4" data-inema-track="1" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-emerald-400" href="../../index.html">Home</a><span aria-hidden="true">/</span>
+<a class="hover:text-emerald-400" href="index.html">Track 1</a><span aria-hidden="true">/</span>
+<span class="text-emerald-400">Module 1.4</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full mb-4">MODULE 1.4 · PRACTICE</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">📡 Sensors: how the robot perceives</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">The “sensing” part of the robot cycle. You’ll learn the four ways a sensor can deliver data, measure <strong class="text-neutral-100">distance with the HC-SR04</strong> without risking the ESP32, detect lines and obstacles with <strong class="text-neutral-100">infrared</strong>, filter out noise with an averaging filter, connect sensors to the <strong class="text-neutral-100">I2C</strong> bus and read everything at once, <strong class="text-emerald-400">without blocking the program</strong>.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">Beginner</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">Practice</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">HC-SR04 + IR</div><div class="text-xs text-neutral-400">Hardware (or Wokwi)</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 1.4 progress" class="inema-ring" data-inema-meter="modulo:1-4"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:1-4"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-1">1. How a sensor “speaks”</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-2">2. HC-SR04: distance</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-3">3. Infrared</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-4">4. Noise and filtering</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-5">5. I2C sensors</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-6">6. Multiple sensors without blocking</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-1-4#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🗣️ How a sensor “speaks” to the board</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-4-t1-p1">Before connecting any sensor, find out what “language” it uses to deliver its data. There are four: <strong class="text-emerald-400">digital</strong> (yes or no, like “there’s an obstacle”), <strong class="text-emerald-400">analog</strong> (a voltage that varies, like the ground’s reflectance), <strong class="text-emerald-400">pulse width</strong> (the data is in the length of a pulse, as with the HC-SR04) and <strong class="text-emerald-400">bus</strong> (the sensor sends ready-made numbers using a protocol, such as I2C). The language determines the pin, the reading function, and the electrical precautions.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-4-t1-p2">A <strong>sensor module</strong> is a sensor already assembled on a small board with resistors and, sometimes, a comparator that converts analog into digital. The <strong>data sheet</strong> (datasheet) is the manufacturer’s document with the operating voltage, pins, and timings. A <strong>bus</strong> is a pair of wires shared by several devices, each with its own address.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="The four languages of sensors: digital, with a step between 0 and 1; analog, with a continuous curve; pulse width, where the pulse duration carries the value; and the I2C bus, where bits travel in sequence with an address." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><pattern height="32" id="m14-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m14-grid1)" height="300" width="640"></rect><g font-family="Inter,sans-serif"><rect fill="#0e2018" height="124" rx="12" stroke="#34d399" stroke-width="2" width="300" x="14" y="20"></rect>
+<text fill="#34d399" font-size="16" font-weight="600" x="30" y="46">digital</text><text fill="#d1fae5" font-size="14" text-anchor="end" x="300" y="46">digitalRead()</text><path d="M30,120 L120,120 L120,70 L230,70 L230,120 L300,120" fill="none" stroke="#34d399" stroke-width="3"></path>
+<rect fill="#0e2018" height="124" rx="12" stroke="#34d399" stroke-width="2" width="300" x="326" y="20"></rect><text fill="#34d399" font-size="16" font-weight="600" x="342" y="46">analog</text><text fill="#d1fae5" font-size="14" text-anchor="end" x="612" y="46">analogRead()</text>
+<path d="M342,120 C390,118 400,70 450,72 C500,74 510,115 560,110 C590,106 600,80 612,78" fill="none" stroke="#34d399" stroke-width="3"></path><rect fill="#0e1b26" height="124" rx="12" stroke="#38bdf8" stroke-width="2" width="300" x="14" y="156"></rect><text fill="#7dd3fc" font-size="16" font-weight="600" x="30" y="182">pulse width</text>
+<text fill="#bfe6ff" font-size="14" text-anchor="end" x="300" y="182">pulseIn()</text><path d="M30,256 L80,256 L80,206 L230,206 L230,256 L300,256" fill="none" stroke="#38bdf8" stroke-width="3"></path><path d="M84,232 L226,232" stroke="#9ad6ff" stroke-dasharray="4 4" stroke-width="1.5"></path>
+<text fill="#bfe6ff" font-size="14" text-anchor="middle" x="155" y="226">duration = value</text><rect fill="#0e1b26" height="124" rx="12" stroke="#38bdf8" stroke-width="2" width="300" x="326" y="156"></rect><text fill="#7dd3fc" font-size="16" font-weight="600" x="342" y="182">I2C bus</text>
+<text fill="#bfe6ff" font-size="14" text-anchor="end" x="612" y="182">Wire</text><path d="M342,250 L362,250 L362,214 L382,214 L382,250 L402,250 L402,214 L442,214 L442,250 L462,250 L462,214 L482,214 L482,250 L522,250 L522,214 L542,214 L542,250 L612,250" fill="none" stroke="#38bdf8" stroke-width="3"></path><text fill="#bfe6ff" font-size="14" text-anchor="middle" x="477" y="272">address + data, bit by bit</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">How to read this map:</strong> each panel shows a language, with the Arduino function that understands it in the corner. At the top (green), the value is in the voltage level. At the bottom (cyan), the value is in TIME: in the pulse duration or the sequence of bits. The ones below require the program to wait or communicate, so they come up again in topic 6.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3">Sensor in the kit</th><th class="text-left p-3">Language</th><th class="text-left p-3">Power</th><th class="text-left p-3">Caution</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">HC-SR04</td><td class="p-3">pulse width</td><td class="p-3">5 V</td><td class="p-3">ECHO returns 5 V: use a divider</td></tr>
+<tr><td class="p-3">Obstacle IR</td><td class="p-3">digital</td><td class="p-3">3,3 V</td><td class="p-3">adjust the trimpot</td></tr>
+<tr><td class="p-3">TCRT5000 (line)</td><td class="p-3">analog (AO) or digital (DO)</td><td class="p-3">3,3 V</td><td class="p-3">use an ADC1 pin</td></tr>
+<tr><td class="p-3">VL53L0X, MPU-6050</td><td class="p-3">I2C</td><td class="p-3">3.3 V (module)</td><td class="p-3">different addresses</td></tr>
+</tbody>
+</table>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-4-t1-p3">Once you know the language, any new sensor leads to a quick set of questions: which pin, which function, which voltage? You no longer have to rely on a tutorial for every component; you can read the data sheet.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Digital signal</div><div class="text-xs text-neutral-400">yes or no</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">ADC</div><div class="text-xs text-neutral-400">voltage becomes a number</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Pulse</div><div class="text-xs text-neutral-400">duration is the data</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">I2C</div><div class="text-xs text-neutral-400">two wires, addresses</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-1-4#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🦇 HC-SR04: distance by echo</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-4-t2-p1">O <strong class="text-emerald-400">HC-SR04</strong> It works like a bat. You send a short pulse to the <strong class="text-neutral-100">TRIG</strong>; it emits an ultrasonic chirp (40 kHz, which you can't hear) and keeps the pin <strong class="text-neutral-100">ECHO</strong> high until the echo returns. The pulse duration is the round-trip time. Since sound travels at about 343 m/s (0.0343 cm per microsecond), the distance is <strong class="text-neutral-100">duration × 0.0343 ÷ 2</strong>, divided by 2 because the sound traveled there and back.</p>
+<figure class="fig mb-3">
+<svg aria-label="How the HC-SR04 works and connects: a 10-microsecond pulse on TRIG triggers the ultrasound; the wave hits an obstacle and returns. ECHO stays high for the round-trip time and passes through a 1 kΩ/2 kΩ divider before reaching GPIO 18 on the ESP32." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><pattern height="32" id="m14-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern><filter height="180%" id="m14-glow2" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs><rect fill="url(#m14-grid2)" height="300" width="640"></rect><g font-family="Inter,sans-serif">
+<rect fill="#0e1b26" height="70" rx="10" stroke="#38bdf8" stroke-width="2" width="140" x="20" y="30"></rect><circle cx="58" cy="65" fill="#16161e" r="20" stroke="#9ad6ff" stroke-width="2"></circle><circle cx="122" cy="65" fill="#16161e" r="20" stroke="#9ad6ff" stroke-width="2"></circle><text fill="#bfe6ff" font-size="14" text-anchor="middle" x="90" y="120">HC-SR04</text>
+<path d="M180,50 q8,15 0,30 M196,44 q11,21 0,42 M212,38 q14,27 0,54" fill="none" stroke="#34d399" stroke-width="2"></path><path d="M330,60 L230,60" stroke="#38bdf8" stroke-dasharray="6 5" stroke-width="2"></path><rect fill="#26201a" height="96" rx="4" stroke="#9ca3af" stroke-width="2" width="18" x="340" y="24"></rect>
+<text fill="#e5e7eb" font-size="14" text-anchor="middle" x="349" y="140">obstacle</text><text fill="#9ad6ff" font-size="14" text-anchor="middle" x="280" y="50">echo returns</text><text fill="#d1fae5" font-size="14" x="30" y="178">TRIG</text>
+<path d="M80,180 L100,180 L100,164 L112,164 L112,180 L300,180" fill="none" stroke="#34d399" stroke-width="2.5"></path><text fill="#d1fae5" font-size="14" text-anchor="middle" x="106" y="158">10 µs</text><text fill="#7dd3fc" font-size="14" x="30" y="222">ECHO</text>
+<path d="M80,224 L130,224 L130,200 L280,200 L280,224 L300,224" fill="none" stroke="#38bdf8" stroke-width="2.5"></path><text fill="#bfe6ff" font-size="14" text-anchor="middle" x="205" y="246">duration = outbound + return</text><g filter="url(#m14-glow2)"><rect fill="#13261d" height="110" rx="12" stroke="#10b981" stroke-width="2.5" width="150" x="470" y="160"></rect></g>
+<text fill="#34d399" font-size="16" font-weight="600" text-anchor="middle" x="545" y="186">ESP32</text><text fill="#d1fae5" font-size="14" text-anchor="end" x="608" y="214">GPIO 5 (TRIG)</text><text fill="#d1fae5" font-size="14" text-anchor="end" x="608" y="250">GPIO 18 (ECHO)</text>
+<path d="M320,224 L360,224" stroke="#38bdf8" stroke-width="2.5"></path><path d="M360,224 l5,-8 l8,16 l8,-16 l8,16 l5,-8" fill="none" stroke="#fbbf24" stroke-width="2.5"></path><text fill="#fde68a" font-size="14" text-anchor="middle" x="377" y="206">1 kΩ</text>
+<path d="M394,224 L470,224 L470,246 L480,246" fill="none" stroke="#34d399" stroke-width="2.5"></path><path d="M430,224 L430,240" stroke="#34d399" stroke-width="2.5"></path><path d="M430,240 l-7,4 l14,8 l-14,8 l14,8 l-7,4" fill="none" stroke="#fbbf24" stroke-width="2.5"></path>
+<text fill="#fde68a" font-size="14" text-anchor="end" x="404" y="262">2 kΩ</text><path d="M430,272 L430,286 M418,286 L442,286" stroke="#38bdf8" stroke-width="2.5"></path><text fill="#7dd3fc" font-size="14" text-anchor="end" x="400" y="294">GND</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">How to read this map:</strong> at the top, the sound path to the obstacle and back. In the middle, the two signals over time: the short TRIG pulse and the longer ECHO pulse, whose width you measure. On the right, the protection: ECHO outputs 5 V and passes through the 1 kΩ/2 kΩ divider, which supplies about 3.3 V to GPIO 18. TRIG can connect directly: the ESP32's 3.3 V is enough to trigger it.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-4">Three-step setup</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Power</h4><p class="text-neutral-300 text-sm">VCC to 5 V (the DevKit's VIN/5V pin, powered by USB) and GND to common GND. The HC-SR04P version accepts 3.3 V and doesn't need the divider; check which version you have.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">TRIG direct</h4><p class="text-neutral-300 text-sm">TRIG to GPIO 5 with a simple jumper wire.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">ECHO through the divider</h4><p class="text-neutral-300 text-sm">ECHO → 1 kΩ → midpoint → GPIO 18; connect 2 kΩ from the midpoint to GND. Module 1.2 calculation: 5 × 2 ÷ 3 ≈ 3.3 V. The divider isn't needed in Wokwi, but build it for practice.</p></div></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-4-t2-p2"><strong class="text-neutral-100">Goal:</strong> measure the distance five times per second and display it in centimeters, with a message when there is no echo. In Wokwi, add "HC-SR04" and click it during the simulation to change the distance.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">hc-sr04.ino</span></div>
+<pre><code><span class="c">// HC-SR04: distance by echo (ESP32, esp32 3.x package)</span>
+<span class="k">const int</span> PINO_TRIG = 5;
+<span class="k">const int</span> PINO_ECHO = 18;            <span class="c">// through the 1k/2k divider on real hardware</span>
+<span class="k">const unsigned long</span> TIMEOUT_US = 30000;  <span class="c">// ~5 m: no echo after this</span>
+
+<span class="k">float</span> medirCm() {
+  digitalWrite(PINO_TRIG, LOW);  delayMicroseconds(2);
+  digitalWrite(PINO_TRIG, HIGH); delayMicroseconds(10);  <span class="c">// trigger pulse</span>
+  digitalWrite(PINO_TRIG, LOW);
+  <span class="k">unsigned long</span> dur = pulseIn(PINO_ECHO, HIGH, TIMEOUT_US);
+  <span class="k">if</span> (dur == 0) <span class="k">return</span> -1;              <span class="c">// no echo</span>
+  <span class="k">return</span> dur * 0.0343 / 2.0;             <span class="c">// cm (round trip)</span>
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_TRIG, OUTPUT);
+  pinMode(PINO_ECHO, INPUT);
+  Serial.println(<span class="s">"HC-SR04 pronto"</span>);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">float</span> cm = medirCm();
+  <span class="k">if</span> (cm &lt; 0) Serial.println(<span class="s">"no echo (too far away or soft surface)"</span>);
+  <span class="k">else</span> { Serial.print(<span class="s">"distance: "</span>); Serial.print(cm, 1); Serial.println(<span class="s">" cm"</span>); }
+  delay(200);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Hold your hand about 20 cm from the sensor: the Monitor should show something close to "distance: 20.0 cm"; check with a ruler (an error of 1 to 2 cm is normal).</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>In Wokwi, the value follows the sensor's slider control.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Always seeing "no echo"? Check that VCC is connected to 5 V and that TRIG and ECHO aren't swapped.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-5">
+<h4 class="font-bold text-emerald-400 mb-3">✓ The HC-SR04 works well with</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>A wall, box, or chair leg directly in front of it.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Distances from about 2 cm to 2 to 3 m indoors.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Hard, smooth surfaces.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ The HC-SR04 gets confused by</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Curtains, sofas, cushions: they absorb sound.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>A wall at a steep angle: the echo bounces off to the side.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Two HC-SR04s triggering at the same time: one picks up the other's echo.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-4-t2-p3">It's the rover's "eye" for avoiding obstacles in module 1.6. Knowing its limits (soft surfaces, angles) explains why the robot sometimes bumps into a curtain but not a wall.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">TRIG / ECHO</div><div class="text-xs text-neutral-400">triggers / measures</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Speed of sound</div><div class="text-xs text-neutral-400">0.0343 cm/µs</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">pulseIn</div><div class="text-xs text-neutral-400">measures the pulse, with timeout</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Divider on ECHO</div><div class="text-xs text-neutral-400">5 V → 3,3 V</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-1-4#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🔦 Infrared: line and obstacle</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-4-t3-p1">Infrared <strong class="text-emerald-400">(IR)</strong> reflection sensors have an LED that emits invisible light and a receiver next to it. Light surfaces reflect a lot; black surfaces absorb it. With a <strong class="text-neutral-100">line sensor</strong> (TCRT5000), pointed at the ground a few millimeters away, this distinguishes black tape from the floor. With an <strong class="text-neutral-100">obstacle sensor</strong>, pointed forward, a nearby object reflects light back and the module signals it. Many modules include a comparator with a <strong class="text-neutral-100">trimpot</strong> (small blue screw) that converts the analog signal to digital.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-4-t3-p2">O <strong>threshold</strong> is the value that separates "line" from "floor": above it is one, below it is the other. <strong>Calibrating</strong> means measuring the value on light and dark surfaces in the real environment, then setting the threshold halfway between them. On many modules, the digital DO output goes LOW when it detects something; check the indicator LED on the board.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="IR reflectance sensor over the floor: on a light surface, infrared light reflects strongly back to the receiver, and the reading is low; over black tape, almost no light returns, and the reading is high. Set the threshold between the two calibration readings." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs><pattern height="32" id="m14-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern><marker id="m14-ah3" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#f87171"></path></marker>
+</defs><rect fill="url(#m14-grid3)" height="280" width="640"></rect><g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#0e1b26" height="36" rx="8" stroke="#38bdf8" stroke-width="2" width="160" x="40" y="40"></rect><text fill="#bfe6ff" font-size="14" x="120" y="64">IR LED · receiver</text><path d="M90,78 L120,140" marker-end="url(#m14-ah3)" stroke="#f87171" stroke-width="2.5"></path>
+<path d="M124,142 L150,80" marker-end="url(#m14-ah3)" stroke="#f87171" stroke-width="2.5"></path><rect fill="#d6d3cc" height="22" width="200" x="20" y="148"></rect><text fill="#e5e7eb" font-size="15" x="120" y="196">light floor</text>
+<text fill="#d1fae5" font-size="14" x="120" y="218">reflects a lot</text><text fill="#34d399" font-size="15" font-weight="600" x="120" y="240">reading ≈ 300</text><rect fill="#0e1b26" height="36" rx="8" stroke="#38bdf8" stroke-width="2" width="160" x="260" y="40"></rect>
+<text fill="#bfe6ff" font-size="14" x="340" y="64">IR LED · receiver</text><path d="M310,78 L340,140" marker-end="url(#m14-ah3)" stroke="#f87171" stroke-width="2.5"></path><path d="M344,142 L362,100" opacity="0.6" stroke="#f87171" stroke-dasharray="3 4" stroke-width="1.5"></path>
+<rect fill="#0c0c10" height="22" stroke="#3a3a46" width="200" x="240" y="148"></rect><text fill="#e5e7eb" font-size="15" x="340" y="196">black tape</text><text fill="#d1fae5" font-size="14" x="340" y="218">absorbs</text>
+<text fill="#34d399" font-size="15" font-weight="600" x="340" y="240">reading ≈ 3500</text><rect fill="#16161e" height="180" rx="6" stroke="#3a3a46" stroke-width="2" width="34" x="470" y="50"></rect><rect fill="#34d399" height="26" opacity="0.5" rx="4" width="26" x="474" y="200"></rect>
+<rect fill="#34d399" height="26" opacity="0.9" rx="4" width="26" x="474" y="58"></rect><line stroke="#38bdf8" stroke-width="3" x1="462" x2="512" y1="140" y2="140"></line><text fill="#d1fae5" font-size="14" x="572" y="76">black</text>
+<text fill="#7dd3fc" font-size="15" font-weight="600" x="572" y="144">threshold</text><text fill="#bfe6ff" font-size="14" x="572" y="164">in the middle</text><text fill="#d1fae5" font-size="14" x="572" y="218">light</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">How to read this map:</strong> the red arrows show infrared light. On the left, it all reflects back; in the middle, almost none returns. On common TCRT5000 modules, less light at the receiver = a HIGHER ADC reading (300 and 3500 are examples; your values will be different). On the right, the scale: set the threshold halfway between the readings for light and black, measured on your floor.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-4-t3-p3"><strong class="text-neutral-100">Goal:</strong> calibrate the line sensor (AO on GPIO 35) during the first 5 seconds by moving it over light and black surfaces, then display "LINE" or "floor"; also read an obstacle sensor (DO on GPIO 27). In Wokwi, use a potentiometer in place of AO and a button in place of DO.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">ir-linha-obstaculo.ino</span></div>
+<pre><code><span class="c">// Analog line IR with calibration + digital obstacle IR</span>
+<span class="k">const int</span> PINO_LINHA = 35;       <span class="c">// TCRT5000 AO, ADC1</span>
+<span class="k">const int</span> PINO_OBST  = 27;       <span class="c">// obstacle module DO</span>
+<span class="k">int</span> minimo = 4095, maximo = 0, limiar = 2048;
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_OBST, INPUT_PULLUP); <span class="c">// hold the level if the module is disconnected</span>
+  Serial.println(<span class="s">"Calibrating for 5 s: move the sensor over light and black surfaces"</span>);
+  <span class="k">unsigned long</span> inicio = millis();
+  <span class="k">while</span> (millis() - inicio &lt; 5000) {
+    <span class="k">int</span> v = analogRead(PINO_LINHA);
+    <span class="k">if</span> (v &lt; minimo) minimo = v;
+    <span class="k">if</span> (v &gt; maximo) maximo = v;
+    delay(5);
+  }
+  limiar = (minimo + maximo) / 2;
+  Serial.print(<span class="s">"min="</span>); Serial.print(minimo);
+  Serial.print(<span class="s">" max="</span>); Serial.print(maximo);
+  Serial.print(<span class="s">" limiar="</span>); Serial.println(limiar);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">int</span> v = analogRead(PINO_LINHA);
+  <span class="k">bool</span> naLinha = (v &gt; limiar);                    <span class="c">// black = high value</span>
+  <span class="k">bool</span> obstaculo = (digitalRead(PINO_OBST) == LOW);  <span class="c">// many modules: LOW = detected</span>
+  Serial.print(<span class="s">"linha="</span>); Serial.print(v);
+  Serial.print(naLinha ? <span class="s">" LINHA"</span> : <span class="s">" chao"</span>);
+  Serial.println(obstaculo ? <span class="s">" | OBSTACULO"</span> : <span class="s">" | livre"</span>);
+  delay(100);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>After calibration, "max" should be much higher than "min" (a difference of hundreds or more).</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Over the tape, it should show "LINE"; off the tape, "floor". Hold your hand a few cm from the obstacle sensor: "OBSTACLE".</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Are min and max almost the same? The sensor is too high (ideally, it's about 3 to 10 mm above the floor), or you didn't move it over the black surface.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-4-t3-p4">These are the kit's cheapest sensors and the foundation of the line follower in Track 2, where five of them side by side form an array. The automatic calibration you just wrote is the same one used in project 2.6.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Reflection</div><div class="text-xs text-neutral-400">light reflects, black absorbs</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Threshold</div><div class="text-xs text-neutral-400">boundary between two states</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Calibration</div><div class="text-xs text-neutral-400">measure real light and dark surfaces</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Trimpot</div><div class="text-xs text-neutral-400">adjusts the digital output</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-1-4#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">📉 Noise and averaging filter</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-4-t4-p1">No sensor gives the same number twice. The reading "jumps" because of <strong class="text-emerald-400">noise</strong> electrical noise, vibration, lost echo. Sometimes an absurd value appears (0 cm, 900 cm) and, if the robot takes it seriously, it brakes for no reason. Two simple tools solve almost everything: <strong class="text-neutral-100">discard</strong> anything outside the possible range and calculate a <strong class="text-neutral-100">moving average</strong> of the last N valid readings.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-4-t4-p2">A <strong>moving average</strong> stores the last N readings in a circular list and returns their average; with each new reading, the oldest one is removed. The <strong>median</strong> sorts the values and takes the middle one, which works well against isolated spikes. The cost of filtering is <strong>delay</strong>: with a large N, the curve is smooth but takes longer to react.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Graph of a noisy distance reading: the raw line fluctuates and has two absurd spikes; the line filtered with a five-sample moving average and outlier rejection is smooth and follows the actual change with a small delay." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs><pattern height="32" id="m14-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern><filter height="180%" id="m14-glow4" width="120%" x="-10%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs><rect fill="url(#m14-grid4)" height="260" width="640"></rect><line stroke="#3a3a46" stroke-width="2" x1="40" x2="620" y1="210" y2="210"></line>
+<line stroke="#3a3a46" stroke-width="2" x1="40" x2="40" y1="20" y2="210"></line><path d="M40,80 L60,92 L80,70 L100,88 L120,74 L140,200 L160,84 L180,76 L200,92 L220,72 L240,86 L260,78 L280,110 L300,128 L320,150 L340,138 L360,156 L380,30 L400,148 L420,160 L440,146 L460,158 L480,150 L500,162 L520,148 L540,156 L560,144 L580,158 L600,150" fill="none" opacity="0.7" stroke="#38bdf8" stroke-width="2"></path><g filter="url(#m14-glow4)"><path d="M40,82 L120,81 L160,81 L240,80 L280,86 L320,112 L360,138 L400,150 L440,152 L520,153 L600,152" fill="none" stroke="#34d399" stroke-width="3.5"></path></g>
+<circle cx="140" cy="200" fill="none" r="7" stroke="#f87171" stroke-width="2"></circle><circle cx="380" cy="30" fill="none" r="7" stroke="#f87171" stroke-width="2"></circle><g font-family="Inter,sans-serif"><text fill="#fca5a5" font-size="14" x="400" y="34">discarded spike</text>
+<text fill="#fca5a5" font-size="14" x="160" y="196">lost echo</text><text fill="#7dd3fc" font-size="14" x="60" y="56">raw (noisy)</text><text fill="#34d399" font-size="15" font-weight="600" x="460" y="186">filtered</text>
+<text fill="#a8a8b3" font-size="14" text-anchor="middle" x="330" y="236">time → (the object moved closer midway through the graph)</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">How to read this map:</strong> the cyan line shows what the sensor outputs; the green line shows what the robot should use. The red circles are impossible readings, discarded before averaging. Notice that when the object moves closer, the green line drops a little after the cyan one: this is the filter's delay, small with 5 samples.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-4-t4-p3"><strong class="text-neutral-100">Goal:</strong> apply rejection + a 5-reading moving average to the HC-SR04 from topic 2 and view both curves together in the Serial Plotter.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">filtro-media.ino</span></div>
+<pre><code><span class="c">// Reject invalid readings + moving average on the HC-SR04 (ESP32, esp32 core 3.x)</span>
+<span class="k">const int</span> PINO_TRIG = 5, PINO_ECHO = 18;
+<span class="k">const int</span> N = 5;                    <span class="c">// window size</span>
+<span class="k">float</span> janela[N];
+<span class="k">int</span> pos = 0, cheias = 0;
+
+<span class="k">float</span> medirCm() {
+  digitalWrite(PINO_TRIG, LOW);  delayMicroseconds(2);
+  digitalWrite(PINO_TRIG, HIGH); delayMicroseconds(10);
+  digitalWrite(PINO_TRIG, LOW);
+  <span class="k">unsigned long</span> dur = pulseIn(PINO_ECHO, HIGH, 30000);
+  <span class="k">return</span> (dur == 0) ? -1 : dur * 0.0343 / 2.0;
+}
+
+<span class="k">float</span> filtrar(<span class="k">float</span> novo) {
+  janela[pos] = novo; pos = (pos + 1) % N;  <span class="c">// circular list</span>
+  <span class="k">if</span> (cheias &lt; N) cheias++;
+  <span class="k">float</span> soma = 0;
+  <span class="k">for</span> (<span class="k">int</span> i = 0; i &lt; cheias; i++) soma += janela[i];
+  <span class="k">return</span> soma / cheias;
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_TRIG, OUTPUT); pinMode(PINO_ECHO, INPUT);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">float</span> cru = medirCm();
+  <span class="k">static float</span> filtrado = 0;
+  <span class="k">if</span> (cru &gt;= 2 &amp;&amp; cru &lt;= 400) filtrado = filtrar(cru);  <span class="c">// discard impossible values</span>
+  Serial.print(<span class="s">"cru:"</span>); Serial.print(cru);
+  Serial.print(<span class="s">",filtrado:"</span>); Serial.println(filtrado);
+  delay(60);                         <span class="c">// HC-SR04 needs about 60 ms between measurements</span>
+}</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-emerald-400">How to check:</strong> in the Serial Plotter, "raw" has teeth and spikes (including -1 when there is no echo), while "filtered" is a smooth line that follows your hand with a slight delay. Change N to 15 and see the delay increase.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-5">
+<h4 class="font-bold text-emerald-400 mb-3">✓ Filtering done right</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Discard first, then average.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Small window (3 to 7) for quick decisions.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Use the median when spikes are rare and huge.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Filtering that gets in the way</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Average of 50 readings: the robot sees the wall too late.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Include the "no echo" value -1 in the average.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Filter out noise in code when it comes from a loose wire.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-4-t4-p4">A robot that reacts to noise brakes, turns, and hesitates for no reason. With the filter, the decision in module 1.6 becomes reliable. In Track 2, the same idea comes up again as a complementary filter for the IMU and a filter on the PID derivative.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Moving average</div><div class="text-xs text-neutral-400">last N readings</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Median</div><div class="text-xs text-neutral-400">the middle value</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Out of range</div><div class="text-xs text-neutral-400">discard first</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Delay</div><div class="text-xs text-neutral-400">the cost of smoothness</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-1-4#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🔗 I2C sensors: two wires, multiple sensors</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-4-t5-p1">O <strong class="text-emerald-400">I2C</strong> is a two-wire bus, <strong class="text-neutral-100">SDA</strong> (data) and <strong class="text-neutral-100">SCL</strong> (clock), shared by multiple devices. Each has a 7-bit <strong class="text-neutral-100">address</strong> written in hexadecimal: the VL53L0X laser distance sensor usually responds at 0x29, the MPU-6050 IMU at 0x68, and the small OLED display at 0x3C. On the classic ESP32, the default pins are <strong class="text-neutral-100">SDA = GPIO 21</strong> e <strong class="text-neutral-100">SCL = GPIO 22</strong>, and the library is <span class="font-mono text-xs">Wire</span>, which is already included in the package.</p>
+<figure class="fig mb-3">
+<svg aria-label="I2C bus: the ESP32 connects SDA to GPIO 21 and SCL to GPIO 22; three modules—the VL53L0X at address 0x29, MPU-6050 at 0x68, and OLED at 0x3C—connect to the same two wires, with pull-up resistors to 3.3 volts." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs><pattern height="32" id="m14-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern><filter height="180%" id="m14-glow5" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs><rect fill="url(#m14-grid5)" height="260" width="640"></rect><g font-family="Inter,sans-serif" text-anchor="middle">
+<g filter="url(#m14-glow5)"><rect fill="#13261d" height="110" rx="12" stroke="#10b981" stroke-width="2.5" width="130" x="16" y="70"></rect></g><text fill="#34d399" font-size="17" font-weight="600" x="81" y="100">ESP32</text><text fill="#d1fae5" font-size="14" x="81" y="130">GPIO 21 SDA</text>
+<text fill="#d1fae5" font-size="14" x="81" y="160">GPIO 22 SCL</text><path d="M146,125 L620,125" stroke="#34d399" stroke-width="3"></path><path d="M146,155 L620,155" stroke="#38bdf8" stroke-width="3"></path>
+<text fill="#34d399" font-size="14" font-weight="600" x="600" y="117">SDA</text><text fill="#7dd3fc" font-size="14" font-weight="600" x="600" y="174">SCL</text><path d="M200,125 L200,90 M220,155 L220,90" stroke="#fbbf24" stroke-width="2"></path>
+<text fill="#fde68a" font-size="14" x="210" y="80">pull-ups → 3.3 V</text><rect fill="#0e1b26" height="50" rx="8" stroke="#38bdf8" stroke-width="2" width="96" x="270" y="20"></rect><text fill="#bfe6ff" font-size="14" x="318" y="42">VL53L0X</text><text fill="#7dd3fc" font-size="14" font-weight="600" x="318" y="60">0x29</text>
+<rect fill="#0e1b26" height="50" rx="8" stroke="#38bdf8" stroke-width="2" width="96" x="384" y="190"></rect><text fill="#bfe6ff" font-size="14" x="432" y="212">MPU-6050</text><text fill="#7dd3fc" font-size="14" font-weight="600" x="432" y="230">0x68</text><rect fill="#0e1b26" height="50" rx="8" stroke="#38bdf8" stroke-width="2" width="96" x="498" y="20"></rect>
+<text fill="#bfe6ff" font-size="14" x="546" y="42">OLED</text><text fill="#7dd3fc" font-size="14" font-weight="600" x="546" y="60">0x3C</text><path d="M308,70 L308,125 M328,70 L328,155 M422,190 L422,125 M442,190 L442,155 M536,70 L536,125 M556,70 L556,155" stroke="#a8a8b3" stroke-width="2"></path><g fill="#e6e6e6"><circle cx="308" cy="125" r="3.5"></circle><circle cx="328" cy="155" r="3.5"></circle><circle cx="422" cy="125" r="3.5"></circle><circle cx="442" cy="155" r="3.5"></circle><circle cx="536" cy="125" r="3.5"></circle><circle cx="556" cy="155" r="3.5"></circle></g>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">How to read this map:</strong> the two horizontal lines are the entire bus. Each cyan module connects to them with two wires (white dots) and responds only when the ESP32 calls its address. The amber resistors keep the lines at 3.3 V when no one is communicating; most modules already have these pull-ups on the board. In addition to SDA and SCL, each module needs 3.3 V and GND.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-4">From zero to your first reading</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Connect four wires</h4><p class="text-neutral-300 text-sm">VCC → 3.3 V, GND → GND, SDA → GPIO 21, SCL → GPIO 22.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Run the scanner</h4><p class="text-neutral-300 text-sm">It checks all 127 addresses to see which ones respond. If your sensor appears, the wiring is correct.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Install the sensor library</h4><p class="text-neutral-300 text-sm">Tools → Manage Libraries. For the VL53L0X, search for "VL53L0X" and install the Pololu library. Open one of its examples under File → Examples to check the version.</p></div></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-4-t5-p2"><strong class="text-neutral-100">Goal:</strong> list all connected I2C devices in the Serial Monitor. In Wokwi, add an "MPU6050" connected to 21/22, and the scanner should find 0x68.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">i2c-scanner.ino</span></div>
+<pre><code><span class="c">// I2C scanner: what's on the bus? (ESP32, esp32 core 3.x)</span>
+<span class="k">#include</span> &lt;Wire.h&gt;
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  Wire.begin();                       <span class="c">// SDA 21, SCL 22 on the classic ESP32</span>
+  delay(300);
+  Serial.println(<span class="s">"Searching for I2C devices..."</span>);
+  <span class="k">int</span> achados = 0;
+  <span class="k">for</span> (<span class="k">byte</span> endereco = 1; endereco &lt; 127; endereco++) {
+    Wire.beginTransmission(endereco);
+    <span class="k">if</span> (Wire.endTransmission() == 0) { <span class="c">// 0 = a device responded</span>
+      Serial.print(<span class="s">"  found at 0x"</span>);
+      <span class="k">if</span> (endereco &lt; 16) Serial.print(<span class="s">"0"</span>);
+      Serial.println(endereco, HEX);
+      achados++;
+    }
+  }
+  Serial.print(achados); Serial.println(<span class="s">" dispositivo(s)."</span>);
+}
+
+<span class="k">void</span> loop() {}</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-3"><strong class="text-emerald-400">How to check:</strong> with a VL53L0X, you'll see "found at 0x29" and "1 device(s)."; with the Wokwi MPU-6050, you'll see 0x68. Zero devices means SDA and SCL are swapped, GND is missing, or the module isn't powered.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-4-t5-p3"><strong class="text-neutral-100">Goal:</strong> read the distance in millimeters from the VL53L0X (physical board; Wokwi doesn't have this part) using Pololu's VL53L0X library.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">vl53l0x.ino</span></div>
+<pre><code><span class="c">// VL53L0X laser distance over I2C (Pololu VL53L0X library)</span>
+<span class="k">#include</span> &lt;Wire.h&gt;
+<span class="k">#include</span> &lt;VL53L0X.h&gt;
+
+VL53L0X sensor;
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  Wire.begin();
+  sensor.setTimeout(500);
+  <span class="k">if</span> (!sensor.init()) {
+    Serial.println(<span class="s">"VL53L0X not found: check wires and address"</span>);
+    <span class="k">while</span> (<span class="k">true</span>) delay(1000);
+  }
+  sensor.startContinuous();           <span class="c">// measure continuously</span>
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">int</span> mm = sensor.readRangeContinuousMillimeters();
+  <span class="k">if</span> (sensor.timeoutOccurred()) Serial.println(<span class="s">"timeout"</span>);
+  <span class="k">else</span> { Serial.print(<span class="s">"distance: "</span>); Serial.print(mm); Serial.println(<span class="s">" mm"</span>); }
+  delay(100);
+}</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-emerald-400">How to check:</strong> with your hand at 10 cm, you'll see something close to "distance: 100 mm"; with nothing in front (beyond about 1.2 m), values close to 8190 indicate "out of range".</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-4-t5-p4">IMUs, displays, color sensors, pressure sensors, and laser distance sensors use I2C. You can connect several of them using two pins, which will come in handy in Track 2, when the robot gets an IMU and encoders and pins start running out.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">SDA / SCL</div><div class="text-xs text-neutral-400">data / clock</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Address</div><div class="text-xs text-neutral-400">0x29, 0x68, 0x3C</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Wire library</div><div class="text-xs text-neutral-400">Arduino I2C</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Scanner</div><div class="text-xs text-neutral-400">checks the wiring</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-1-4#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">⏱️ Read multiple sensors without blocking</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-4-t6-p1">A <span class="font-mono text-xs">delay(500)</span> seems harmless, but during that half-second the ESP32 does nothing else: it doesn't read the IR sensor, detect the wall, or stop the motor. The solution is to replace the wait with a question: <strong class="text-neutral-100">"has enough time passed since the last time?"</strong>, using <span class="font-mono text-xs">millis()</span>. Each sensor gets its own clock, and the <span class="font-mono text-xs">loop()</span> runs thousands of times per second, handling whichever task is due.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-4-t6-p2">Code <strong>blocking</strong> is code that stops everything while it waits (like <span class="font-mono text-xs">delay</span>). <strong>Non-blocking</strong> checks the clock and moves on. A <strong>periodic task</strong> is a piece of code that runs every X milliseconds. The calculation <span class="font-mono text-xs">millis() - ultimo &gt;= intervalo</span>, with <span class="font-mono text-xs">unsigned long</span>, stays correct even when the counter wraps around, after about 49 days of continuous operation.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Timeline comparison: with delay, the program reads the distance and stops for half a second, so an obstacle that appears during that interval is noticed too late; with millis, IR, distance, and serial readings are interleaved at their own rates, and the obstacle is noticed right away." class="w-full h-auto" role="img" viewbox="0 0 640 270">
+<defs><pattern height="32" id="m14-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#10b981" opacity="0.1" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m14-grid6)" height="270" width="640"></rect><g font-family="Inter,sans-serif"><text fill="#fca5a5" font-size="16" font-weight="600" x="20" y="30">with delay(500)</text>
+<rect fill="#0e2018" height="34" rx="6" stroke="#34d399" stroke-width="2" width="40" x="20" y="44"></rect><rect fill="#1f0e10" height="34" rx="6" stroke="#f87171" stroke-width="1.5" width="250" x="64" y="44"></rect><text fill="#fecaca" font-size="14" text-anchor="middle" x="189" y="66">stopped, blind</text>
+<rect fill="#0e2018" height="34" rx="6" stroke="#34d399" stroke-width="2" width="40" x="318" y="44"></rect><rect fill="#1f0e10" height="34" rx="6" stroke="#f87171" stroke-width="1.5" width="250" x="362" y="44"></rect><path d="M150,90 L150,36" stroke="#fbbf24" stroke-dasharray="4 3" stroke-width="2"></path>
+<text fill="#fde68a" font-size="14" text-anchor="middle" x="150" y="108">obstacle appears</text><text fill="#fca5a5" font-size="14" text-anchor="middle" x="338" y="108">only noticed here</text><text fill="#34d399" font-size="16" font-weight="600" x="20" y="150">with millis()</text>
+<text fill="#d1fae5" font-size="14" text-anchor="end" x="606" y="178">IR</text><g fill="#34d399"><rect height="18" rx="2" width="8" x="20" y="166"></rect><rect height="18" rx="2" width="8" x="60" y="166"></rect><rect height="18" rx="2" width="8" x="100" y="166"></rect><rect height="18" rx="2" width="8" x="140" y="166"></rect><rect height="18" rx="2" width="8" x="180" y="166"></rect><rect height="18" rx="2" width="8" x="220" y="166"></rect><rect height="18" rx="2" width="8" x="260" y="166"></rect><rect height="18" rx="2" width="8" x="300" y="166"></rect><rect height="18" rx="2" width="8" x="340" y="166"></rect><rect height="18" rx="2" width="8" x="380" y="166"></rect><rect height="18" rx="2" width="8" x="420" y="166"></rect><rect height="18" rx="2" width="8" x="460" y="166"></rect><rect height="18" rx="2" width="8" x="500" y="166"></rect><rect height="18" rx="2" width="8" x="540" y="166"></rect></g><text fill="#bfe6ff" font-size="14" text-anchor="end" x="606" y="208">distance</text>
+<g fill="#38bdf8"><rect height="18" rx="2" width="18" x="30" y="196"></rect><rect height="18" rx="2" width="18" x="150" y="196"></rect><rect height="18" rx="2" width="18" x="270" y="196"></rect><rect height="18" rx="2" width="18" x="390" y="196"></rect><rect height="18" rx="2" width="18" x="510" y="196"></rect></g><text fill="#e5e7eb" font-size="14" text-anchor="end" x="606" y="238">serial</text><g fill="#9ca3af"><rect height="18" rx="2" width="26" x="80" y="226"></rect><rect height="18" rx="2" width="26" x="330" y="226"></rect></g>
+<path d="M150,250 L150,156" stroke="#fbbf24" stroke-dasharray="4 3" stroke-width="2"></path><text fill="#fde68a" font-size="14" text-anchor="middle" x="150" y="264">noticed immediately</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">How to read this map:</strong> Above, each red block is half a second during which the program is deaf and blind; the obstacle (amber line) is only noticed at the next reading. Below, three tasks run at their own rates: IR every 10 ms, distance every 60 ms, message every 250 ms. None waits for another, and the obstacle is noticed at the next distance reading.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-4-t6-p3"><strong class="text-neutral-100">Goal:</strong> combine an HC-SR04, a line-following IR sensor, and a warning LED in a single program without any <span class="font-mono text-xs">delay</span> in the loop. The GPIO 2 LED turns on when an obstacle is less than 20 cm away. This is the sensing skeleton for the rover in module 1.6.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">sensores-sem-travar.ino</span></div>
+<pre><code><span class="c">// Multiple sensors without blocking: millis() instead of delay (ESP32, 3.x)</span>
+<span class="k">const int</span> PINO_TRIG = 5, PINO_ECHO = 18, PINO_LINHA = 35, PINO_LED = 2;
+<span class="k">const float</span> PERTO_CM = 20.0;
+
+<span class="k">unsigned long</span> tIR = 0, tDist = 0, tPrint = 0;
+<span class="k">float</span> distanciaCm = -1;
+<span class="k">int</span> linha = 0;
+
+<span class="k">float</span> medirCm() {
+  digitalWrite(PINO_TRIG, LOW);  delayMicroseconds(2);
+  digitalWrite(PINO_TRIG, HIGH); delayMicroseconds(10);
+  digitalWrite(PINO_TRIG, LOW);
+  <span class="k">unsigned long</span> dur = pulseIn(PINO_ECHO, HIGH, 25000); <span class="c">// wait no more than 25 ms</span>
+  <span class="k">return</span> (dur == 0) ? -1 : dur * 0.0343 / 2.0;
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_TRIG, OUTPUT); pinMode(PINO_ECHO, INPUT); pinMode(PINO_LED, OUTPUT);
+  Serial.println(<span class="s">"Sensors running without delay"</span>);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">unsigned long</span> agora = millis();
+
+  <span class="k">if</span> (agora - tIR &gt;= 10) {          <span class="c">// IR: 100 times per second</span>
+    tIR = agora;
+    linha = analogRead(PINO_LINHA);
+  }
+  <span class="k">if</span> (agora - tDist &gt;= 60) {        <span class="c">// distance: ~16 times per second</span>
+    tDist = agora;
+    <span class="k">float</span> cm = medirCm();
+    <span class="k">if</span> (cm &gt; 0) distanciaCm = cm;
+    digitalWrite(PINO_LED, (distanciaCm &gt; 0 &amp;&amp; distanciaCm &lt; PERTO_CM) ? HIGH : LOW);
+  }
+  <span class="k">if</span> (agora - tPrint &gt;= 250) {      <span class="c">// report: 4 times per second</span>
+    tPrint = agora;
+    Serial.print(<span class="s">"dist="</span>); Serial.print(distanciaCm, 1);
+    Serial.print(<span class="s">" cm | linha="</span>); Serial.print(linha);
+    Serial.println(distanciaCm &gt; 0 &amp;&amp; distanciaCm &lt; PERTO_CM ? <span class="s">" | PERTO"</span> : <span class="s">""</span>);
+  }
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>The Monitor shows 4 lines per second with "dist=" and "linha="; bring your hand within 20 cm and "CLOSE" appears while the LED turns on immediately.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Moving the line sensor over the black surface changes "linha=" immediately, even while distance is being measured.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Everything is slow? Is there still a <span class="font-mono text-xs">delay()</span> in the loop or in a function it calls.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 pulseIn also waits</h3>
+<p class="text-neutral-300 text-sm">O <span class="font-mono text-xs">pulseIn</span> blocks until the echo returns, which is why the timeout is 25 ms: in the worst case, the loop loses 25 ms, never half a second. In Track 2, you’ll separate this completely with FreeRTOS tasks and interrupts.</p>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-4-t6-p4">A long delay leaves the robot blind, so it can crash before noticing an obstacle. With periodic tasks, the rover in module 1.6 measures, decides, and moves at the same time, and you can add sensors without rewriting the rest.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">millis()</div><div class="text-xs text-neutral-400">clock since startup</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Periodic task</div><div class="text-xs text-neutral-400">runs every X ms</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Non-blocking</div><div class="text-xs text-neutral-400">checks and continues</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Timeout</div><div class="text-xs text-neutral-400">maximum wait time</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 rounded-xl border border-emerald-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Four languages</strong><span class="text-neutral-400">: digital, analog, pulse width, and the I2C bus.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">HC-SR04</strong><span class="text-neutral-400">: duration × 0.0343 ÷ 2; ECHO at 5 V through the 1 kΩ/2 kΩ divider.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">IR</strong><span class="text-neutral-400">: light surfaces reflect, black surfaces absorb; calibrate on your floor and use the threshold between the readings.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Filter</strong><span class="text-neutral-400">: discard impossible readings, then use a short moving average.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">I2C</strong><span class="text-neutral-400">: SDA 21, SCL 22, different addresses; the scanner checks the wiring.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Non-blocking</strong><span class="text-neutral-400">: millis() and periodic tasks instead of delay.</span></div></div>
+</div>
+<h3 class="font-semibold text-emerald-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/i2c.html" rel="noopener" target="_blank">I2C on Arduino-ESP32 (Espressif)</a> <span class="text-neutral-500">— Wire, pins, and speed</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/pololu/vl53l0x-arduino" rel="noopener" target="_blank">Pololu VL53L0X Library</a> <span class="text-neutral-500">— examples and measurement modes</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.wokwi.com/parts/wokwi-hc-sr04" rel="noopener" target="_blank">HC-SR04 on Wokwi</a> <span class="text-neutral-500">— simulate the distance sensor</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.arduino.cc/built-in-examples/digital/BlinkWithoutDelay/" rel="noopener" target="_blank">Blink Without Delay (Arduino)</a> <span class="text-neutral-500">— the millis() pattern explained</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/adc.html" rel="noopener" target="_blank">ADC on Arduino-ESP32</a> <span class="text-neutral-500">— analog readings from IR sensors</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-emerald-400 mb-1">Next module</h3>
+<p class="text-neutral-300">1.5 · Motors and power. DC, servo, or stepper motor; TB6612FNG or DRV8833 H-bridge; PWM speed control; servo with ESP32Servo; batteries and a common GND.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-1-3.html">← Previous: 1.3 ESP32</a>
+<a class="inline-flex items-center px-5 py-3 bg-emerald-700 text-white rounded-lg font-semibold hover:bg-emerald-600 transition-colors" href="modulo-1-5.html">Next: 1.5 Motors and power →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

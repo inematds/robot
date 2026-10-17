@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Módulo 2.2 · IMU y encoders: saber dónde está | Robótica desde cero hasta experto</title>
+<meta content="IMU MPU-6050 por I2C, ángulo con filtro complementario, encoders en cuadratura con interrupción y odometría (x, y, θ) en el ESP32 (paquete 3.x), con calibración y los errores que se acumulan." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Primeros pasos",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "Qué es un robot y su kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Electrónica esencial",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: el primer programa",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensores: el robot percibe",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motores y energía",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Proyecto: rover que esquiva obstáculos",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Robot autónomo",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control desde el celular: Wi-Fi y BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU y encoders: saber dónde está",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "Control PID en la práctica",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Varias tareas al mismo tiempo",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetría y registro de datos",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Proyecto: seguidor de línea con PID",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Visión e IA integrada",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 y Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Cámara y OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detectar objetos con YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "IA dentro del microcontrolador",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi se comunica con el ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Proyecto: robot que sigue un objeto",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 y navegación",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 sin miedo",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describir y simular el robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS en el ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR y mapas (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navegación con Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Proyecto: robot que mapea y navega",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "IA moderna y brazo robótico",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "Modelo de lenguaje como cerebro",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Voz local: escuchar y hablar",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "Brazo SO-101 y LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Aprender por demostración",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simular antes de hacerlo en la realidad",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Proyecto final: robot asistente",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "Para el docente",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "Cómo impartir este curso",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha2/modulo-2-2.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha2/modulo-2-2.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha2/modulo-2-2.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha2/modulo-2-2.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha2/modulo-2-2.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha2/modulo-2-2.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="../../../en/curso/trilha2/modulo-2-2.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">EN</a><a href="modulo-2-2.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">ES</a></div>
+<a class="skip" href="#conteudo">Saltar al contenido</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T2 ativa -->
+<nav aria-label="Navegación principal" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robótica desde cero hasta experto — inicio" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeros pasos</span></a>
+<a aria-current="page" class="nav-trail text-blue-400 bg-blue-500/10" href="index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autónomo</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visión e IA</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Docente</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="Mi recorrido" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Mi recorrido</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Apariencia" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Apariencia</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Oscuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Enfoque</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fuente</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Lectura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamaño</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Ancho</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estrecho</button><button data-inema-set-linewidth="68" type="button">Mediano</button><button data-inema-set-linewidth="75" type="button">Ancho</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Interlineado</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Cómodo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento morado" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento ámbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/oscuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="2-2" data-inema-track="2" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Ruta de navegación" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-blue-400" href="../../index.html">Inicio</a><span aria-hidden="true">/</span>
+<a class="hover:text-blue-400" href="index.html">Ruta 2</a><span aria-hidden="true">/</span>
+<span class="text-blue-400">Módulo 2.2</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full mb-4">MÓDULO 2.2 · FUNDAMENTO</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🧭 IMU y encoders: saber dónde está</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Un robot autónomo necesita responder dos preguntas sin ayuda de nadie: <strong class="text-neutral-100">«¿hacia dónde estoy mirando?»</strong> e <strong class="text-neutral-100">«¿cuánto avancé?»</strong>. La IMU responde la primera; los encoders de las ruedas, la segunda. Juntos proporcionan la <strong class="text-blue-400">odometría</strong>, la posición estimada del robot, con errores que aprenderás a medir y reducir.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">6</div><div class="text-xs text-neutral-400">Temas</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Intermedio</div><div class="text-xs text-neutral-400">Nivel</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Fundamentos</div><div class="text-xs text-neutral-400">Tipo</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">IMU + encoders</div><div class="text-xs text-neutral-400">Hardware</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progreso del módulo 2.2" class="inema-ring" data-inema-meter="modulo:2-2"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:2-2"><strong data-inema-meter-frac="">0 de 0</strong> temas leídos · <span data-inema-section-counter="">Sección 1 de 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Índice de la página" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">En este módulo</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-1">1. Qué mide la IMU</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-2">2. MPU-6050 por I2C</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-3">3. Filtro complementario</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-4">4. Encoders</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-5">5. Odometría (x, y, θ)</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-6">6. Errores que se acumulan</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Contenido detallado</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-2-2#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🧭 Qué mide una IMU (acelerómetro y giroscopio)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-2-t1-p1">A <strong class="text-blue-400">IMU</strong> (unidad de medición inercial) es un chip que detecta el movimiento sin mirar hacia afuera. La MPU-6050 tiene dos sensores de tres ejes cada uno. El <strong class="text-neutral-100">acelerómetro</strong> mide la aceleración, incluida la gravedad: cuando está quieto y nivelado, muestra 1 g apuntando hacia abajo, por eso sirve para conocer la inclinación. El <strong class="text-neutral-100">giroscopio</strong> mide la velocidad de giro en cada eje, en grados por segundo; al sumar esa velocidad a lo largo del tiempo, sabes cuánto giró el robot.</p>
+<div class="bg-dark-800 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-2-t1-p2"><strong>g</strong> es la aceleración de la gravedad (cerca de 9,8 m/s²); 1 g es lo que sientes cuando estás quieto. <strong>°/s</strong> (grados por segundo) es la velocidad de giro: 90 °/s es un cuarto de vuelta por segundo. <strong>Integrar</strong> es sumar una velocidad, poco a poco a lo largo del tiempo, para obtener el total (ángulo o distancia). <strong>Deriva</strong> (drift) es un pequeño error que, al sumarse muchas veces, crece sin parar.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Los tres ejes de la IMU sobre el robot: X apunta hacia delante, Y hacia la izquierda, Z hacia arriba. El acelerómetro detecta la gravedad en el eje Z cuando el robot está nivelado; el giroscopio mide la rotación alrededor de Z cuando el robot gira." class="w-full h-auto" role="img" viewbox="0 0 640 290">
+<defs><pattern height="32" id="m22-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.12" r="1.3"></circle></pattern><marker id="m22-ah1" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#60a5fa"></path></marker><marker id="m22-ah1c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker><filter height="180%" id="m22-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m22-grid1)" height="290" width="640"></rect><g filter="url(#m22-glow1)"><rect fill="#0e1622" height="70" rx="10" stroke="#3b82f6" stroke-width="2.5" width="120" x="110" y="140"></rect></g><text fill="#dbeafe" font-family="Inter,sans-serif" font-size="16" font-weight="600" text-anchor="middle" x="170" y="181">IMU</text>
+<g fill="none" stroke="#60a5fa" stroke-width="2.5"><path d="M230,175 L320,175" marker-end="url(#m22-ah1)"></path><path d="M170,140 L170,50" marker-end="url(#m22-ah1)"></path><path d="M130,150 L80,110" marker-end="url(#m22-ah1)"></path></g><path d="M140,60 A40,14 0 1,0 200,60" fill="none" marker-end="url(#m22-ah1c)" stroke="#38bdf8" stroke-width="2"></path>
+<path d="M170,214 L170,268" fill="none" marker-end="url(#m22-ah1)" stroke="#fbbf24" stroke-dasharray="5 4" stroke-width="2"></path>
+<g font-family="Inter,sans-serif" font-size="15"><text fill="#dbeafe" x="330" y="180">X adelante</text><text fill="#dbeafe" x="182" y="46">Z arriba</text><text fill="#dbeafe" x="20" y="104">Y izquierda</text><text fill="#bfe6ff" x="210" y="84">giro en Z = girar</text><text fill="#fde68a" x="182" y="262">gravedad (1 g)</text></g>
+<g font-family="Inter,sans-serif"><rect fill="#0e1622" height="96" rx="12" stroke="#60a5fa" stroke-width="2" width="200" x="420" y="40"></rect><text fill="#60a5fa" font-size="16" font-weight="600" text-anchor="middle" x="520" y="72">acelerómetro</text><text fill="#dbeafe" font-size="14" text-anchor="middle" x="520" y="96">inclinación: bueno</text><text fill="#dbeafe" font-size="14" text-anchor="middle" x="520" y="118">con sacudidas: ruidoso</text>
+<rect fill="#0e1b26" height="96" rx="12" stroke="#38bdf8" stroke-width="2" width="200" x="420" y="160"></rect><text fill="#7dd3fc" font-size="16" font-weight="600" text-anchor="middle" x="520" y="192">giroscopio</text><text fill="#bfe6ff" font-size="14" text-anchor="middle" x="520" y="216">giro rápido: excelente</text><text fill="#bfe6ff" font-size="14" text-anchor="middle" x="520" y="238">con el tiempo: deriva</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Cómo leer:</strong> las flechas azules son los tres ejes, siempre fijos al chip. La flecha ámbar es la gravedad que detecta el acelerómetro; la curva cian es el giro alrededor de Z, que mide el giroscopio cuando el robot gira. Los dos cuadros resumen el punto fuerte y el punto débil de cada sensor: uno complementa al otro, y eso es lo que aprovecha el tema 3.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm text-left">
+<thead class="bg-dark-700 text-neutral-200"><tr><th class="p-3 font-semibold">IMU</th><th class="p-3 font-semibold">Qué tiene</th><th class="p-3 font-semibold">Cuándo elegirlo</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300"><tr class="bg-dark-800"><td class="p-3 font-semibold text-blue-400">MPU-6050</td><td class="p-3">acelerómetro + giroscopio (6 ejes), I2C</td><td class="p-3">económica, muy documentada, excelente para aprender</td></tr><tr class="bg-dark-800"><td class="p-3 font-semibold text-blue-400">ICM-20948</td><td class="p-3">6 ejes + magnetómetro (9 ejes), I2C/SPI</td><td class="p-3">cuando necesites una brújula; usa la biblioteca del fabricante de la placa</td></tr></tbody>
+</table>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-2-t1-p3">Girar exactamente 90°, detectar que subiste por una rampa o detectar que el robot se volcó son tareas de la IMU. Sin ella, el robot solo sabe cuánto giraron las ruedas, y las ruedas patinan.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Acelerómetro</div><div class="text-xs text-neutral-400">aceleración + gravedad</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Giroscopio</div><div class="text-xs text-neutral-400">velocidad de giro</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">6 / 9 ejes</div><div class="text-xs text-neutral-400">con o sin brújula</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Deriva</div><div class="text-xs text-neutral-400">error que se acumula</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-2-2#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🔌 Leer la MPU-6050 por I2C</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-2-t2-p1">La MPU-6050 se comunica por I2C, el bus de dos cables que conociste en el 1.4. Son cuatro conexiones: VCC a 3V3, GND a GND, SDA a GPIO 21 y SCL a GPIO 22. En lugar de una biblioteca lista para usar, te comunicarás directamente con el chip: escribirás en un <strong class="text-neutral-100">registro</strong> para despertarlo y leerás 14 bytes de una vez, con aceleración, temperatura y giro.</p>
+<div class="bg-dark-800 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-2-t2-p2">Un <strong>registro</strong> es una posición de memoria dentro del sensor, con un número (ej.: 0x6B). Escribir en él cambia la configuración; leerlo devuelve la medición. El <strong>0x</strong> indica un número en hexadecimal. Cada medición viene en 2 bytes, un número entero de −32768 a 32767; al dividirlo entre <strong>16384</strong> obtienes la aceleración en g, y entre <strong>131</strong>, el giro en °/s (rangos predeterminados de ±2 g y ±250 °/s).</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Conexión de la MPU-6050 al ESP32: VCC a 3V3, GND a GND, SDA al GPIO 21 y SCL al GPIO 22. Los datos salen de los registros a partir de 0x3B: aceleración X, Y, Z, temperatura y giro X, Y, Z." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs><pattern height="32" id="m22-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.1" r="1.3"></circle></pattern></defs><rect fill="url(#m22-grid2)" height="260" width="640"></rect>
+<rect fill="#0e1622" height="170" rx="12" stroke="#60a5fa" stroke-width="2" width="150" x="20" y="40"></rect><rect fill="#0e1b26" height="170" rx="12" stroke="#38bdf8" stroke-width="2" width="130" x="290" y="40"></rect>
+<g font-family="Inter,sans-serif" font-size="15"><text fill="#60a5fa" font-size="16" font-weight="600" text-anchor="middle" x="95" y="66">ESP32</text><text fill="#7dd3fc" font-size="16" font-weight="600" text-anchor="middle" x="355" y="66">MPU-6050</text>
+<text fill="#dbeafe" text-anchor="end" x="160" y="100">3V3</text><text fill="#dbeafe" text-anchor="end" x="160" y="134">GND</text><text fill="#dbeafe" text-anchor="end" x="160" y="168">GPIO 21</text><text fill="#dbeafe" text-anchor="end" x="160" y="198">GPIO 22</text>
+<text fill="#bfe6ff" x="300" y="100">VCC</text><text fill="#bfe6ff" x="300" y="134">GND</text><text fill="#bfe6ff" x="300" y="168">SDA</text><text fill="#bfe6ff" x="300" y="198">SCL</text></g>
+<g fill="none" stroke-width="2.5"><path d="M170,95 L290,95" stroke="#f87171"></path><path d="M170,129 L290,129" stroke="#a8a8b3"></path><path d="M170,163 L290,163" stroke="#60a5fa"></path><path d="M170,193 L290,193" stroke="#38bdf8"></path></g>
+<g font-family="Inter,sans-serif" font-size="14"><rect fill="#101016" height="170" rx="12" stroke="#3a3a46" stroke-width="2" width="170" x="450" y="40"></rect><text fill="#e6e6e6" font-size="15" font-weight="600" text-anchor="middle" x="535" y="66">a partir de 0x3B</text><text fill="#dbeafe" x="470" y="94">acel. X, Y, Z</text><text fill="#a8a8b3" x="470" y="118">temperatura</text><text fill="#bfe6ff" x="470" y="142">giro X, Y, Z</text><text fill="#fde68a" x="470" y="176">14 bytes</text><text fill="#fde68a" x="470" y="198">2 por medición</text></g>
+<text fill="#a8a8b3" font-family="Inter,sans-serif" font-size="14" text-anchor="middle" x="320" y="244">módulo GY-521: AD0 a GND = dirección 0x68</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Cómo leer:</strong> a la izquierda, los cuatro cables; rojo es alimentación, gris es tierra, azul y cian son los datos de I2C. A la derecha, el orden en que llegan los 14 bytes cuando solicitas la lectura a partir del registro 0x3B. El código lee en ese mismo orden.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-2-t2-p3"><strong class="text-neutral-100">Objetivo:</strong> despertar la MPU-6050 y mostrar aceleración (g) y giro (°/s) diez veces por segundo. Funciona en Wokwi, que incluye la MPU-6050 en la lista de componentes.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">mpu6050-leitura.ino</span></div>
+<pre><code><span class="c">// MPU-6050 por I2C, sin biblioteca adicional (paquete esp32 3.x)</span>
+<span class="k">#include</span> &lt;Wire.h&gt;
+<span class="k">const int</span> MPU = 0x68;                     <span class="c">// dirección con AD0 a GND</span>
+
+int16_t ler16() {                          <span class="c">// une dos bytes: primero el alto</span>
+  uint8_t alto = Wire.read();
+  uint8_t baixo = Wire.read();
+  <span class="k">return</span> (int16_t)((alto &lt;&lt; 8) | baixo);
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  Wire.begin(21, 22);                      <span class="c">// SDA, SCL</span>
+  Wire.beginTransmission(MPU);
+  Wire.write(0x6B); Wire.write(0);         <span class="c">// registro de energía = 0: sale del modo de suspensión</span>
+  <span class="k">if</span> (Wire.endTransmission() != 0) {
+    Serial.println(<span class="s">"MPU-6050 no respondió: revisa los cables y la dirección"</span>);
+    <span class="k">while</span> (<span class="k">true</span>) delay(1000);
+  }
+  Serial.println(<span class="s">"MPU-6050 lista"</span>);
+}
+
+<span class="k">void</span> loop() {
+  Wire.beginTransmission(MPU);
+  Wire.write(0x3B);                        <span class="c">// empieza en la aceleración X</span>
+  Wire.endTransmission(<span class="k">false</span>);
+  Wire.requestFrom(MPU, 14);
+  <span class="k">float</span> ax = ler16() / 16384.0;
+  <span class="k">float</span> ay = ler16() / 16384.0;
+  <span class="k">float</span> az = ler16() / 16384.0;
+  ler16();                                 <span class="c">// temperatura: se ignora aquí</span>
+  <span class="k">float</span> gx = ler16() / 131.0;
+  <span class="k">float</span> gy = ler16() / 131.0;
+  <span class="k">float</span> gz = ler16() / 131.0;
+  Serial.printf(<span class="s">"ax:%.2f,ay:%.2f,az:%.2f,gx:%.1f,gy:%.1f,gz:%.1f\n"</span>, ax, ay, az, gx, gy, gz);
+  delay(100);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Placa quieta y acostada: az cerca de 1.00, ax y ay cerca de 0, giros cerca de 0 (hasta ±3 es normal).</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Gira la placa sobre la mesa: gz aumenta mientras gira y vuelve a cerca de 0 cuando se detiene.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿"no respondió"? Ejecuta el escáner I2C del 1.4: si aparece 0x69, el pin AD0 está en 3V3.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-5">
+<h4 class="font-bold text-blue-400 mb-3">✓ Montaje que funciona</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>IMU firmemente sujeta al chasis, cerca del centro, con los ejes alineados con el robot.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Cables I2C cortos, lejos de los cables del motor.</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Robot quieto durante los primeros segundos para calibrar el giro.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Causa de lecturas erráticas</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>IMU suelta en la protoboard, vibrando con cada sacudida.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>IMU pegada al motor: la vibración se convierte en ruido.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Alimentar con 5 V un módulo sin regulador.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-2-t2-p4">Leer los registros directamente muestra lo que las bibliotecas ocultan y funciona igual para casi cualquier sensor I2C: dirección, registro, cantidad de bytes, conversión de unidades. Cuando cambies de IMU, sabrás dónde buscar en la hoja de datos.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Registro</div><div class="text-xs text-neutral-400">dirección interna</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">0x68</div><div class="text-xs text-neutral-400">dirección I2C</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">16384 / 131</div><div class="text-xs text-neutral-400">bruto → g y °/s</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Lectura en ráfaga</div><div class="text-xs text-neutral-400">14 bytes de una vez</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-2-2#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">📐 Ángulo con filtro complementario</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-2-t3-p1">Puedes calcular la inclinación de dos maneras. Con el acelerómetro, usando trigonometría sobre la gravedad: es correcto en promedio, pero da saltos con cada sacudida. Con el giroscopio, sumando el giro: es fluido y rápido, pero la deriva aleja el resultado. El <strong class="text-blue-400">filtro complementario</strong> combina ambos: confía un 98% en el giroscopio en cada paso y usa un 2% del acelerómetro para devolver el ángulo a su valor real.</p>
+<figure class="fig mb-3">
+<svg aria-label="Diagrama del filtro complementario: el giroscopio se integra y aporta con un peso de 0,98; el ángulo del acelerómetro aporta con un peso de 0,02; la suma es el ángulo filtrado, que vuelve a la siguiente integración." class="w-full h-auto" role="img" viewbox="0 0 640 240">
+<defs><pattern height="32" id="m22-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.1" r="1.3"></circle></pattern><marker id="m22-ah3" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#60a5fa"></path></marker><filter height="180%" id="m22-glow3" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m22-grid3)" height="240" width="640"></rect><g font-family="Inter,sans-serif" text-anchor="middle"><rect fill="#0e1b26" height="56" rx="10" stroke="#38bdf8" stroke-width="2" width="150" x="10" y="30"></rect><text fill="#7dd3fc" font-size="15" font-weight="600" x="85" y="55">giroscopio</text><text fill="#bfe6ff" font-size="13" x="85" y="75">°/s, rápido</text>
+<rect fill="#0e1622" height="56" rx="10" stroke="#60a5fa" stroke-width="2" width="150" x="10" y="140"></rect><text fill="#60a5fa" font-size="15" font-weight="600" x="85" y="165">acelerómetro</text><text fill="#dbeafe" font-size="13" x="85" y="185">atan2, ruidoso</text>
+<rect fill="#0e1b26" height="56" rx="10" stroke="#38bdf8" stroke-width="2" width="150" x="200" y="30"></rect><text fill="#bfe6ff" font-size="15" x="275" y="55">ángulo + giro×dt</text><text fill="#fde68a" font-size="14" x="275" y="75">× 0,98</text>
+<rect fill="#0e1622" height="56" rx="10" stroke="#60a5fa" stroke-width="2" width="150" x="200" y="140"></rect><text fill="#dbeafe" font-size="15" x="275" y="165">ángulo de la gravedad</text><text fill="#fde68a" font-size="14" x="275" y="185">× 0,02</text><circle cx="410" cy="113" fill="#101016" r="22" stroke="#a8a8b3" stroke-width="2"></circle><text fill="#e6e6e6" font-size="20" x="410" y="120">+</text>
+<g filter="url(#m22-glow3)"><rect fill="#0e1622" height="56" rx="12" stroke="#3b82f6" stroke-width="2.5" width="160" x="470" y="85"></rect></g><text fill="#dbeafe" font-size="16" font-weight="600" x="550" y="119">ángulo filtrado</text><text fill="#a8a8b3" font-size="14" x="400" y="224">el resultado actual es el punto de partida del siguiente paso</text></g>
+<g fill="none" opacity="0.8" stroke="#60a5fa" stroke-width="1.8"><path d="M160,58 L194,58" marker-end="url(#m22-ah3)"></path><path d="M160,168 L194,168" marker-end="url(#m22-ah3)"></path><path d="M350,58 L396,98" marker-end="url(#m22-ah3)"></path><path d="M350,168 L396,128" marker-end="url(#m22-ah3)"></path><path d="M432,113 L464,113" marker-end="url(#m22-ah3)"></path></g>
+<path d="M550,85 C550,10 275,10 275,26" fill="none" marker-end="url(#m22-ah3)" stroke="#38bdf8" stroke-dasharray="6 5" stroke-width="1.8"></path>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Cómo leer:</strong> el camino de arriba (cian) sigue el movimiento rápido; el de abajo (azul) corrige la deriva lentamente. Los pesos suman 1. La flecha punteada muestra que el filtro tiene memoria: cada nuevo ángulo parte del anterior. Más peso en el giroscopio hace que el ángulo sea más fluido; más peso en el acelerómetro corrige más rápido, con más ruido.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-2-t3-p2"><strong class="text-neutral-100">Objetivo:</strong> calcular la inclinación hacia adelante (cabeceo) de tres maneras y ver las tres en el Serial Plotter: solo acelerómetro, solo giroscopio y filtrado. El bucle se ejecuta cada 10 ms.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">filtro-complementar.ino</span></div>
+<pre><code><span class="c">// Inclinación con filtro complementario (MPU-6050, paquete esp32 3.x)</span>
+<span class="k">#include</span> &lt;Wire.h&gt;
+<span class="k">const int</span> MPU = 0x68;
+<span class="k">const float</span> ALFA = 0.98;                  <span class="c">// confianza en el giroscopio</span>
+<span class="k">const float</span> DT = 0.01;                    <span class="c">// 10 ms por paso</span>
+<span class="k">float</span> offsetGy = 0, angGiro = 0, angFiltro = 0;
+
+int16_t ler16() { uint8_t a = Wire.read(); uint8_t b = Wire.read(); <span class="k">return</span> (int16_t)((a &lt;&lt; 8) | b); }
+
+<span class="k">void</span> lerMPU(<span class="k">float</span> &amp;ax, <span class="k">float</span> &amp;ay, <span class="k">float</span> &amp;az, <span class="k">float</span> &amp;gy) {
+  Wire.beginTransmission(MPU); Wire.write(0x3B); Wire.endTransmission(<span class="k">false</span>);
+  Wire.requestFrom(MPU, 14);
+  ax = ler16() / 16384.0; ay = ler16() / 16384.0; az = ler16() / 16384.0;
+  ler16(); ler16();                        <span class="c">// temperatura y giro X: ignorados</span>
+  gy = ler16() / 131.0; ler16();           <span class="c">// giro Y (usado) y giro Z</span>
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  Wire.begin(21, 22);
+  Wire.beginTransmission(MPU); Wire.write(0x6B); Wire.write(0); Wire.endTransmission();
+  Serial.println(<span class="s">"Calibrando: no muevas el robot..."</span>);
+  <span class="k">float</span> ax, ay, az, gy, soma = 0;
+  <span class="k">for</span> (<span class="k">int</span> i = 0; i &lt; 500; i++) { lerMPU(ax, ay, az, gy); soma += gy; delay(2); }
+  offsetGy = soma / 500;                   <span class="c">// el giro "en reposo" se convierte en el cero</span>
+  lerMPU(ax, ay, az, gy);
+  angFiltro = angGiro = atan2(-ax, sqrt(ay * ay + az * az)) * 180 / PI;
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">static unsigned long</span> ultimo = micros();
+  <span class="k">if</span> (micros() - ultimo &lt; 10000) <span class="k">return</span>;   <span class="c">// espera a completar 10 ms</span>
+  ultimo += 10000;
+  <span class="k">float</span> ax, ay, az, gy;
+  lerMPU(ax, ay, az, gy);
+  gy -= offsetGy;
+  <span class="k">float</span> angAcel = atan2(-ax, sqrt(ay * ay + az * az)) * 180 / PI;
+  angGiro += gy * DT;                                          <span class="c">// solo giroscopio: deriva</span>
+  angFiltro = ALFA * (angFiltro + gy * DT) + (1 - ALFA) * angAcel;
+  Serial.printf(<span class="s">"acel:%.1f,giro:%.1f,filtro:%.1f\n"</span>, angAcel, angGiro, angFiltro);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Abre Herramientas → Serial Plotter. Inclina la placa unos 30°: las tres líneas suben juntas.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Golpea suavemente la mesa: "acel" da picos; "filtro" casi no se mueve.</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Déjalo quieto unos minutos: "giro" se aleja lentamente del valor real; "filtro" no.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-2-t3-p3">Cinco líneas de cálculo resuelven el problema que hace caer a los robots equilibristas y a los drones caseros. El filtro de Kalman, que encontrarás en proyectos más grandes, sigue la misma idea de combinar un sensor rápido con uno que no deriva, con pesos que se ajustan solos.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">atan2</div><div class="text-xs text-neutral-400">ángulo según la gravedad</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Offset</div><div class="text-xs text-neutral-400">cero del giroscopio</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">α = 0,98</div><div class="text-xs text-neutral-400">peso del giroscopio</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">dt fijo</div><div class="text-xs text-neutral-400">bucle de 10 ms</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-2-2#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">⚙️ Encoders: contar giros de la rueda</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-2-t4-p1">Un <strong class="text-blue-400">encoder</strong> convierte el giro en pulsos. En el motor TT, un disco con 20 orificios pasa entre un LED y un sensor de luz: cada orificio es un pulso. En el motor N20 con encoder, un imán en el eje pasa por dos sensores Hall. Los dos sensores, llamados <strong class="text-neutral-100">canales A y B</strong>, están desfasados: el que pulsa primero indica el sentido del giro. Esto se llama <strong class="text-neutral-100">cuadratura</strong>.</p>
+<div class="bg-dark-800 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 ¿Eres nuevo aquí?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-2-t4-p2">Una <strong>interrupción</strong> es una señal del hardware que pausa el programa un instante para ejecutar una función corta, la <strong>ISR</strong>, y luego continúa desde donde se había detenido. Así no se pierde ningún pulso, aunque el loop esté ocupado. Las variables que se modifican dentro de la ISR llevan <span class="font-mono text-xs">volatile</span>, y la ISR lleva <span class="font-mono text-xs">IRAM_ATTR</span> para ejecutarse desde la memoria rápida del ESP32.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Señales de un encoder en cuadratura: el canal A y el canal B son ondas cuadradas desfasadas un cuarto de período. Al girar hacia adelante, A cambia antes que B; al girar hacia atrás, B cambia antes que A. Cada flanco cuenta un pulso." class="w-full h-auto" role="img" viewbox="0 0 640 230">
+<defs><pattern height="32" id="m22-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.1" r="1.3"></circle></pattern></defs><rect fill="url(#m22-grid4)" height="230" width="640"></rect><g font-family="Inter,sans-serif" font-size="16" font-weight="600"><text fill="#60a5fa" x="20" y="62">A</text><text fill="#38bdf8" x="20" y="142">B</text></g>
+<path d="M50,80 L90,80 L90,40 L170,40 L170,80 L250,80 L250,40 L330,40 L330,80 L410,80 L410,40 L490,40 L490,80 L570,80 L570,40 L620,40" fill="none" stroke="#60a5fa" stroke-width="3"></path><path d="M50,160 L130,160 L130,120 L210,120 L210,160 L290,160 L290,120 L370,120 L370,160 L450,160 L450,120 L530,120 L530,160 L610,160 L610,120 L620,120" fill="none" stroke="#38bdf8" stroke-width="3"></path>
+<g stroke="#fbbf24" stroke-dasharray="3 4" stroke-width="1.5"><line x1="90" x2="90" y1="30" y2="170"></line><line x1="130" x2="130" y1="30" y2="170"></line></g><g font-family="Inter,sans-serif" font-size="14"><text fill="#fde68a" text-anchor="middle" x="110" y="192">A sube antes que B</text><text fill="#a8a8b3" text-anchor="middle" x="320" y="214">adelante: A va antes que B · atrás: B va antes que A</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Cómo leer:</strong> las dos ondas tienen el mismo ritmo, pero B se retrasa un cuarto de ciclo. En las líneas ámbar, A subió primero: la rueda gira hacia adelante. Si la rueda invierte el sentido, B empieza a cambiar primero. Contar cada flanco de A (subida y bajada) duplica la resolución sin costo.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-2-t4-p3"><strong class="text-neutral-100">Objetivo:</strong> contar los pulsos de las dos ruedas con una interrupción y mostrar la rotación en RPM cada 200 ms. Encoders: izquierdo A 18 / B 19, derecho A 34 / B 35 (34 y 35 no tienen pull-up interno; los módulos Hall del N20 suelen tenerlo).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">encoders-rpm.ino</span></div>
+<pre><code><span class="c">// Dos encoders en cuadratura con interrupción (paquete esp32 3.x)</span>
+<span class="k">const int</span> ENC_E_A = 18, ENC_E_B = 19;      <span class="c">// rueda izquierda</span>
+<span class="k">const int</span> ENC_D_A = 34, ENC_D_B = 35;      <span class="c">// rueda derecha</span>
+<span class="k">const float</span> PULSOS_VOLTA = 1400;          <span class="c">// N20 1:100 contando los 2 flancos de A. Mide el tuyo (tema 6)</span>
+<span class="k">volatile long</span> pulsosE = 0, pulsosD = 0;
+
+<span class="k">void</span> IRAM_ATTR isrE() { <span class="k">if</span> (digitalRead(ENC_E_A) == digitalRead(ENC_E_B)) pulsosE++; <span class="k">else</span> pulsosE--; }
+<span class="k">void</span> IRAM_ATTR isrD() { <span class="k">if</span> (digitalRead(ENC_D_A) == digitalRead(ENC_D_B)) pulsosD--; <span class="k">else</span> pulsosD++; }  <span class="c">// invertido</span>
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(ENC_E_A, INPUT_PULLUP); pinMode(ENC_E_B, INPUT_PULLUP);
+  pinMode(ENC_D_A, INPUT); pinMode(ENC_D_B, INPUT);
+  attachInterrupt(digitalPinToInterrupt(ENC_E_A), isrE, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC_D_A), isrD, CHANGE);
+  Serial.println(<span class="s">"Encoders listos: gira las ruedas con la mano"</span>);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">static long</span> antE = 0, antD = 0;
+  delay(200);
+  noInterrupts(); <span class="k">long</span> e = pulsosE, d = pulsosD; interrupts();   <span class="c">// copia sin interrupciones</span>
+  <span class="k">float</span> rpmE = (e - antE) / PULSOS_VOLTA / 0.2 * 60;
+  <span class="k">float</span> rpmD = (d - antD) / PULSOS_VOLTA / 0.2 * 60;
+  antE = e; antD = d;
+  Serial.printf(<span class="s">"pulsosE:%ld,pulsosD:%ld,rpmE:%.1f,rpmD:%.1f\n"</span>, e, d, rpmE, rpmD);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Al girar la rueda izquierda hacia adelante con la mano, pulsosE aumenta; hacia atrás, disminuye.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Ruedas detenidas: rpm en 0 y contadores detenidos.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿Un lado cuenta al revés? Cambia el ++ por el −− en la ISR de ese lado. ¿Cuenta y no cambia el signo? El canal B no está conectado.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-2-t4-p4">Sin encoder, "avanzar 1 metro" se convierte en "encender el motor por 2 segundos y cruzar los dedos". Con él, mides la velocidad real (la entrada del PID de 2.3) y la distancia recorrida (la base de la odometría del siguiente tema).</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Pulsos por vuelta</div><div class="text-xs text-neutral-400">resolución de la rueda</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Cuadratura</div><div class="text-xs text-neutral-400">A y B indican el sentido</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">ISR</div><div class="text-xs text-neutral-400">corta, IRAM_ATTR</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">volatile</div><div class="text-xs text-neutral-400">cambia mediante interrupción</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-2-2#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🗺️ Odometría: de pulsos a posición (x, y, θ)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-2-t5-p1"><strong class="text-blue-400">Odometría</strong> es estimar la posición sumando pequeños desplazamientos. Cada 50 ms calculas cuánto avanzó cada rueda (pulsos ÷ pulsos por vuelta × perímetro de la rueda). El promedio de las dos indica cuánto avanzó el centro del robot; la diferencia entre ellas, dividida por la distancia entre las ruedas, indica cuánto giró. Con eso actualizas x, y y θ (la dirección, en radianes).</p>
+<figure class="fig mb-3">
+<svg aria-label="Robot de dos ruedas visto desde arriba, sobre una cuadrícula con ejes x e y: la rueda izquierda recorrió dE y la derecha dD; la distancia entre las ruedas es L. El centro avanza una distancia d igual al promedio de dE y dD y gira un ángulo delta theta igual a dD menos dE dividido entre L." class="w-full h-auto" role="img" viewbox="0 0 640 280">
+<defs><pattern height="32" id="m22-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.1" r="1.3"></circle></pattern><marker id="m22-ah5" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#60a5fa"></path></marker><filter height="180%" id="m22-glow5" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m22-grid5)" height="280" width="640"></rect><g stroke="#3a3a46" stroke-width="1.5"><line x1="40" x2="330" y1="250" y2="250"></line><line x1="40" x2="40" y1="250" y2="20"></line></g><g fill="#a8a8b3" font-family="Inter,sans-serif" font-size="15"><text x="320" y="270">x</text><text x="24" y="30">y</text></g>
+<g transform="rotate(-25 170 160)"><g filter="url(#m22-glow5)"><rect fill="#0e1622" height="60" rx="10" stroke="#3b82f6" stroke-width="2.5" width="100" x="120" y="130"></rect></g><rect fill="#60a5fa" height="12" rx="3" width="40" x="130" y="116"></rect><rect fill="#38bdf8" height="12" rx="3" width="40" x="130" y="192"></rect><path d="M175,160 L240,160" fill="none" marker-end="url(#m22-ah5)" stroke="#60a5fa" stroke-width="2.5"></path><path d="M150,128 L150,192" stroke="#fbbf24" stroke-dasharray="4 3" stroke-width="1.5"></path></g>
+<path d="M240,160 A70,70 0 0,0 228,118" fill="none" stroke="#38bdf8" stroke-dasharray="5 4" stroke-width="2"></path><g font-family="Inter,sans-serif" font-size="15"><text fill="#bfe6ff" x="250" y="128">θ</text><text fill="#fde68a" x="92" y="150">L</text></g><g font-family="Inter,sans-serif"><rect fill="#101016" height="220" rx="14" stroke="#3a3a46" stroke-width="2" width="260" x="360" y="30"></rect>
+<text fill="#60a5fa" font-size="16" font-weight="600" x="380" y="62">en cada paso</text><text fill="#dbeafe" font-size="15" x="380" y="94">d = (dE + dD) / 2</text><text fill="#dbeafe" font-size="15" x="380" y="124">Δθ = (dD − dE) / L</text><text fill="#bfe6ff" font-size="15" x="380" y="154">x += d · cos(θ + Δθ/2)</text>
+<text fill="#bfe6ff" font-size="15" x="380" y="184">y += d · sin(θ + Δθ/2)</text><text fill="#bfe6ff" font-size="15" x="380" y="214">θ += Δθ</text><text fill="#a8a8b3" font-size="13" x="380" y="238">dE, dD en metros; θ en radianes</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Cómo leer:</strong> La flecha azul es la parte delantera del robot y apunta en la dirección θ, medida desde el eje x. La regla ámbar L es la distancia entre las ruedas. Las cinco líneas del cuadro son todo el algoritmo: si la rueda derecha avanzó más que la izquierda, Δθ es positivo y el robot giró a la izquierda.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-2-t5-p2"><strong class="text-neutral-100">Objetivo:</strong> estimar x, y (en centímetros) y θ (en grados) empujando el robot con la mano. Los mismos pines del tema 4. Ajusta el radio de la rueda y la distancia entre ruedas de tu chasis.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">odometria.ino</span></div>
+<pre><code><span class="c">// Odometry of a differential-drive robot with two encoders (esp32 package 3.x)</span>
+<span class="k">const int</span> ENC_E_A = 18, ENC_E_B = 19, ENC_D_A = 34, ENC_D_B = 35;
+<span class="k">const float</span> PULSOS_VOLTA = 1400;           <span class="c">// measure yours (topic 6)</span>
+<span class="k">const float</span> RAIO = 0.0215;                 <span class="c">// wheel radius in meters (43 mm wheel)</span>
+<span class="k">const float</span> BASE = 0.130;                  <span class="c">// distance between the wheels in meters</span>
+<span class="k">const float</span> M_POR_PULSO = 2 * PI * RAIO / PULSOS_VOLTA;
+<span class="k">volatile long</span> pulsosE = 0, pulsosD = 0;
+<span class="k">float</span> x = 0, y = 0, theta = 0;
+
+<span class="k">void</span> IRAM_ATTR isrE() { <span class="k">if</span> (digitalRead(ENC_E_A) == digitalRead(ENC_E_B)) pulsosE++; <span class="k">else</span> pulsosE--; }
+<span class="k">void</span> IRAM_ATTR isrD() { <span class="k">if</span> (digitalRead(ENC_D_A) == digitalRead(ENC_D_B)) pulsosD--; <span class="k">else</span> pulsosD++; }
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(ENC_E_A, INPUT_PULLUP); pinMode(ENC_E_B, INPUT_PULLUP);
+  pinMode(ENC_D_A, INPUT); pinMode(ENC_D_B, INPUT);
+  attachInterrupt(digitalPinToInterrupt(ENC_E_A), isrE, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC_D_A), isrD, CHANGE);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">static long</span> antE = 0, antD = 0;
+  <span class="k">static unsigned long</span> ultimoPrint = 0;
+  delay(50);                                  <span class="c">// 50 ms step</span>
+  noInterrupts(); <span class="k">long</span> e = pulsosE, d = pulsosD; interrupts();
+  <span class="k">float</span> dE = (e - antE) * M_POR_PULSO;
+  <span class="k">float</span> dD = (d - antD) * M_POR_PULSO;
+  antE = e; antD = d;
+  <span class="k">float</span> dist = (dE + dD) / 2;
+  <span class="k">float</span> dTheta = (dD - dE) / BASE;
+  x += dist * cos(theta + dTheta / 2);
+  y += dist * sin(theta + dTheta / 2);
+  theta = atan2(sin(theta + dTheta), cos(theta + dTheta));   <span class="c">// keeps the value between -180° and 180°</span>
+  <span class="k">if</span> (millis() - ultimoPrint &gt;= 250) {
+    ultimoPrint = millis();
+    Serial.printf(<span class="s">"x=%.1f cm  y=%.1f cm  theta=%.1f degrees\n"</span>, x * 100, y * 100, theta * 180 / PI);
+  }
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Cómo verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Empuja el robot 50 cm en línea recta sobre una cinta métrica: x debe estar cerca de 50, y y theta cerca de 0.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Gira el robot sobre el sitio un cuarto de vuelta hacia la izquierda: theta debe estar cerca de 90.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>¿x sale negativo cuando avanzas? Los dos encoders están contando al revés (tema 4).</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Giro con la IMU, distancia con las ruedas</h3>
+<p class="text-neutral-300 text-sm">Las ruedas patinan más en las curvas que en línea recta. Una mejora sencilla: usa el encoder para la distancia y el giro Z de la IMU (integrado, con el offset descontado) para θ. Es el comienzo de la fusión de sensores que ROS 2 realiza en la Ruta 4.</p>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-2-t5-p3">Volver a la base, avanzar hasta un punto, dibujar un cuadrado en el suelo: todo eso necesita x, y y θ. Eso es exactamente lo que micro-ROS de 4.3 publica como odometría para que ROS 2 construya mapas.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Pose</div><div class="text-xs text-neutral-400">x, y y θ juntos</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Metros por pulso</div><div class="text-xs text-neutral-400">2πr ÷ pulsos/vuelta</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Base (L)</div><div class="text-xs text-neutral-400">distancia entre ruedas</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Radián</div><div class="text-xs text-neutral-400">π rad = 180°</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-2-2#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">📉 Errores que se acumulan y cómo convivir con ellos</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar una duda en este tema" type="button"><span aria-hidden="true">?</span><span>Tengo una duda</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-2-t6-p1">La odometría nunca es exacta, solo «casi exacta». Cada paso arrastra un pequeño error: la rueda patinó, el diámetro real es 1 mm mayor, se perdió un pulso. Como la posición es la suma de todos los pasos, estos errores <strong class="text-neutral-100">se acumulan</strong>, y el error de dirección es el peor: 2° de error al principio se convierten en 3,5 cm de desviación por cada metro recorrido. La forma de convivir con esto es calibrar bien y corregir de vez en cuando con algo que no derive.</p>
+<figure class="fig mb-3">
+<svg aria-label="Trayectoria real y trayectoria estimada de un robot que intenta recorrer un cuadrado: la real cierra el cuadrado; la estimada por la odometría comienza junto a ella y se va separando en cada esquina, hasta terminar lejos del punto de partida." class="w-full h-auto" role="img" viewbox="0 0 640 270">
+<defs><pattern height="32" id="m22-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.1" r="1.3"></circle></pattern></defs><rect fill="url(#m22-grid6)" height="270" width="640"></rect><rect fill="none" height="190" stroke="#60a5fa" stroke-width="3" width="190" x="60" y="40"></rect>
+<path d="M60,230 L250,226 L262,40 L66,22 L40,212" fill="none" stroke="#38bdf8" stroke-dasharray="7 5" stroke-width="2.5"></path><circle cx="60" cy="230" fill="#60a5fa" r="7"></circle><circle cx="40" cy="212" fill="#f87171" r="7"></circle>
+<g font-family="Inter,sans-serif" font-size="15"><text fill="#60a5fa" font-weight="600" x="300" y="70">— recorrido real</text><text fill="#38bdf8" font-weight="600" x="300" y="100">- - odometría</text><text fill="#dbeafe" x="300" y="140">empiezan igual, se separan en cada esquina</text><text fill="#dbeafe" x="300" y="166">el error de ángulo se convierte en error de posición</text><text fill="#fecaca" x="300" y="206">punto rojo: donde el robot</text><text fill="#fecaca" x="300" y="228">«cree» que terminó</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Cómo leer:</strong> El cuadrado azul es lo que el robot hizo en realidad; la línea cian es lo que sumó la odometría. En el primer tramo casi no hay diferencia. En cada giro, un pequeño error de ángulo deforma todos los tramos siguientes. Por eso la prueba de calibración usa vueltas completas: el error se hace grande y es fácil de medir.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-4">Calibración en 4 pasos</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Pulsos por vuelta</h4><p class="text-neutral-300 text-sm">Marca la rueda con cinta, gírala 10 vueltas con la mano y divide el conteo entre 10. Usa ese número, no el del anuncio.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Radio de la rueda</h4><p class="text-neutral-300 text-sm">Empuja el robot 2 m en línea recta. Si x muestra 196 cm, multiplica el RADIO por 200/196.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Base entre ruedas</h4><p class="text-neutral-300 text-sm">Gira el robot 5 vueltas completas sobre el sitio (1800°). Si theta acumulado muestra 1750°, multiplica la BASE por 1750/1800.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">4</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Prueba del cuadrado</h4><p class="text-neutral-300 text-sm">Haz un cuadrado de 1 m en ambos sentidos y mide qué tan lejos del inicio se detuvo el robot. Anótalo: ese es tu valor de referencia.</p></div></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-5">
+<h4 class="font-bold text-blue-400 mb-3">✓ Reduce el error</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Ruedas de goma firme y aceleración suave (sin patinar).</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>θ con el giroscopio, distancia con los encoders.</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Restablecer la pose en puntos conocidos (base, marca en el suelo, pared).</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Aumenta el error</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Arranques bruscos y frenadas secas.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Alfombra mullida, ruedas de plástico liso, suelo con juntas.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Confiar en la odometría durante minutos sin ninguna corrección.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por qué aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-2-t6-p2">Saber que la posición «se desliza» cambia la forma de diseñar: las tareas cortas pueden confiar en la odometría; las tareas largas necesitan una referencia externa, como la línea en el suelo de 2.6, la cámara de la Ruta 3 o el LiDAR con SLAM de la Ruta 4, que existe precisamente para corregir este error.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceptos clave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Error acumulado</div><div class="text-xs text-neutral-400">crece con la distancia</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Error sistemático</div><div class="text-xs text-neutral-400">la calibración lo resuelve</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Deslizamiento</div><div class="text-xs text-neutral-400">aleatorio, solo se reduce</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Referencia externa</div><div class="text-xs text-neutral-400">elimina la deriva</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como leído</span><span class="inema-label-done">Leído</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 rounded-xl border border-blue-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Resumen del módulo</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">IMU = acelerómetro + giroscopio</strong><span class="text-neutral-400">: uno acierta en promedio; el otro, en los movimientos rápidos.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">I2C directamente en los registros</strong><span class="text-neutral-400">: despertar en 0x6B, leer 14 bytes a partir de 0x3B.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Filtro complementario</strong><span class="text-neutral-400">: 0,98 del giroscopio + 0,02 del acelerómetro, en un bucle de tiempo fijo.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Encoders con interrupción</strong><span class="text-neutral-400">: la cuadratura indica el sentido; ISR corta con IRAM_ATTR y volatile.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Odometría y sus límites</strong><span class="text-neutral-400">: x, y, θ mediante la suma de pasos; calibra y corrige con una referencia externa.</span></div></div>
+</div>
+<h3 class="font-semibold text-blue-400 mb-3">Para profundizar</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://invensense.tdk.com/products/motion-tracking/6-axis/mpu-6050/" rel="noopener" target="_blank">MPU-6050 (TDK InvenSense)</a> <span class="text-neutral-500">— hoja de datos y mapa de registros</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/i2c.html" rel="noopener" target="_blank">I2C en arduino-esp32</a> <span class="text-neutral-500">— biblioteca Wire en la 3.x</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/gpio.html" rel="noopener" target="_blank">GPIO e interrupciones (arduino-esp32)</a> <span class="text-neutral-500">— attachInterrupt y pines solo de entrada</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.wokwi.com/parts/wokwi-mpu6050" rel="noopener" target="_blank">MPU-6050 en Wokwi</a> <span class="text-neutral-500">— prueba el filtro sin hardware</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-blue-400 mb-1">Siguiente módulo</h3>
+<p class="text-neutral-300">2.3 · Control PID en la práctica: usa la velocidad medida por los encoders para mantener iguales las dos ruedas.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-2-1.html">← Anterior: 2.1 Control desde el celular</a>
+<a class="inline-flex items-center px-5 py-3 bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors" href="modulo-2-3.html">Siguiente: 2.3 Control PID →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica de cero a experto · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licencia MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

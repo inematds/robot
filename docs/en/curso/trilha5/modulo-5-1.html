@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 5.1 · Language model as the brain | Robotics from Zero to Expert</title>
+<meta content="A language model as the robot's brain: LLM, VLM, and VLA; a safe architecture with a closed list of actions in JSON; local Ollama; a VLM using the camera; and safeguards with an emergency stop." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha5/modulo-5-1.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha5/modulo-5-1.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha5/modulo-5-1.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha5/modulo-5-1.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha5/modulo-5-1.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha5/modulo-5-1.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-5-1.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha5/modulo-5-1.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T5 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a aria-current="page" class="nav-trail text-teal-400 bg-teal-500/10" href="index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="5-1" data-inema-track="5" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-teal-400" href="../../index.html">Home</a><span aria-hidden="true">/</span>
+<a class="hover:text-teal-400" href="index.html">Track 5</a><span aria-hidden="true">/</span>
+<span class="text-teal-400">Module 5.1</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-teal-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-teal-500/20 text-teal-400 text-xs font-semibold rounded-full mb-4">MODULE 5.1 · FOUNDATIONS</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🧠 Language model as the brain</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">A language model understands requests like “move the gripper to the cup,” but it makes mistakes, makes things up, and cannot sense the world. In this module, you’ll build an architecture that uses what it does well without letting it control the motors: <strong class="text-neutral-100">the model chooses, the robot executes</strong>, within a <strong class="text-teal-400">closed list of actions</strong> with limits checked in code.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">Advanced</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">Foundation</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">PC or Pi 5</div><div class="text-xs text-neutral-400">Hardware</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 5.1 progress" class="inema-ring" data-inema-meter="modulo:5-1"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:5-1"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-1">1. LLM, VLM, and VLA</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-2">2. Safe architecture</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-3">3. Closed list in JSON</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-4">4. Local model (Ollama)</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-5">5. VLM: What do you see?</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-6">6. Safeguards and stop</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-5-1#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🧩 LLM, VLM, and VLA: what each one does in a robot</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-1-t1-p1">Three acronyms appear in every AI-powered robot project, and each has a different role. The <strong class="text-teal-400">LLM</strong> (large language model) takes text and returns text: it understands the request and decides which action makes sense. The <strong class="text-teal-400">VLM</strong> (vision-language model) takes an image along with text and answers questions about it: “there’s a blue cup on the left.” The <strong class="text-teal-400">VLA</strong> (vision-language-action model) goes a step further: it takes an image and an instruction and returns the joint movements themselves, several times per second.</p>
+<div class="bg-dark-800 border border-teal-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-teal-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m5-1-t1-p2">A <strong>model</strong> is a file of numbers (the <strong>parameters</strong>, or weights) learned from many examples. Running the model to get a response is called <strong>inference</strong>. Text goes in and comes out in pieces called <strong>tokens</strong> (parts of words). In general, the more parameters a model has, the better its responses and the more memory and time inference requires.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Three types of models: an LLM receives text and returns text or a selected action; a VLM receives an image and text and returns a description; a VLA receives an image and an instruction and returns joint angles several times per second." class="w-full h-auto" role="img" viewbox="0 0 640 330">
+<defs><pattern height="32" id="m51-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.12" r="1.3"></circle></pattern><marker id="m51-ah1" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#2dd4bf"></path></marker><filter height="180%" id="m51-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs><rect fill="url(#m51-grid1)" height="330" width="640"></rect><g font-family="Inter,sans-serif" text-anchor="middle"><text fill="#a8a8b3" font-size="15" x="95" y="32">input</text><text fill="#a8a8b3" font-size="15" x="320" y="32">model</text><text fill="#a8a8b3" font-size="15" x="540" y="32">output</text>
+<rect fill="#0e1b26" height="62" rx="10" stroke="#38bdf8" stroke-width="2" width="150" x="20" y="52"></rect><text fill="#bfe6ff" font-size="16" x="95" y="89">text</text><rect fill="#0b2421" height="62" rx="12" stroke="#2dd4bf" stroke-width="2" width="140" x="250" y="52"></rect><text fill="#2dd4bf" font-size="20" font-weight="600" x="320" y="89">LLM</text><rect fill="#0b2421" height="62" rx="10" stroke="#2dd4bf" stroke-width="1.5" width="150" x="470" y="52"></rect><text fill="#ccfbf1" font-size="15" x="545" y="80">text or</text><text fill="#ccfbf1" font-size="15" x="545" y="100">chosen action</text><rect fill="#0e1b26" height="62" rx="10" stroke="#38bdf8" stroke-width="2" width="150" x="20" y="140"></rect><text fill="#bfe6ff" font-size="16" x="95" y="168">image</text><text fill="#bfe6ff" font-size="15" x="95" y="188">+ text</text>
+<rect fill="#0b2421" height="62" rx="12" stroke="#2dd4bf" stroke-width="2" width="140" x="250" y="140"></rect><text fill="#2dd4bf" font-size="20" font-weight="600" x="320" y="177">VLM</text><rect fill="#0b2421" height="62" rx="10" stroke="#2dd4bf" stroke-width="1.5" width="150" x="470" y="140"></rect><text fill="#ccfbf1" font-size="15" x="545" y="168">“blue cup</text><text fill="#ccfbf1" font-size="15" x="545" y="188">on the left”</text><rect fill="#0e1b26" height="62" rx="10" stroke="#38bdf8" stroke-width="2" width="150" x="20" y="228"></rect><text fill="#bfe6ff" font-size="16" x="95" y="256">image</text><text fill="#bfe6ff" font-size="15" x="95" y="276">+ instruction</text><g filter="url(#m51-glow1)"><rect fill="#0e2b28" height="62" rx="12" stroke="#2dd4bf" stroke-width="2.5" width="140" x="250" y="228"></rect></g><text fill="#2dd4bf" font-size="20" font-weight="600" x="320" y="265">VLA</text>
+<rect fill="#0b2421" height="62" rx="10" stroke="#2dd4bf" stroke-width="1.5" width="150" x="470" y="228"></rect><text fill="#ccfbf1" font-size="15" x="545" y="256">joint angles</text><text fill="#ccfbf1" font-size="15" x="545" y="276">several times/s</text></g><g fill="none" opacity="0.8" stroke="#2dd4bf" stroke-width="2"><path d="M170,83 L243,83" marker-end="url(#m51-ah1)"></path><path d="M390,83 L463,83" marker-end="url(#m51-ah1)"></path>
+<path d="M170,171 L243,171" marker-end="url(#m51-ah1)"></path><path d="M390,171 L463,171" marker-end="url(#m51-ah1)"></path><path d="M170,259 L243,259" marker-end="url(#m51-ah1)"></path><path d="M390,259 L463,259" marker-end="url(#m51-ah1)"></path></g><text fill="#7dd3fc" font-family="Inter,sans-serif" font-size="15" text-anchor="middle" x="320" y="318">from top to bottom: the model gets closer and closer to the motors</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> Each row shows a type of model. On the left (cyan) is what it receives; on the right is what it returns. The LLM and VLM stop at words or a choice; the glowing VLA returns movement directly. This module uses the first two as planners; the VLA appears in module 5.4, with SmolVLA.</p>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">💬 LLM</div><p class="text-sm text-neutral-400">Turns “move a little forward” into <span class="font-mono text-xs">move 20 cm</span>. Good at understanding requests, bad at measuring distance.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">👁️ VLM</div><p class="text-sm text-neutral-400">Describes the camera scene. It helps the LLM know what’s on the table, but it can get the color, number, or position wrong.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🦾 VLA</div><p class="text-sm text-neutral-400">Trained on demonstrations using the arm itself. It controls the joints, so it needs data, testing, and even stricter limits.</p></div>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-1-t1-p3">Knowing which model does what helps you avoid the most common beginner mistake: asking a text model to control a motor in real time. Each type has its place in the robot stack, and choosing the right place is half the safety work.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">LLM</div><div class="text-xs text-neutral-400">text → text</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">VLM</div><div class="text-xs text-neutral-400">image + text → text</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">VLA</div><div class="text-xs text-neutral-400">image + text → movement</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Inference</div><div class="text-xs text-neutral-400">run the model</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-5-1#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🛡️ Safe architecture: the model chooses, the robot executes</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-1-t2-p1">The language model stays at the <strong class="text-neutral-100">high level</strong>: it reads the request and chooses an action. Everything that follows is regular code you wrote and tested. A <strong class="text-teal-400">validator</strong> on the Raspberry Pi or PC checks that the action exists and the numbers are within the limits. Only then does a line of text go over serial to the ESP32, which has its own limits and emergency stop. If the model makes something up, the response is stopped by the validator.</p>
+<figure class="fig mb-3">
+<svg aria-label="Layered architecture: the request goes to the model, which returns JSON; the validator accepts or rejects it; if accepted, it becomes a text line over serial; the ESP32 checks the limits again and moves the motors; the stop button shuts everything down." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><pattern height="32" id="m51-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.12" r="1.3"></circle></pattern><marker id="m51-ah2" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#2dd4bf"></path></marker><marker id="m51-ah2r" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#f87171"></path></marker>
+</defs><rect fill="url(#m51-grid2)" height="300" width="640"></rect><rect fill="none" height="170" opacity="0.6" rx="14" stroke="#38bdf8" stroke-dasharray="6 6" stroke-width="1.5" width="250" x="10" y="20"></rect><rect fill="none" height="170" opacity="0.6" rx="14" stroke="#2dd4bf" stroke-dasharray="6 6" stroke-width="1.5" width="340" x="290" y="20"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle"><text fill="#7dd3fc" font-size="15" font-weight="600" x="135" y="44">can make mistakes</text><text fill="#2dd4bf" font-size="15" font-weight="600" x="460" y="44">code you tested</text><rect fill="#0e1b26" height="56" rx="10" stroke="#38bdf8" stroke-width="2" width="100" x="25" y="62"></rect><text fill="#bfe6ff" font-size="16" x="75" y="95">request</text>
+<rect fill="#0e1b26" height="56" rx="10" stroke="#38bdf8" stroke-width="2" width="95" x="150" y="62"></rect><text fill="#bfe6ff" font-size="16" x="197" y="95">model</text><rect fill="#0b2421" height="56" rx="10" stroke="#2dd4bf" stroke-width="2.5" width="110" x="305" y="62"></rect><text fill="#2dd4bf" font-size="16" font-weight="600" x="360" y="95">validator</text><rect fill="#0b2421" height="56" rx="10" stroke="#2dd4bf" stroke-width="2" width="80" x="440" y="62"></rect><text fill="#ccfbf1" font-size="16" x="480" y="95">serial</text><rect fill="#0b2421" height="56" rx="10" stroke="#2dd4bf" stroke-width="2" width="75" x="545" y="62"></rect><text fill="#ccfbf1" font-size="16" x="582" y="95">ESP32</text>
+<text fill="#bfe6ff" font-size="14" x="197" y="145">JSON</text><text fill="#ccfbf1" font-size="14" x="480" y="145">MOVE 20</text><text fill="#ccfbf1" font-size="14" x="582" y="145">limits</text><text fill="#ccfbf1" font-size="14" x="582" y="165">again</text>
+<rect fill="#3b0f10" height="50" rx="10" stroke="#f87171" stroke-width="2" width="150" x="290" y="222"></rect><text fill="#fecaca" font-size="15" x="365" y="252">refuses and explains</text><circle cx="560" cy="246" fill="#3b0f10" r="26" stroke="#f87171" stroke-width="2.5"></circle><text fill="#fecaca" font-size="14" font-weight="700" x="560" y="251">STOP</text><text fill="#a8a8b3" font-size="14" x="160" y="252">action not on the list</text><text fill="#a8a8b3" font-size="14" x="160" y="270">or outside the limit</text></g>
+<g fill="none" opacity="0.85" stroke="#2dd4bf" stroke-width="2"><path d="M125,90 L143,90" marker-end="url(#m51-ah2)"></path><path d="M245,90 L298,90" marker-end="url(#m51-ah2)"></path><path d="M415,90 L433,90" marker-end="url(#m51-ah2)"></path><path d="M520,90 L538,90" marker-end="url(#m51-ah2)"></path></g><path d="M360,118 L360,215" fill="none" marker-end="url(#m51-ah2r)" stroke="#f87171" stroke-dasharray="5 5" stroke-width="2"></path>
+<path d="M548,224 L551,125" fill="none" marker-end="url(#m51-ah2r)" stroke="#f87171" stroke-width="2"></path>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> The dashed cyan box is the part that can make mistakes (the model); the teal box is deterministic code that always does the same thing. The dashed red arrow shows the refusal path. The STOP button acts directly on the ESP32, without going through the model or the Pi.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-5">
+<h4 class="font-bold text-teal-400 mb-3">✓ Do</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Let the model choose from a few clearly named actions.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Check everything in code before sending it over serial.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Repeat the limits on the ESP32: it’s the last line of defense.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Log every request, response, and decision.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Don't</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Let the model generate and run code without review.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Send the model’s text directly over serial.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Ask the model for raw PWM values or motor angles.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Depend on the model to stop the robot in an emergency.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-1-t2-p2">Language models sometimes confidently give a wrong answer (this is called a hallucination). In a chat, that produces a bad sentence; in a robot, it could cause a collision. Separating “choosing” from “executing” lets you switch models, whether local or in the cloud, without changing what keeps things safe.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">High level</div><div class="text-xs text-neutral-400">what, not how</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Validator</div><div class="text-xs text-neutral-400">code that refuses</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Hallucination</div><div class="text-xs text-neutral-400">a confidently stated mistake</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Final barrier</div><div class="text-xs text-neutral-400">limits on the ESP32</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-5-1#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">📋 Closed list of actions in JSON (function calling)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-1-t3-p1">Instead of asking for an open-ended answer, you give the model a <strong class="text-teal-400">menu</strong>: the actions the robot knows how to perform, each one’s parameters, and the exact response format. This idea is called <strong class="text-neutral-100">function calling</strong> (function call) or <strong class="text-neutral-100">tool use</strong>. Ollama accepts a <strong class="text-neutral-100">JSON Schema</strong> in the <span class="font-mono text-xs">format</span> field and forces the response to follow that structure; the <span class="font-mono text-xs">enum</span> field lists the only permitted action names.</p>
+<div class="bg-dark-800 border border-teal-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-teal-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m5-1-t3-p2"><strong>JSON</strong> is a data format with keys and values: <span class="font-mono text-xs">{"acao": "girar", "parametros": {"graus": 90}}</span>. A <strong>JSON Schema</strong> is the rule that says which keys exist and what type each value must be. The schema helps the model get the format right, but it doesn’t guarantee that a value is safe: 9000 degrees is still a valid number. That’s why the validator checks the limits afterward.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="A menu of four actions with limits: move from 5 to 100 centimeters, turn from minus 180 to 180 degrees, open or close the gripper, or stop. Three responses come in: move 30 is accepted; turn 900 is rejected for exceeding the limit; jump is rejected because it is not on the list." class="w-full h-auto" role="img" viewbox="0 0 640 310">
+<defs><pattern height="32" id="m51-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.12" r="1.3"></circle></pattern></defs><rect fill="url(#m51-grid3)" height="310" width="640"></rect>
+<g font-family="Inter,sans-serif"><rect fill="#0b2421" height="270" rx="14" stroke="#2dd4bf" stroke-width="2" width="250" x="20" y="20"></rect><text fill="#2dd4bf" font-size="17" font-weight="600" text-anchor="middle" x="145" y="50">closed list</text><text fill="#ccfbf1" font-size="16" x="40" y="92">move</text><text fill="#99f6e4" font-size="15" text-anchor="end" x="250" y="92">5 to 100 cm</text>
+<text fill="#ccfbf1" font-size="16" x="40" y="140">turn</text><text fill="#99f6e4" font-size="15" text-anchor="end" x="250" y="140">−180 a 180°</text><text fill="#ccfbf1" font-size="16" x="40" y="188">gripper</text><text fill="#99f6e4" font-size="15" text-anchor="end" x="250" y="188">open | close</text><text fill="#ccfbf1" font-size="16" x="40" y="236">stop</text><text fill="#99f6e4" font-size="15" text-anchor="end" x="250" y="236">no parameter</text><text fill="#a8a8b3" font-size="14" text-anchor="middle" x="145" y="274">only these exist</text>
+<rect fill="#0b2421" height="64" rx="10" stroke="#2dd4bf" stroke-width="2" width="320" x="300" y="40"></rect><text fill="#ccfbf1" font-family="JetBrains Mono,monospace" font-size="15" x="318" y="68">move · cm: 30</text><text fill="#2dd4bf" font-size="15" font-weight="600" x="318" y="92">✓ sends MOVE 30</text><rect fill="#3b0f10" height="64" rx="10" stroke="#f87171" stroke-width="2" width="320" x="300" y="122"></rect><text fill="#fecaca" font-family="JetBrains Mono,monospace" font-size="15" x="318" y="150">turn · degrees: 900</text><text fill="#f87171" font-size="15" font-weight="600" x="318" y="174">✗ out of range</text>
+<rect fill="#3b0f10" height="64" rx="10" stroke="#f87171" stroke-width="2" width="320" x="300" y="204"></rect><text fill="#fecaca" font-family="JetBrains Mono,monospace" font-size="15" x="318" y="232">jump · height: 1</text><text fill="#f87171" font-size="15" font-weight="600" x="318" y="256">✗ action doesn’t exist</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> On the left is the menu you write in the code. On the right are three possible model responses. Only the first becomes a command; the red ones are rejected by the validator, and the robot stays still and explains why.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-1-t3-p3"><strong class="text-neutral-100">Goal:</strong> see what a valid model response looks like. This is the format required by the script in Topic 4; notice that <span class="font-mono text-xs">reason</span> is just text for the log and is never executed.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">resposta-exemplo.json</span></div>
+<pre><code>{
+  <span class="s">"acao"</span>: <span class="s">"girar"</span>,
+  <span class="s">"parametros"</span>: { <span class="s">"graus"</span>: -90 },
+  <span class="s">"motivo"</span>: <span class="s">"the user asked to turn left"</span>
+}</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-teal-400">How to check:</strong> paste the block into a JSON validator (or run <span class="font-mono">python3 -m json.tool resposta-exemplo.json</span>); it should be accepted without errors. Change <span class="font-mono">-90</span> with <span class="font-mono">"left"</span> and see that the type is no longer a number: the validator in Topic 4 would reject it.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-1-t3-p4">The closed list turns an open-ended problem ("what will the model answer?") into a closed, testable problem ("which of the four actions did it choose, and is the number within the limit?"). It’s the same principle commercial assistants use to call tools, applied to a robot.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Function calling</div><div class="text-xs text-neutral-400">model chooses a tool</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">JSON Schema</div><div class="text-xs text-neutral-400">response structure</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">enum</div><div class="text-xs text-neutral-400">only these names</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Threshold</div><div class="text-xs text-neutral-400">minimum and maximum</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-5-1#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">💻 Run a local model (Ollama on the Pi 5 or PC)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-1-t4-p1">O <strong class="text-teal-400">Ollama</strong> downloads open models and runs them on your machine, through an HTTP API at <span class="font-mono text-xs">http://localhost:11434</span>. Your script talks to it just as it would to an internet service, except nothing leaves your computer. Cloud models also work with this architecture (the validator is the same); the course shows the local setup because it works without internet, has no per-request cost, and doesn’t send audio or images from your home outside.</p>
+<figure class="fig mb-3">
+<svg aria-label="Inside the computer, the Python script sends an HTTP request to the Ollama server on port 11434, which loads the model into memory and responds; the script communicates with the ESP32 over a serial cable; the internet is not involved." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs><pattern height="32" id="m51-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.12" r="1.3"></circle></pattern><marker id="m51-ah4" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#2dd4bf"></path></marker></defs>
+<rect fill="url(#m51-grid4)" height="260" width="640"></rect><rect fill="#0b2421" height="190" rx="16" stroke="#2dd4bf" stroke-width="2" width="440" x="20" y="30"></rect><g font-family="Inter,sans-serif" text-anchor="middle"><text fill="#2dd4bf" font-size="16" font-weight="600" x="240" y="56">your PC, Pi 5, or Jetson</text>
+<rect fill="#0e2b28" height="70" rx="10" stroke="#2dd4bf" stroke-width="2" width="150" x="45" y="80"></rect><text fill="#ccfbf1" font-size="16" x="120" y="110">script</text><text fill="#99f6e4" font-size="15" x="120" y="132">Python</text><rect fill="#0e2b28" height="70" rx="10" stroke="#2dd4bf" stroke-width="2" width="170" x="265" y="80"></rect><text fill="#ccfbf1" font-size="16" x="350" y="110">Ollama</text><text fill="#99f6e4" font-size="15" x="350" y="132">port 11434</text><rect fill="#0e1b26" height="38" rx="8" stroke="#38bdf8" stroke-width="1.5" width="120" x="290" y="168"></rect><text fill="#bfe6ff" font-size="15" x="350" y="193">model in RAM</text><rect fill="#0e1b26" height="70" rx="10" stroke="#38bdf8" stroke-width="2" width="110" x="510" y="80"></rect><text fill="#bfe6ff" font-size="16" x="565" y="110">ESP32</text><text fill="#7dd3fc" font-size="15" x="565" y="132">motors</text>
+<text fill="#99f6e4" font-size="14" x="230" y="76">HTTP</text><text fill="#a8a8b3" font-size="14" x="565" y="200">internet:</text><text fill="#a8a8b3" font-size="14" x="565" y="220">not needed</text></g><g fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M195,105 L258,105" marker-end="url(#m51-ah4)"></path><path d="M265,125 L202,125" marker-end="url(#m51-ah4)"></path><path d="M350,150 L350,163"></path></g>
+<path d="M460,115 L503,115" fill="none" stroke="#38bdf8" stroke-dasharray="6 4" stroke-width="2.5"></path><text fill="#7dd3fc" font-family="Inter,sans-serif" font-size="14" text-anchor="middle" x="482" y="104">USB</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> Everything inside the teal frame runs on your machine. The two arrows between the script and Ollama show the request and response over the local network (localhost). The dashed cyan cable is the serial connection to the ESP32, the same one from Module 3.5.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3 text-teal-400">Where it runs</th><th class="text-left p-3 text-teal-400">Model size that fits</th><th class="text-left p-3 text-teal-400">In practice</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">Raspberry Pi 5 (8 GB), CPU only</td><td class="p-3">small models, with 1 to 3 billion parameters</td><td class="p-3">a few seconds per short response</td></tr>
+<tr><td class="p-3">Pi 5 + AI HAT+ 2</td><td class="p-3">small LLMs and VLMs on the accelerator</td><td class="p-3">check the Pi documentation for supported models</td></tr>
+<tr><td class="p-3">Jetson Orin Nano Super</td><td class="p-3">small and medium models, with a GPU</td><td class="p-3">faster than the Pi, more expensive</td></tr>
+<tr><td class="p-3">PC with an NVIDIA GPU</td><td class="p-3">medium models (7 to 14 billion) with room to spare</td><td class="p-3">almost instant response</td></tr>
+</tbody>
+</table>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-4">Step by step</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Install Ollama</h4><p class="text-neutral-300 text-sm">Follow the installer for your system at ollama.com/download (on Linux and the Pi, it’s a single command). It starts a service that listens on port 11434.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Choose and download a model</h4><p class="text-neutral-300 text-sm">At ollama.com/library, filter for models that support "tools" and are small enough for your memory. Download with <span class="font-mono text-xs">ollama pull &lt;modelo&gt;</span>. Names and versions change quickly: check the current list.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Test in the terminal and install pyserial</h4><p class="text-neutral-300 text-sm">Run the commands below. If curl returns JSON with <span class="font-mono text-xs">"message"</span>, the server is ready for the script.</p></div></div>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal</span></div>
+<pre><code>ollama pull &lt;modelo&gt;          <span class="c"># replace with the chosen name</span>
+ollama list                     <span class="c"># the model should appear here</span>
+curl http://localhost:11434/api/chat -d '{"model": "&lt;modelo&gt;", "stream": false,
+  "messages": [{"role": "user", "content": "Reply only: ok"}]}'
+python3 -m venv ~/robo-ia &amp;&amp; source ~/robo-ia/bin/activate
+pip install pyserial</code></pre>
+</div>
+<p class="text-sm text-neutral-300 mb-3 mt-6" data-inema-block="m5-1-t4-p2"><strong class="text-neutral-100">Goal:</strong> the complete script for the safe architecture. It sends the request and schema to the local model, validates the response (action is on the list, parameters are within limits, nothing extra), asks for confirmation for large movements, and only then sends a line of text to the ESP32. With <span class="font-mono text-xs">--simular</span>, it prints the line instead of sending it, so you can test without hardware.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">cerebro_llm.py</span></div>
+<pre><code><span class="c">#!/usr/bin/env python3</span>
+<span class="c">"""Local-model brain: the model CHOOSES an action from the closed list,
+the code VALIDATES it, and only then sends a line of text to the ESP32 over serial.
+Usage: python3 cerebro_llm.py            (with ESP32)
+       python3 cerebro_llm.py --simular  (without hardware: only prints)"""</span>
+<span class="k">import</span> json, sys, time, urllib.request, urllib.error
+
+OLLAMA_URL = <span class="s">"http://localhost:11434/api/chat"</span>
+MODELO = <span class="s">"&lt;modelo&gt;"</span>          <span class="c"># replace with the name shown by: ollama list</span>
+PORTA = <span class="s">"/dev/ttyUSB0"</span>       <span class="c"># USB: /dev/ttyUSB0 or /dev/ttyACM0 · Pi UART: /dev/serial0 · Windows: COM3</span>
+BAUD = 115200
+CONFIRMAR_ACIMA_CM = 50        <span class="c"># moving farther than this requires typing "s" on the keyboard</span>
+
+<span class="c"># Closed list: action -&gt; {parameter: (minimum, maximum)} or {parameter: [permitted values]}</span>
+ACOES = {
+    <span class="s">"andar"</span>: {<span class="s">"cm"</span>: (5, 100)},
+    <span class="s">"girar"</span>: {<span class="s">"graus"</span>: (-180, 180)},
+    <span class="s">"garra"</span>: {<span class="s">"estado"</span>: [<span class="s">"abrir"</span>, <span class="s">"fechar"</span>]},
+    <span class="s">"parar"</span>: {},
+}
+
+ESQUEMA = {
+    <span class="s">"type"</span>: <span class="s">"object"</span>,
+    <span class="s">"properties"</span>: {
+        <span class="s">"acao"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"enum"</span>: list(ACOES)},
+        <span class="s">"parametros"</span>: {<span class="s">"type"</span>: <span class="s">"object"</span>},
+        <span class="s">"motivo"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>},
+    },
+    <span class="s">"required"</span>: [<span class="s">"acao"</span>, <span class="s">"parametros"</span>],
+}
+
+SISTEMA = (
+    <span class="s">"You control a small robot. Choose ONE action and respond only in JSON.\n"</span>
+    <span class="s">"Actions: andar {cm: 5 to 100, negative values aren’t allowed}; girar {graus: -180 to 180, "</span>
+    <span class="s">"negative = left}; garra {estado: open or close}; parar {}.\n"</span>
+    <span class="s">"If the request doesn't fit any action, or is dangerous, use stop and explain why."</span>
+)
+
+<span class="k">def</span> perguntar_modelo(pedido):
+    <span class="s">"""Send the request to Ollama and return the response dictionary (or raise an error)."""</span>
+    corpo = {
+        <span class="s">"model"</span>: MODELO,
+        <span class="s">"messages"</span>: [{<span class="s">"role"</span>: <span class="s">"system"</span>, <span class="s">"content"</span>: SISTEMA},
+                     {<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: pedido}],
+        <span class="s">"stream"</span>: False,           <span class="c"># one complete response, not pieces</span>
+        <span class="s">"format"</span>: ESQUEMA,          <span class="c"># force the JSON format</span>
+        <span class="s">"options"</span>: {<span class="s">"temperature"</span>: 0},
+    }
+    req = urllib.request.Request(OLLAMA_URL, data=json.dumps(corpo).encode(),
+                                 headers={<span class="s">"Content-Type"</span>: <span class="s">"application/json"</span>})
+    <span class="k">with</span> urllib.request.urlopen(req, timeout=120) <span class="k">as</span> r:
+        dados = json.loads(r.read())
+    <span class="k">return</span> json.loads(dados[<span class="s">"message"</span>][<span class="s">"content"</span>])
+
+<span class="k">def</span> validar(resp):
+    <span class="s">"""Return (ok, line_or_reason, needs_confirmation). Never trust the model."""</span>
+    <span class="k">if not</span> isinstance(resp, dict):
+        <span class="k">return</span> False, <span class="s">"response is not a JSON object"</span>, False
+    acao = resp.get(<span class="s">"acao"</span>)
+    <span class="k">if</span> acao <span class="k">not in</span> ACOES:
+        <span class="k">return</span> False, f<span class="s">"action '{acao}' is not on the list"</span>, False
+    params = resp.get(<span class="s">"parametros"</span>) <span class="k">or</span> {}
+    <span class="k">if not</span> isinstance(params, dict):
+        <span class="k">return</span> False, <span class="s">"parameters are not an object"</span>, False
+    sobra = set(params) - set(ACOES[acao])
+    <span class="k">if</span> sobra:
+        <span class="k">return</span> False, f<span class="s">"unknown parameter: {', '.join(sorted(sobra))}"</span>, False
+    valores = []
+    <span class="k">for</span> nome, regra <span class="k">in</span> ACOES[acao].items():
+        <span class="k">if</span> nome <span class="k">not in</span> params:
+            <span class="k">return</span> False, f<span class="s">"missing parameter '{nome}'"</span>, False
+        v = params[nome]
+        <span class="k">if</span> isinstance(regra, list):                      <span class="c"># allowed values</span>
+            <span class="k">if</span> v <span class="k">not in</span> regra:
+                <span class="k">return</span> False, f<span class="s">"'{v}' is not allowed for {nome}"</span>, False
+            valores.append(str(v).upper())
+        <span class="k">else</span>:                                            <span class="c"># numeric range</span>
+            <span class="k">if</span> isinstance(v, bool) <span class="k">or not</span> isinstance(v, (int, float)):
+                <span class="k">return</span> False, f<span class="s">"{nome} must be a number"</span>, False
+            minimo, maximo = regra
+            <span class="k">if not</span> (minimo &lt;= v &lt;= maximo):
+                <span class="k">return</span> False, f<span class="s">"{nome}={v} is outside the limit ({minimo} to {maximo})"</span>, False
+            valores.append(str(int(round(v))))
+    linha = <span class="s">" "</span>.join([acao.upper()] + valores)         <span class="c"># e.g.: ANDAR 30 · GARRA ABRIR · PARAR</span>
+    confirmar = acao == <span class="s">"andar"</span> <span class="k">and</span> params[<span class="s">"cm"</span>] &gt; CONFIRMAR_ACIMA_CM
+    <span class="k">return</span> True, linha, confirmar
+
+<span class="k">def</span> abrir_serial(simular):
+    <span class="k">if</span> simular:
+        <span class="k">return</span> None
+    <span class="k">import</span> serial                                       <span class="c"># pip install pyserial</span>
+    s = serial.Serial(PORTA, BAUD, timeout=2)
+    time.sleep(2)                                       <span class="c"># opening the port resets the ESP32: wait</span>
+    s.reset_input_buffer()
+    <span class="k">return</span> s
+
+<span class="k">def</span> enviar(s, linha):
+    <span class="k">if</span> s <span class="k">is</span> None:
+        <span class="k">return</span> f<span class="s">"(simulated) {linha}"</span>
+    s.write((linha + <span class="s">"\n"</span>).encode())
+    <span class="k">return</span> s.readline().decode(errors=<span class="s">"replace"</span>).strip() <span class="k">or</span> <span class="s">"(no response from ESP32)"</span>
+
+<span class="k">def</span> main():
+    simular = <span class="s">"--simular"</span> <span class="k">in</span> sys.argv
+    s = abrir_serial(simular)
+    print(<span class="s">"Brain ready. Enter a request (or 'sair')."</span>)
+    <span class="k">while</span> True:
+        pedido = input(<span class="s">"You: "</span>).strip()
+        <span class="k">if</span> pedido.lower() <span class="k">in</span> (<span class="s">"sair"</span>, <span class="s">"exit"</span>):
+            <span class="k">break</span>
+        <span class="k">if not</span> pedido:
+            <span class="k">continue</span>
+        <span class="k">try</span>:
+            resp = perguntar_modelo(pedido)
+        <span class="k">except</span> urllib.error.URLError <span class="k">as</span> e:
+            print(f<span class="s">"Ollama did not respond ({e}). Is it running? Try: ollama list"</span>); <span class="k">continue</span>
+        <span class="k">except</span> (json.JSONDecodeError, KeyError) <span class="k">as</span> e:
+            print(f<span class="s">"Rejected: unreadable response ({e})."</span>); <span class="k">continue</span>
+        print(<span class="s">"Modelo:"</span>, json.dumps(resp, ensure_ascii=False))
+        ok, linha, confirmar = validar(resp)
+        <span class="k">if not</span> ok:
+            print(<span class="s">"Recusado:"</span>, linha); <span class="k">continue</span>
+        <span class="k">if</span> confirmar <span class="k">and</span> input(f<span class="s">"Confirm '{linha}'? (y/n) "</span>).strip().lower() != <span class="s">"s"</span>:
+            print(<span class="s">"Canceled by you."</span>); <span class="k">continue</span>
+        print(<span class="s">"ESP32:"</span>, enviar(s, linha))
+    <span class="k">if</span> s:
+        s.write(b<span class="s">"PARAR\n"</span>); s.close()
+
+<span class="k">if</span> __name__ == <span class="s">"__main__"</span>:
+    main()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>With <span class="font-mono text-xs">--simular</span>, "walk thirty centimeters" shows the model's JSON, and "ESP32: (simulated) ANDAR 30".</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>"walk two meters" is rejected (cm is outside the limit) or becomes <span class="font-mono text-xs">stop</span>; "walk 80 cm" asks for confirmation first.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>"make a coffee" ends in a refusal or in PARAR, never in an invented action.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"Ollama did not respond"? The service may be stopped or the model name may not match <span class="font-mono text-xs">ollama list</span>.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Test the validator without a model</h3>
+<p class="text-neutral-300 text-sm">In the Python interactive shell, run <span class="font-mono text-xs">from cerebro_llm import validar</span> and call <span class="font-mono text-xs">validar({"acao": "girar", "parametros": {"graus": 900}})</span>. Write about ten invalid cases (nonexistent action, text instead of a number, extra parameter). If all are rejected, your robot is protected against any model you plug in later.</p>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-1-t4-p3">With a local model, you can test as much as you like, with no quota or account, and the robot keeps working without Wi-Fi. And since the validator is in your code, switching Ollama for a cloud model means changing only the function <span class="font-mono text-xs">perguntar_modelo</span>.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Ollama</div><div class="text-xs text-neutral-400">local model server</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">localhost:11434</div><div class="text-xs text-neutral-400">the API on your machine</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">temperature 0</div><div class="text-xs text-neutral-400">more predictable response</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">--simular</div><div class="text-xs text-neutral-400">test without hardware</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-5-1#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">👁️ VLM: “what do you see?” through the camera</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-1-t5-p1">A VLM receives a photo and a question. In Ollama, the image is sent as base64 in the <span class="font-mono text-xs">images</span> field of the message. The safe approach is the same as before: the VLM <strong class="text-neutral-100">describes</strong>, and that description is included as context in the request to the LLM (or in the same model, if it accepts images and tools). It doesn't control a motor. For exact positioning, the detector from module 3.3 is still more reliable; the VLM helps with open-ended questions: “is there anything in the way?”, “which object is red?”</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-1-t5-p2"><strong class="text-neutral-100">Goal:</strong> take a photo with the USB camera (or Camera Module 3 via OpenCV) and ask the local VLM what's in the scene. You need a model with vision: in the Ollama library, filter by “vision”.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">o_que_ve.py</span></div>
+<pre><code><span class="c">#!/usr/bin/env python3</span>
+<span class="c">"""Take a photo and ask the local VLM what's in it. pip install opencv-python"""</span>
+<span class="k">import</span> base64, json, sys, urllib.request
+<span class="k">import</span> cv2
+
+MODELO_VISAO = <span class="s">"&lt;modelo-de-visao&gt;"</span>   <span class="c"># a model with 'vision' at ollama.com/library</span>
+PERGUNTA = sys.argv[1] <span class="k">if</span> len(sys.argv) &gt; 1 <span class="k">else</span> <span class="s">"List the objects on the table, with their color and position (left, center, right)."</span>
+
+cam = cv2.VideoCapture(0)                <span class="c"># 0 = first camera</span>
+<span class="k">for</span> _ <span class="k">in</span> range(5):                       <span class="c"># discard dark frames at the start</span>
+    ok, quadro = cam.read()
+cam.release()
+<span class="k">if not</span> ok:
+    sys.exit(<span class="s">"Camera didn't open: check the index (0, 1...) and the cable."</span>)
+quadro = cv2.resize(quadro, (640, 480))   <span class="c"># smaller image = faster response</span>
+cv2.imwrite(<span class="s">"foto.jpg"</span>, quadro)
+_, jpg = cv2.imencode(<span class="s">".jpg"</span>, quadro)
+
+corpo = {
+    <span class="s">"model"</span>: MODELO_VISAO, <span class="s">"stream"</span>: False, <span class="s">"options"</span>: {<span class="s">"temperature"</span>: 0},
+    <span class="s">"messages"</span>: [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: PERGUNTA + <span class="s">" Answer in English, in up to 3 sentences."</span>,
+                  <span class="s">"images"</span>: [base64.b64encode(jpg.tobytes()).decode()]}],
+}
+req = urllib.request.Request(<span class="s">"http://localhost:11434/api/chat"</span>, data=json.dumps(corpo).encode(),
+                             headers={<span class="s">"Content-Type"</span>: <span class="s">"application/json"</span>})
+<span class="k">with</span> urllib.request.urlopen(req, timeout=180) <span class="k">as</span> r:
+    print(json.loads(r.read())[<span class="s">"message"</span>][<span class="s">"content"</span>])</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-teal-400">How to check:</strong> the file <span class="font-mono">foto.jpg</span> appears in the folder, and the terminal shows a short description of the scene. Put two objects of different colors on the table and switch their sides: the description should follow them. If it gets it wrong, you've just seen why the VLM can't control the motor.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-5">
+<h4 class="font-bold text-teal-400 mb-3">✓ Good use of the VLM</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Give the LLM context: “there's a blue cup and a ball on the table”.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Answer open-ended questions from the user about the scene.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Check after the action: “is the gripper holding something?”.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Bad use of the VLM</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Ask for coordinates in millimeters and send the arm there.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Use it as a safety sensor (“is anyone nearby?”).</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Call it on every video frame: it's too slow for that.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-1-t5-p3">Combining vision and language lets the robot respond to requests that refer to the world (“pick up the red one”). Knowing where the VLM performs well and where it makes mistakes prepares you for the VLA in module 5.4, which takes the same idea all the way to movement.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">images (base64)</div><div class="text-xs text-neutral-400">photo inside the JSON</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Context</div><div class="text-xs text-neutral-400">description that helps the LLM</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Detector vs. VLM</div><div class="text-xs text-neutral-400">position vs. meaning</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Resolution</div><div class="text-xs text-neutral-400">smaller = faster</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-5-1#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🚨 Safeguards: limits, confirmation, and emergency stop</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-1-t6-p1">Safety in an AI-powered robot is built in <strong class="text-neutral-100">layers</strong>, and each layer trusts none of the previous ones. The validator on the Pi is the first. The ESP32 checks the limits again and rejects any line it doesn't understand. A <strong class="text-teal-400">command watchdog</strong> stops the motors if no command arrives for a short time. And a <strong class="text-red-400">physical stop button</strong> cuts off movement without depending on any software.</p>
+<figure class="fig mb-3">
+<svg aria-label="Four concentric layers of protection around the motor: validator on the Pi, limits on the ESP32, command watchdog, and, around everything, the physical stop button." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><pattern height="32" id="m51-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#14b8a6" opacity="0.12" r="1.3"></circle></pattern><filter height="180%" id="m51-glow6" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m51-grid6)" height="300" width="640"></rect><g font-family="Inter,sans-serif" text-anchor="middle"><rect fill="#2a0d0f" height="260" rx="22" stroke="#f87171" stroke-width="2.5" width="580" x="30" y="20"></rect><text fill="#fecaca" font-size="16" font-weight="600" x="320" y="46">4 · stop button (cuts power to the motors)</text>
+<rect fill="#0e1b26" height="200" rx="18" stroke="#38bdf8" stroke-width="2" width="500" x="70" y="60"></rect><text fill="#bfe6ff" font-size="16" font-weight="600" x="320" y="86">3 · watchdog: stops if no new command arrives</text><rect fill="#0b2421" height="140" rx="14" stroke="#2dd4bf" stroke-width="2" width="410" x="115" y="100"></rect><text fill="#99f6e4" font-size="16" font-weight="600" x="320" y="126">2 · ESP32 checks the limits again</text>
+<rect fill="#0e2b28" height="84" rx="12" stroke="#2dd4bf" stroke-width="2" width="320" x="160" y="140"></rect><text fill="#ccfbf1" font-size="16" font-weight="600" x="320" y="164">1 · validator on the Pi / PC</text><g filter="url(#m51-glow6)"><rect fill="#13261d" height="36" rx="8" stroke="#2dd4bf" stroke-width="2" width="130" x="255" y="178"></rect></g><text fill="#2dd4bf" font-size="16" font-weight="700" x="320" y="202">motor</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">How to read this map:</strong> the motor is in the center; for it to move, none of the four surrounding layers can have blocked the command. The outer red layer is the only one that works even if the program freezes: it's physical. If one layer fails, the outer one still holds.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-1-t6-p2"><strong class="text-neutral-100">Goal:</strong> the ESP32 side of the text-line protocol (the same one used in module 3.5), with its own limits, an OK/ERROR response, a 2-second watchdog, and a stop button on GPIO 13. The motor functions only print messages; replace them with your motor code (Track 1).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">esp32_executor.ino</span></div>
+<pre><code><span class="c">// Safe executor: receives "ANDAR 30", "GIRAR -90", "GARRA ABRIR", "PARAR" (ESP32, pacote esp32 3.x)</span>
+<span class="k">const int</span> PINO_PARADA = 13;              <span class="c">// button connected to GND (uses internal pull-up)</span>
+<span class="k">const unsigned long</span> WATCHDOG_MS = 2000;  <span class="c">// no command for 2 s: stop</span>
+<span class="k">unsigned long</span> ultimoComando = 0;
+<span class="k">bool</span> movendo = <span class="k">false</span>;
+
+<span class="k">void</span> pararMotores() { movendo = <span class="k">false</span>; Serial.println(<span class="s">"# motors stopped"</span>); }  <span class="c">// replace with your driver</span>
+<span class="k">void</span> andar(<span class="k">int</span> cm)    { movendo = <span class="k">true</span>; Serial.printf(<span class="s">"# moving %d cm\n"</span>, cm); }
+<span class="k">void</span> girar(<span class="k">int</span> graus) { movendo = <span class="k">true</span>; Serial.printf(<span class="s">"# turning %d degrees\n"</span>, graus); }
+<span class="k">void</span> garra(<span class="k">bool</span> abrir) { Serial.println(abrir ? <span class="s">"# opening gripper"</span> : <span class="s">"# closing gripper"</span>); }
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_PARADA, INPUT_PULLUP);
+  pararMotores();
+  Serial.println(<span class="s">"PRONTO"</span>);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">if</span> (digitalRead(PINO_PARADA) == LOW) { pararMotores(); <span class="k">while</span> (digitalRead(PINO_PARADA) == LOW) delay(10); }
+  <span class="k">if</span> (movendo &amp;&amp; millis() - ultimoComando &gt; WATCHDOG_MS) pararMotores();
+  <span class="k">if</span> (!Serial.available()) <span class="k">return</span>;
+  String linha = Serial.readStringUntil(<span class="s">'\n'</span>); linha.trim();
+  <span class="k">if</span> (linha.length() == 0 || linha.length() &gt; 32) { Serial.println(<span class="s">"ERRO linha invalida"</span>); <span class="k">return</span>; }
+  ultimoComando = millis();
+  <span class="k">int</span> esp = linha.indexOf(<span class="s">' '</span>);
+  String cmd = esp &lt; 0 ? linha : linha.substring(0, esp);
+  String arg = esp &lt; 0 ? <span class="s">""</span> : linha.substring(esp + 1);
+  <span class="k">if</span> (cmd == <span class="s">"PARAR"</span>) { pararMotores(); Serial.println(<span class="s">"OK PARAR"</span>); }
+  <span class="k">else if</span> (cmd == <span class="s">"ANDAR"</span>) { <span class="k">int</span> v = arg.toInt(); <span class="k">if</span> (v &lt; 5 || v &gt; 100) Serial.println(<span class="s">"ERRO limite"</span>); <span class="k">else</span> { andar(v); Serial.println(<span class="s">"OK ANDAR"</span>); } }
+  <span class="k">else if</span> (cmd == <span class="s">"GIRAR"</span>) { <span class="k">int</span> v = arg.toInt(); <span class="k">if</span> (v &lt; -180 || v &gt; 180) Serial.println(<span class="s">"ERRO limite"</span>); <span class="k">else</span> { girar(v); Serial.println(<span class="s">"OK GIRAR"</span>); } }
+  <span class="k">else if</span> (cmd == <span class="s">"GARRA"</span> &amp;&amp; (arg == <span class="s">"ABRIR"</span> || arg == <span class="s">"FECHAR"</span>)) { garra(arg == <span class="s">"ABRIR"</span>); Serial.println(<span class="s">"OK GARRA"</span>); }
+  <span class="k">else</span> { pararMotores(); Serial.println(<span class="s">"ERRO comando desconhecido"</span>); }
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>In the Serial Monitor (115200, line ending "Newline"), "ANDAR 30" responds with "OK ANDAR" and, 2 s later, "# motors stopped".</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>"ANDAR 500" responds with "ERRO limite" even if the Pi failed to block it.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>With the button on GPIO 13 pressed, any movement stops immediately. Test it in Wokwi too.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 A real stop is physical</h3>
+<p class="text-neutral-300 text-sm">The button on GPIO 13 depends on the program running. For a powerful robot (an arm or a heavy base), also install a switch in series with the motors' power supply, within reach. Before each test, press it once to make sure it works.</p>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-1-t6-p3">The next modules add an arm that picks up objects and a voice that gives commands. With all four layers in place, any model you test—local or cloud-based, large or small—operates within a box you control.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Layers</div><div class="text-xs text-neutral-400">none trusts the others</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Watchdog</div><div class="text-xs text-neutral-400">no command, stop</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Confirmation</div><div class="text-xs text-neutral-400">a human approves the big move</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Physical stop</div><div class="text-xs text-neutral-400">cuts the power</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-teal-900/30 via-dark-800 to-dark-800 rounded-xl border border-teal-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">LLM, VLM, and VLA</strong><span class="text-neutral-400">: text, images with text, and movement; each has its place in the stack.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">The model chooses, the robot executes</strong><span class="text-neutral-400">: the code validates before any movement.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Closed list in JSON</strong><span class="text-neutral-400">: action enum, numeric limits, nothing extra.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Local Ollama</strong><span class="text-neutral-400">: API at localhost:11434, no internet; cloud works too with the same validator.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Four safety layers</strong><span class="text-neutral-400">: validator, limits on the ESP32, watchdog, and physical stop.</span></div></div>
+</div>
+<h3 class="font-semibold text-teal-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://ollama.com" rel="noopener" target="_blank">Ollama</a> <span class="text-neutral-500">— installation and model library</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/ollama/ollama/blob/main/docs/api.md" rel="noopener" target="_blank">Ollama API</a> <span class="text-neutral-500">— /api/chat, format, images, tools</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://json-schema.org/learn/getting-started-step-by-step" rel="noopener" target="_blank">JSON Schema step by step</a> <span class="text-neutral-500">— the response template</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.raspberrypi.com/documentation/computers/ai.html" rel="noopener" target="_blank">AI on Raspberry Pi (AI HAT+ and AI HAT+ 2)</a> <span class="text-neutral-500">— accelerators for Pi 5</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://pyserial.readthedocs.io/" rel="noopener" target="_blank">pySerial</a> <span class="text-neutral-500">— serial communication on the Python side</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-teal-400 mb-1">Next module</h3>
+<p class="text-neutral-300">5.2 · Local voice: listen with Whisper and speak with Piper, connecting voice to this module's brain.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">← Previous: Track 5 index</a>
+<a class="inline-flex items-center px-5 py-3 bg-teal-700 text-white rounded-lg font-semibold hover:bg-teal-600 transition-colors" href="modulo-5-2.html">Next: 5.2 Local voice →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

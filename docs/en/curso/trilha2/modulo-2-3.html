@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 2.3 · PID control in practice | Robotics from Zero to Expert</title>
+<meta content="PID control on the ESP32 (3.x package): why on/off control oscillates, P, I, and D with the car on the track, a fixed-time PID loop with a simulated motor, Ziegler-Nichols and hands-on tuning, anti-windup, and two wheels at the same speed." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha2/modulo-2-3.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha2/modulo-2-3.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha2/modulo-2-3.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha2/modulo-2-3.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha2/modulo-2-3.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha2/modulo-2-3.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-2-3.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha2/modulo-2-3.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T2 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a aria-current="page" class="nav-trail text-blue-400 bg-blue-500/10" href="index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="2-3" data-inema-track="2" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-blue-400" href="../../index.html">Home</a><span aria-hidden="true">/</span>
+<a class="hover:text-blue-400" href="index.html">Track 2</a><span aria-hidden="true">/</span>
+<span class="text-blue-400">Module 2.3</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full mb-4">MODULE 2.3 · FUNDAMENTALS</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🎯 PID control in practice</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">PID is the formula that makes a robot <strong class="text-neutral-100">reach its target without overshooting and stay there</strong>, even with a low battery or a ramp in the way. You’ll understand each letter using a car on a track, write PID code, test it on a simulated motor without hardware, tune the gains, and finish with both rover wheels spinning at the same speed.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Intermediate</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Foundation</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Wokwi + rover</div><div class="text-xs text-neutral-400">Hardware</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 2.3 progress" class="inema-ring" data-inema-meter="modulo:2-3"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:2-3"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-1">1. On/off isn’t enough</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-2">2. P, I, and D on the track</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-3">3. PID in code</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-4">4. Step-by-step tuning</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-5">5. Windup and filtering</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-6">6. Matching wheel speeds</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-2-3#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🔁 Why on/off isn’t enough</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t1-p1">The simplest control is <strong class="text-neutral-100">on/off</strong>: below the target, the motor runs at full power; above it, the motor shuts off. This works for an iron, which heats up slowly. In a robot, which reacts quickly, the result is an endless back-and-forth: the wheel overshoots the target, slows down, falls below it, then speeds up all over again. The line follower “dances” along the track and misses the curves. It needs a <strong class="text-blue-400">proportional</strong>: make a small correction when the error is small and a large one when it’s big.</p>
+<div class="bg-dark-800 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-3-t1-p2">O <strong>target</strong> (setpoint) is the value you want, such as 150 RPM. The <strong>measurement</strong> is what the sensor says is happening. The <strong>error</strong> is the target minus the measurement. The <strong>output</strong> is what the controller sends to the actuator—in this case, the motor’s PWM signal. <strong>Closed loop</strong> is the cycle in which the measurement feeds back to correct the output.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Two speed-over-time graphs with the same target line: with on/off control, speed keeps oscillating above and below the target; with PID, it rises, overshoots the target slightly, then settles." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs><pattern height="32" id="m23-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.12" r="1.3"></circle></pattern><filter height="180%" id="m23-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m23-grid1)" height="260" width="640"></rect><g stroke="#3a3a46" stroke-width="1.5"><line x1="30" x2="300" y1="210" y2="210"></line><line x1="340" x2="610" y1="210" y2="210"></line></g><g stroke="#fbbf24" stroke-dasharray="6 5" stroke-width="1.8"><line x1="30" x2="300" y1="100" y2="100"></line><line x1="340" x2="610" y1="100" y2="100"></line></g>
+<path d="M30,210 L70,80 L95,125 L120,78 L145,124 L170,78 L195,124 L220,78 L245,124 L270,78 L295,124" fill="none" stroke="#38bdf8" stroke-width="2.5"></path><g filter="url(#m23-glow1)"><path d="M340,210 C380,100 400,82 430,90 S470,104 500,100 L610,100" fill="none" stroke="#3b82f6" stroke-width="3"></path></g>
+<g font-family="Inter,sans-serif" text-anchor="middle"><text fill="#7dd3fc" font-size="17" font-weight="600" x="165" y="40">on/off</text><text fill="#60a5fa" font-size="17" font-weight="600" x="475" y="40">PID</text><text fill="#bfe6ff" font-size="14" x="165" y="240">oscillates forever</text><text fill="#dbeafe" font-size="14" x="475" y="240">overshoots a little, then settles</text><text fill="#fde68a" font-size="14" x="320" y="94">target</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">How to read this map:</strong> The amber line is the target in both graphs. On the left, the speed reaches the target and immediately overshoots because the motor only knows “all or nothing.” On the right, PID reduces the power as it gets closer: it takes a small step past the target, then settles on it.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-5">
+<h4 class="font-bold text-blue-400 mb-3">✓ On/off works for</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Slow systems: a heater, a water tank pump.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>State decisions: stopping when an obstacle is detected.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ PID is needed for</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Wheel speed, steering in a line follower.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Balance, arm position, turning exactly 90°.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t1-p3">PID is used for car speed control, in drones, 3D printers, and the arm in Trail 5. Understanding why on/off control fails means understanding the problem PID solves.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Target</div><div class="text-xs text-neutral-400">what you want</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Error</div><div class="text-xs text-neutral-400">target − measurement</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Oscillation</div><div class="text-xs text-neutral-400">back-and-forth around the target</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Closed loop</div><div class="text-xs text-neutral-400">the measurement corrects the output</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-2-3#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🏎️ P, I, and D explained with a car on the track</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t2-p1">Imagine you’re driving and want to stay in the middle of the lane. The <strong class="text-blue-400">P</strong> (proportional) term is turning the steering wheel based on how far you are from the middle: turn a lot when you’re far away, a little when you’re close. With only P, you’ll zigzag. The <strong class="text-blue-400">D</strong> (derivative) term looks at the <strong class="text-neutral-100">speed</strong> at which you’re approaching the middle and eases off the steering before you pass it: it dampens the zigzag. The <strong class="text-blue-400">I</strong> (integral) term notices that with a side wind, you’re always a little to the right, and keeps adding up that error until it compensates for it.</p>
+<div class="bg-dark-800 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-3-t2-p2">A <strong>integral</strong> of the error is the sum of the error over time: a small error that doesn’t go away becomes a large sum. The <strong>derivative</strong> of the error is how quickly it changes. The <strong>gains</strong> Kp, Ki, and Kd are the three numbers you adjust: how much weight to give each term. Output = Kp·error + Ki·sum + Kd·change.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Three responses to a step change in the target: P alone stays below the target with a constant error; P plus I reaches the target but overshoots by a lot and oscillates; P, I, and D reaches the target with little overshoot and settles quickly." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs><pattern height="32" id="m23-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.1" r="1.3"></circle></pattern><filter height="180%" id="m23-glow2" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m23-grid2)" height="260" width="640"></rect><line stroke="#3a3a46" stroke-width="1.5" x1="40" x2="420" y1="220" y2="220"></line><line stroke="#fbbf24" stroke-dasharray="6 5" stroke-width="1.8" x1="40" x2="420" y1="80" y2="80"></line><path d="M40,220 C90,130 120,118 420,116" fill="none" stroke="#a8a8b3" stroke-width="2.5"></path>
+<path d="M40,220 C70,60 95,30 125,60 S165,105 195,82 S240,70 270,82 S330,82 420,80" fill="none" stroke="#38bdf8" stroke-width="2.5"></path><g filter="url(#m23-glow2)"><path d="M40,220 C75,90 100,70 135,76 S175,82 420,80" fill="none" stroke="#3b82f6" stroke-width="3"></path></g>
+<g font-family="Inter,sans-serif" font-size="15"><text fill="#fde68a" x="430" y="85">target</text><text fill="#e6e6e6" x="440" y="130">P only: falls short</text><text fill="#bfe6ff" x="440" y="160">P + I: reaches target, oscillates</text><text fill="#dbeafe" x="440" y="190">P + I + D: reaches target and settles</text><text fill="#a8a8b3" text-anchor="middle" x="230" y="248">time →</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">How to read this map:</strong> All three curves respond to the same request: “speed up to the target.” The gray one (P only) stops short: a steady error remains. The cyan one (P + I) eliminates that error, but the accumulated sum causes it to overshoot and wobble. The blue one (PID) uses D to slow the approach and settles sooner.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm text-left">
+<thead class="bg-dark-700 text-neutral-200"><tr><th class="p-3 font-semibold">Increase…</th><th class="p-3 font-semibold">Response speed</th><th class="p-3 font-semibold">Overshoot</th><th class="p-3 font-semibold">Remaining error</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300"><tr class="bg-dark-800"><td class="p-3 font-semibold text-blue-400">Kp</td><td class="p-3">faster</td><td class="p-3">more</td><td class="p-3">decreases, but doesn’t disappear</td></tr><tr class="bg-dark-800"><td class="p-3 font-semibold text-blue-400">Ki</td><td class="p-3">a little faster</td><td class="p-3">more</td><td class="p-3">disappears</td></tr><tr class="bg-dark-800"><td class="p-3 font-semibold text-blue-400">Kd</td><td class="p-3">changes little</td><td class="p-3">less</td><td class="p-3">doesn’t change (amplifies noise)</td></tr></tbody>
+</table>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t2-p3">When you understand what each term does, you can tune the gains by looking at the graph: “overshot too much, add D”; “fell short, add I.” Without that understanding, you just change numbers at random.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">P</div><div class="text-xs text-neutral-400">reacts to the current error</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">I</div><div class="text-xs text-neutral-400">corrects the error that persists</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">D</div><div class="text-xs text-neutral-400">slows the approach</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Overshoot</div><div class="text-xs text-neutral-400">how far it goes past the target</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-2-3#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">💻 PID in code (fixed time loop)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t3-p1">In code, PID is a function called at the <strong class="text-neutral-100">same interval</strong>, such as every 10 ms. A fixed interval matters: the integral sums error × time, and the derivative divides by time. If the interval varies, the gains change their effect on their own. That’s why the loop uses <span class="font-mono text-xs">micros()</span> and a scheduled “next time,” instead of <span class="font-mono text-xs">delay()</span>.</p>
+<figure class="fig mb-3">
+<svg aria-label="Closed-loop speed control: subtract the measured speed from the target to get the error; the PID turns the error into PWM; the motor spins; the encoder measures the speed, which feeds back to the start. This repeats every 10 milliseconds." class="w-full h-auto" role="img" viewbox="0 0 640 220">
+<defs><pattern height="32" id="m23-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.1" r="1.3"></circle></pattern><marker id="m23-ah3" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#60a5fa"></path></marker><marker id="m23-ah3c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker><filter height="180%" id="m23-glow3" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m23-grid3)" height="220" width="640"></rect><g font-family="Inter,sans-serif" text-anchor="middle"><rect fill="#101016" height="50" rx="10" stroke="#fbbf24" stroke-width="2" width="90" x="10" y="50"></rect><text fill="#fde68a" font-size="15" x="55" y="81">target</text>
+<circle cx="150" cy="75" fill="#101016" r="20" stroke="#a8a8b3" stroke-width="2"></circle><text fill="#e6e6e6" font-size="16" x="150" y="81">−</text><g filter="url(#m23-glow3)"><rect fill="#0e1622" height="60" rx="12" stroke="#3b82f6" stroke-width="2.5" width="120" x="210" y="45"></rect></g><text fill="#dbeafe" font-size="17" font-weight="600" x="270" y="81">PID</text>
+<rect fill="#1c1c26" height="60" rx="12" stroke="#a8a8b3" stroke-width="2" width="110" x="380" y="45"></rect><text fill="#e6e6e6" font-size="15" x="435" y="81">motor</text><rect fill="#0e1b26" height="50" rx="12" stroke="#38bdf8" stroke-width="2" width="110" x="380" y="140"></rect><text fill="#bfe6ff" font-size="15" x="435" y="170">encoder</text>
+<text fill="#bfdbfe" font-size="14" x="180" y="40">error</text><text fill="#bfdbfe" font-size="14" x="355" y="40">PWM</text><text fill="#bfdbfe" font-size="14" x="570" y="70">runs</text><text fill="#7dd3fc" font-size="14" x="270" y="205">measured speed · every 10 ms</text></g>
+<g fill="none" stroke="#60a5fa" stroke-width="1.8"><path d="M100,75 L124,75" marker-end="url(#m23-ah3)"></path><path d="M170,75 L204,75" marker-end="url(#m23-ah3)"></path><path d="M330,75 L374,75" marker-end="url(#m23-ah3)"></path><path d="M490,75 L540,75 L540,165 L496,165" marker-end="url(#m23-ah3)"></path></g>
+<path d="M380,165 L150,165 L150,101" fill="none" marker-end="url(#m23-ah3c)" stroke="#38bdf8" stroke-dasharray="6 5" stroke-width="1.8"></path>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">How to read this map:</strong> Follow the blue arrows from left to right: target, error, PID, PWM, motor. The dashed cyan arrow shows the measurement feeding back. In the code below, “motor + encoder” is simulated in two lines so you can experiment with the gains without hardware; in topic 6, it becomes a real motor.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-3-t3-p2"><strong class="text-neutral-100">Goal:</strong> run a complete PID at 100 Hz against a simulated motor, with the target alternating between 120 and 220 RPM every 4 s and an “uphill” section that slows the wheel starting at 12 s. You can change the gains by typing in the Serial Monitor (e.g., <span class="font-mono text-xs">p3</span>, <span class="font-mono text-xs">i5</span>, <span class="font-mono text-xs">d0.05</span>). Runs in Wokwi with just an ESP32.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">pid-simulated.ino</span></div>
+<pre><code><span class="c">// PID against a simulated motor: understand the gains without hardware (esp32 3.x package)</span>
+<span class="k">struct</span> PID {
+  <span class="k">float</span> kp = 1.0, ki = 0.0, kd = 0.0;          <span class="c">// start with P only</span>
+  <span class="k">float</span> saidaMin = 0, saidaMax = 255;           <span class="c">// PWM limits</span>
+  <span class="k">float</span> integral = 0, dFiltrada = 0, medidaAnt = 0;
+  <span class="k">bool</span> primeira = <span class="k">true</span>;
+  <span class="k">float</span> calcula(<span class="k">float</span> alvo, <span class="k">float</span> medida, <span class="k">float</span> dt) {
+    <span class="k">float</span> erro = alvo - medida;
+    <span class="k">if</span> (primeira) { medidaAnt = medida; primeira = <span class="k">false</span>; }
+    <span class="k">float</span> dBruta = -(medida - medidaAnt) / dt;   <span class="c">// derivative of the MEASUREMENT: no jolt when the target changes</span>
+    medidaAnt = medida;
+    dFiltrada += 0.2 * (dBruta - dFiltrada);       <span class="c">// low-pass filter on the derivative</span>
+    <span class="k">float</span> novaIntegral = integral + ki * erro * dt;
+    <span class="k">float</span> saida = kp * erro + novaIntegral + kd * dFiltrada;
+    <span class="k">if</span> (saida &gt; saidaMax) { saida = saidaMax; <span class="k">if</span> (erro &lt; 0) integral = novaIntegral; }  <span class="c">// anti-windup</span>
+    <span class="k">else if</span> (saida &lt; saidaMin) { saida = saidaMin; <span class="k">if</span> (erro &gt; 0) integral = novaIntegral; }
+    <span class="k">else</span> integral = novaIntegral;
+    <span class="k">return</span> saida;
+  }
+};
+
+PID pid;
+<span class="k">const unsigned long</span> PERIODO_US = 10000;       <span class="c">// 10 ms = 100 Hz</span>
+<span class="k">const float</span> DT = PERIODO_US / 1e6;
+<span class="k">float</span> vel = 0;                                 <span class="c">// simulated speed, in RPM</span>
+
+<span class="k">void</span> motorSimulado(<span class="k">float</span> pwm) {                  <span class="c">// first-order motor: tends toward 1.2 x PWM in ~0.3 s</span>
+  <span class="k">float</span> carga = (millis() &gt; 12000) ? 40 : 0;    <span class="c">// starting at 12 s, an uphill section slows the wheel</span>
+  vel += ((1.2 * pwm - carga) - vel) * DT / 0.3;
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  Serial.setTimeout(20);
+  Serial.println(<span class="s">"Enter p, i, or d followed by the value. E.g.: p3"</span>);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">static unsigned long</span> proximo = micros();
+  <span class="k">if</span> ((<span class="k">long</span>)(micros() - proximo) &lt; 0) <span class="k">return</span>;  <span class="c">// the next scheduled time has not arrived yet</span>
+  proximo += PERIODO_US;
+  <span class="k">if</span> (Serial.available()) {
+    <span class="k">char</span> g = Serial.read();
+    <span class="k">float</span> v = Serial.parseFloat();
+    <span class="k">if</span> (g == <span class="s">'p'</span>) pid.kp = v; <span class="k">else if</span> (g == <span class="s">'i'</span>) pid.ki = v; <span class="k">else if</span> (g == <span class="s">'d'</span>) pid.kd = v;
+  }
+  <span class="k">float</span> alvo = ((millis() / 4000) % 2) ? 220 : 120;
+  <span class="k">float</span> pwm = pid.calcula(alvo, vel, DT);
+  motorSimulado(pwm);
+  <span class="k">static int</span> n = 0;
+  <span class="k">if</span> (++n % 5 == 0) Serial.printf(<span class="s">"alvo:%.0f,vel:%.1f,pwm:%.0f\n"</span>, alvo, vel, pwm);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>In the Serial Plotter, with P = 1 only: “vel” stays well below “alvo” (remaining error).</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Enter <span class="font-mono text-xs">i5</span>: “vel” reaches the target; after 12 s, the load pulls the speed down and I brings it back up.</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Enter <span class="font-mono text-xs">p8</span>: the response becomes jumpy and overshoots the target. Go back to <span class="font-mono text-xs">p2</span>.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t3-p3">This PID structure is the one you'll copy for the line follower in 2.6, the turn control for the object-following robot in 3.6, and anything else that needs to “reach and stay.” Testing with a simulation first separates code errors from assembly errors.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Fixed period</div><div class="text-xs text-neutral-400">dt always the same</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">micros()</div><div class="text-xs text-neutral-400">clock without blocking</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Simulated plant</div><div class="text-xs text-neutral-400">test without a motor</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Serial Plotter</div><div class="text-xs text-neutral-400">see the response</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-2-3#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🎛️ Step-by-step tuning (simplified Ziegler-Nichols, by hand)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t4-p1"><strong class="text-blue-400">Tuning</strong> means choosing Kp, Ki, and Kd for your robot. There is no universal number: it depends on the motor, wheel, weight, and battery. There are two complementary approaches. The <strong class="text-neutral-100">Ziegler-Nichols</strong> method gives you a starting point based on a single test; <strong class="text-neutral-100">manual tuning</strong>, using the Serial Plotter, fine-tunes it.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-4">Manual tuning, in the right order</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Set I and D to zero</h4><p class="text-neutral-300 text-sm">Start with <span class="font-mono text-xs">i0</span> e <span class="font-mono text-xs">d0</span>. Lift the robot so the wheels are off the ground.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Increase P until it almost oscillates</h4><p class="text-neutral-300 text-sm">Double Kp until the response starts to wobble, then go back to half that value.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Add I gradually</h4><p class="text-neutral-300 text-sm">Increase Ki until the remaining error disappears in less than a second, without too much wobbling.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">4</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Use D only if needed</h4><p class="text-neutral-300 text-sm">If it overshoots the target by a lot, a little Kd can dampen the response. For wheel speed, PI is often enough.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">5</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Test on the floor and take notes</h4><p class="text-neutral-300 text-sm">The robot's weight changes the response on the floor, so tune it again and note the final gains in the code.</p></div></div>
+</div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t4-p2"><strong class="text-neutral-100">Simplified Ziegler-Nichols:</strong> with I and D at zero, increase Kp until the speed oscillates at a steady rate, without growing or dying out. This is the <strong class="text-blue-400">critical gain Ku</strong>. Measure the time for one complete oscillation in the Serial Plotter: this is the <strong class="text-blue-400">period Tu</strong>, in seconds. The table gives you the initial gains.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm text-left">
+<thead class="bg-dark-700 text-neutral-200"><tr><th class="p-3 font-semibold">Controller</th><th class="p-3 font-semibold">Kp</th><th class="p-3 font-semibold">Ki</th><th class="p-3 font-semibold">Kd</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300"><tr class="bg-dark-800"><td class="p-3 font-semibold text-blue-400">P</td><td class="p-3">0.5 · Ku</td><td class="p-3">0</td><td class="p-3">0</td></tr><tr class="bg-dark-800"><td class="p-3 font-semibold text-blue-400">PI</td><td class="p-3">0.45 · Ku</td><td class="p-3">0.54 · Ku / Tu</td><td class="p-3">0</td></tr><tr class="bg-dark-800"><td class="p-3 font-semibold text-blue-400">PID</td><td class="p-3">0.6 · Ku</td><td class="p-3">1.2 · Ku / Tu</td><td class="p-3">0.075 · Ku · Tu</td></tr></tbody>
+</table>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Ziegler-Nichols is aggressive</h3>
+<p class="text-neutral-300 text-sm">The gains in the table usually produce a fast response that overshoots the target by a lot. Use them as a starting point and reduce Kp and Ki by about 20 to 30% if the robot gets twitchy. The calculation helps you get started; it doesn't replace testing.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-5">
+<h4 class="font-bold text-blue-400 mb-3">✓ Tuning that works</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Change one gain at a time and watch the graph.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Make large changes (double it or halve it).</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Tune with a fully charged battery, as in real use.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Tuning that drives you crazy</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Change all three gains at the same time.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Adjust “by eye,” without the Serial Plotter.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Copy gains from a robot that's different from yours.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t4-p3">A poorly tuned PID is worse than none: it oscillates, drains the battery, and heats up the motor. With a method, tuning a line follower goes from an afternoon of trial and error to a few organized tests.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Ku</div><div class="text-xs text-neutral-400">gain that causes oscillation</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Tu</div><div class="text-xs text-neutral-400">oscillation period</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">P → I → D</div><div class="text-xs text-neutral-400">the tuning sequence</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">One at a time</div><div class="text-xs text-neutral-400">to see the effect</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-2-3#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🧯 Windup, saturation, and derivative filtering</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t5-p1">The “textbook” PID has three real-world pitfalls, and the code in topic 3 already handles all three. <strong class="text-blue-400">Saturation:</strong> PWM can't go above 255; asking for 400 makes no difference. <strong class="text-blue-400">Windup:</strong> while the output is stuck at its maximum, the integral keeps adding up the error. When the robot finally reaches the target, that huge sum makes it overshoot by a lot. <strong class="text-blue-400">Derivative noise:</strong> D amplifies every little jump in the measurement and makes the motor vibrate.</p>
+<figure class="fig mb-3">
+<svg aria-label="The effect of windup: while the wheel is stuck, the output stays at maximum and the integral keeps growing; when the wheel is released, speed greatly overshoots the target. With anti-windup, the integral stops growing at saturation and speed reaches the target with almost no overshoot." class="w-full h-auto" role="img" viewbox="0 0 640 250">
+<defs><pattern height="32" id="m23-grid5" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.1" r="1.3"></circle></pattern><filter height="180%" id="m23-glow5" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="1.8"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter></defs>
+<rect fill="url(#m23-grid5)" height="250" width="640"></rect><rect fill="#2a0f18" height="180" opacity="0.5" width="160" x="60" y="30"></rect><line stroke="#3a3a46" stroke-width="1.5" x1="40" x2="620" y1="210" y2="210"></line><line stroke="#fbbf24" stroke-dasharray="6 5" stroke-width="1.8" x1="40" x2="620" y1="90" y2="90"></line>
+<path d="M40,210 L220,210 C250,60 270,20 300,30 S350,120 380,100 S430,85 620,90" fill="none" stroke="#f87171" stroke-width="2.5"></path><g filter="url(#m23-glow5)"><path d="M40,210 L220,210 C250,110 270,92 300,88 L620,90" fill="none" stroke="#3b82f6" stroke-width="3"></path></g>
+<g font-family="Inter,sans-serif" font-size="14"><text fill="#fecaca" text-anchor="middle" x="140" y="56">wheel held in place:</text><text fill="#fecaca" text-anchor="middle" x="140" y="76">integral grows</text><text fill="#fca5a5" x="305" y="22">without anti-windup: big overshoot</text><text fill="#dbeafe" x="430" y="130">with anti-windup: reaches the target and stays there</text><text fill="#fde68a" text-anchor="end" x="600" y="84">target</text><text fill="#a8a8b3" text-anchor="middle" x="330" y="238">time → (the wheel is released at the end of the red section)</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">How to read this map:</strong> In the red section, your hand is holding the wheel still: speed is zero, and the output is at its maximum. When you let go, the red curve (without protection) shoots far past the target because of the accumulated integral. The blue curve (with protection) didn't accumulate anything while saturated, so it reaches the target smoothly.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm text-left">
+<thead class="bg-dark-700 text-neutral-200"><tr><th class="p-3 font-semibold">Problem</th><th class="p-3 font-semibold">Code line (topic 3)</th><th class="p-3 font-semibold">What it does</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300"><tr class="bg-dark-800"><td class="p-3 font-semibold text-blue-400">Saturation</td><td class="p-3 font-mono text-xs">saidaMin / saidaMax</td><td class="p-3">clamps the output to the range the motor accepts</td></tr><tr class="bg-dark-800"><td class="p-3 font-semibold text-blue-400">Windup</td><td class="p-3 font-mono text-xs">if (erro &lt; 0) integral = novaIntegral</td><td class="p-3">during saturation, only accepts the integral if it helps bring the output out of saturation</td></tr><tr class="bg-dark-800"><td class="p-3 font-semibold text-blue-400">Kick at the target</td><td class="p-3 font-mono text-xs">-(medida - medidaAnt) / dt</td><td class="p-3">derivative of the measurement, not the error: changing the target doesn't cause a spike</td></tr><tr class="bg-dark-800"><td class="p-3 font-semibold text-blue-400">Noise in D</td><td class="p-3 font-mono text-xs">dFiltrada += 0.2 * (...)</td><td class="p-3">exponential moving average: smooths the signal before multiplying by Kd</td></tr></tbody>
+</table>
+</div>
+<div class="bg-dark-800 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-3-t5-p2">A <strong>low-pass filter</strong> lets slow changes through and cuts out fast ones, like the average in 1.4. The expression <span class="font-mono text-xs">f += a * (novo - f)</span> does this in one line: with <span class="font-mono text-xs">a = 0.2</span>, each new reading pulls the filtered value just 20% toward it. A smaller <span class="font-mono text-xs">a</span> means smoother but more delayed.</p>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-2">⚠️ Test windup carefully</h3>
+<p class="text-neutral-300 text-sm">To see the effect on a real rover, hold the wheel still using only a small motor (N20 or TT) and only for a few seconds: a stalled motor draws maximum current and heats up the motor and driver. Never do this with larger motors.</p>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t5-p3">The difference between a PID that works in simulation and one that works on the robot comes down to these four lines. Ready-made PID libraries do the same thing; now you know what to look for in them.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Saturation</div><div class="text-xs text-neutral-400">physical output limit</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Anti-windup</div><div class="text-xs text-neutral-400">integral under control</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">D on measurement</div><div class="text-xs text-neutral-400">no spike when the target changes</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Low-pass filter</div><div class="text-xs text-neutral-400">cuts out noise</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-2-3#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">⚖️ Match the speed of both wheels with PID</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t6-p1">Two “identical” motors are never identical: with the same PWM, one spins faster than the other, and the rover veers to one side. The solution is to give <strong class="text-blue-400">each wheel its own PID</strong>, both with the same target RPM, and each reading its own encoder. The PID for the weaker wheel simply sends more PWM until both reach the target.</p>
+<figure class="fig mb-3">
+<svg aria-label="Two independent PID loops: the same RPM target goes to the left wheel’s PID and the right wheel’s PID; each PID controls its motor and reads its own encoder." class="w-full h-auto" role="img" viewbox="0 0 640 230">
+<defs><pattern height="32" id="m23-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#3b82f6" opacity="0.1" r="1.3"></circle></pattern><marker id="m23-ah6" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#60a5fa"></path></marker><marker id="m23-ah6c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker></defs>
+<rect fill="url(#m23-grid6)" height="230" width="640"></rect><g font-family="Inter,sans-serif" text-anchor="middle"><rect fill="#101016" height="54" rx="10" stroke="#fbbf24" stroke-width="2" width="120" x="10" y="88"></rect><text fill="#fde68a" font-size="15" x="70" y="112">target</text><text fill="#fde68a" font-size="14" x="70" y="132">150 RPM</text>
+<rect fill="#0e1622" height="54" rx="10" stroke="#60a5fa" stroke-width="2" width="120" x="200" y="30"></rect><text fill="#dbeafe" font-size="15" x="260" y="63">left PID</text><rect fill="#0e1622" height="54" rx="10" stroke="#60a5fa" stroke-width="2" width="120" x="200" y="146"></rect><text fill="#dbeafe" font-size="15" x="260" y="179">right PID</text>
+<rect fill="#1c1c26" height="54" rx="10" stroke="#a8a8b3" stroke-width="2" width="110" x="390" y="30"></rect><text fill="#e6e6e6" font-size="15" x="445" y="63">left motor</text><rect fill="#1c1c26" height="54" rx="10" stroke="#a8a8b3" stroke-width="2" width="110" x="390" y="146"></rect><text fill="#e6e6e6" font-size="15" x="445" y="179">right motor</text>
+<text fill="#bfe6ff" font-size="14" x="575" y="62">left enc.</text><text fill="#bfe6ff" font-size="14" x="575" y="178">right enc.</text></g>
+<g fill="none" stroke="#60a5fa" stroke-width="1.8"><path d="M130,105 L194,62" marker-end="url(#m23-ah6)"></path><path d="M130,125 L194,170" marker-end="url(#m23-ah6)"></path><path d="M320,57 L384,57" marker-end="url(#m23-ah6)"></path><path d="M320,173 L384,173" marker-end="url(#m23-ah6)"></path></g>
+<g fill="none" stroke="#38bdf8" stroke-dasharray="6 5" stroke-width="1.8"><path d="M500,40 L540,40 L540,18 L260,18 L260,24" marker-end="url(#m23-ah6c)"></path><path d="M500,190 L540,190 L540,214 L260,214 L260,206" marker-end="url(#m23-ah6c)"></path></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">How to read this map:</strong> The same amber target feeds two loops that don’t know about each other. Each dashed cyan line is one wheel’s encoder feeding back to its own PID. If the right wheel is weaker, only the lower loop increases the PWM.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-3-t6-p2"><strong class="text-neutral-100">Goal:</strong> keep both wheels at the RPM you enter in the Serial Monitor (e.g., 150; 0 to stop), with one PI controller for each at 50 Hz. Use the same driver pins as in 2.1 and the same encoder pins as in 2.2.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">two-wheels-pid.ino</span></div>
+<pre><code><span class="c">// Two wheels at the same speed: one PID per wheel (TB6612FNG + encoders, esp32 3.x package)</span>
+<span class="k">const int</span> PWMA = 25, AIN1 = 26, AIN2 = 27, PWMB = 14, BIN1 = 16, BIN2 = 17;   <span class="c">// STBY on 3V3</span>
+<span class="k">const int</span> ENC_E_A = 18, ENC_E_B = 19, ENC_D_A = 34, ENC_D_B = 35;
+<span class="k">const float</span> PULSOS_VOLTA = 1400;            <span class="c">// the value measured in 2.2</span>
+<span class="k">const unsigned long</span> PERIODO_US = 20000;     <span class="c">// 20 ms = 50 Hz</span>
+<span class="k">const float</span> DT = PERIODO_US / 1e6;
+<span class="k">volatile long</span> pulsosE = 0, pulsosD = 0;
+
+<span class="k">void</span> IRAM_ATTR isrE() { <span class="k">if</span> (digitalRead(ENC_E_A) == digitalRead(ENC_E_B)) pulsosE++; <span class="k">else</span> pulsosE--; }
+<span class="k">void</span> IRAM_ATTR isrD() { <span class="k">if</span> (digitalRead(ENC_D_A) == digitalRead(ENC_D_B)) pulsosD--; <span class="k">else</span> pulsosD++; }
+
+<span class="k">struct</span> PID {
+  <span class="k">float</span> kp = 0.8, ki = 4.0, kd = 0.0, saidaMin = 0, saidaMax = 255;   <span class="c">// starting point: tune yours</span>
+  <span class="k">float</span> integral = 0, dFiltrada = 0, medidaAnt = 0;
+  <span class="k">float</span> calcula(<span class="k">float</span> alvo, <span class="k">float</span> medida, <span class="k">float</span> dt) {
+    <span class="k">float</span> erro = alvo - medida;
+    dFiltrada += 0.2 * (-(medida - medidaAnt) / dt - dFiltrada);
+    medidaAnt = medida;
+    <span class="k">float</span> novaIntegral = integral + ki * erro * dt;
+    <span class="k">float</span> saida = kp * erro + novaIntegral + kd * dFiltrada;
+    <span class="k">if</span> (saida &gt; saidaMax) { saida = saidaMax; <span class="k">if</span> (erro &lt; 0) integral = novaIntegral; }
+    <span class="k">else if</span> (saida &lt; saidaMin) { saida = saidaMin; <span class="k">if</span> (erro &gt; 0) integral = novaIntegral; }
+    <span class="k">else</span> integral = novaIntegral;
+    <span class="k">return</span> saida;
+  }
+  <span class="k">void</span> zera() { integral = 0; dFiltrada = 0; }
+};
+
+PID pidE, pidD;
+<span class="k">float</span> alvoRPM = 0, rpmE = 0, rpmD = 0;
+
+<span class="k">void</span> frente(<span class="k">int</span> pwm, <span class="k">int</span> in1, <span class="k">int</span> in2, <span class="k">int</span> v) { digitalWrite(in1, v &gt; 0); digitalWrite(in2, LOW); ledcWrite(pwm, v); }
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  Serial.setTimeout(20);
+  <span class="k">int</span> saidas[] = {AIN1, AIN2, BIN1, BIN2};
+  <span class="k">for</span> (<span class="k">int</span> p : saidas) pinMode(p, OUTPUT);
+  ledcAttach(PWMA, 20000, 8);
+  ledcAttach(PWMB, 20000, 8);
+  pinMode(ENC_E_A, INPUT_PULLUP); pinMode(ENC_E_B, INPUT_PULLUP);
+  pinMode(ENC_D_A, INPUT); pinMode(ENC_D_B, INPUT);
+  attachInterrupt(digitalPinToInterrupt(ENC_E_A), isrE, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC_D_A), isrD, CHANGE);
+  Serial.println(<span class="s">"Enter the target in RPM (e.g., 150). 0 to stop."</span>);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">static unsigned long</span> proximo = micros();
+  <span class="k">static long</span> antE = 0, antD = 0;
+  <span class="k">if</span> ((<span class="k">long</span>)(micros() - proximo) &lt; 0) <span class="k">return</span>;
+  proximo += PERIODO_US;
+  <span class="k">if</span> (Serial.available()) alvoRPM = constrain(Serial.parseFloat(), 0, 250);
+  noInterrupts(); <span class="k">long</span> e = pulsosE, d = pulsosD; interrupts();
+  rpmE = 0.7 * rpmE + 0.3 * ((e - antE) / PULSOS_VOLTA / DT * 60);   <span class="c">// light filtering on the measurement</span>
+  rpmD = 0.7 * rpmD + 0.3 * ((d - antD) / PULSOS_VOLTA / DT * 60);
+  antE = e; antD = d;
+  <span class="k">if</span> (alvoRPM &lt; 1) {                                        <span class="c">// really stop and clear the integral</span>
+    frente(PWMA, AIN1, AIN2, 0); frente(PWMB, BIN1, BIN2, 0);
+    pidE.zera(); pidD.zera();
+  } <span class="k">else</span> {
+    frente(PWMA, AIN1, AIN2, (<span class="k">int</span>)pidE.calcula(alvoRPM, rpmE, DT));
+    frente(PWMB, BIN1, BIN2, (<span class="k">int</span>)pidD.calcula(alvoRPM, rpmD, DT));
+  }
+  <span class="k">static int</span> n = 0;
+  <span class="k">if</span> (++n % 5 == 0) Serial.printf(<span class="s">"alvo:%.0f,esq:%.1f,dir:%.1f\n"</span>, alvoRPM, rpmE, rpmD);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>With the wheels off the ground, enter 150: in the Serial Plotter, "left" and "right" rise and meet at 150 in under a second.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Gently touch one wheel with your finger: it slows a little, then returns to 150 on its own.</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>On the ground, set both wheels to 150: the rover drives straight for 2 m (compare with fixed PWM).</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Does one wheel shoot up to maximum and fail to come back? Its encoder is counting backward: the PID "sees" the wheel moving in reverse and speeds it up even more.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-3-t6-p3">Driving straight seems trivial until you try it. With both wheels’ speeds controlled, the odometry in 2.2 becomes more reliable, the line follower in 2.6 has a stable base for adding steering corrections, and the ROS 2 /cmd_vel command in Track 4 becomes exactly this: a speed target for each wheel.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">One PID per wheel</div><div class="text-xs text-neutral-400">independent loops</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">measured RPM</div><div class="text-xs text-neutral-400">pulses ÷ time</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">PI is enough</div><div class="text-xs text-neutral-400">for wheel speed</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Clear the integral</div><div class="text-xs text-neutral-400">when stopping</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 rounded-xl border border-blue-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">On/off control oscillates</strong><span class="text-neutral-400">: fast systems need corrections proportional to the error.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">P responds, I persists, D brakes</strong><span class="text-neutral-400">: output = Kp·error + Ki·sum + Kd·change.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Fixed-time loop</strong><span class="text-neutral-400">: use micros() and the next scheduled time, never delay() for control.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Tune methodically</strong><span class="text-neutral-400">: P, then I, then D; use Ziegler-Nichols as a starting point.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">A real PID</strong><span class="text-neutral-400">: saturation, anti-windup, derivative of the filtered measurement, one loop per wheel.</span></div></div>
+</div>
+<h3 class="font-semibold text-blue-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://brettbeauregard.com/blog/2011/04/improving-the-beginners-pid-introduction/" rel="noopener" target="_blank">Improving the Beginner's PID (Brett Beauregard)</a> <span class="text-neutral-500">— the series that inspired the Arduino PID library</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://ctms.engin.umich.edu/CTMS/index.php?example=Introduction&amp;section=ControlPID" rel="noopener" target="_blank">Control Tutorials for MATLAB and Simulink: PID</a> <span class="text-neutral-500">— the effect of each gain, shown in graphs (University of Michigan)</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.arduino.cc/software/ide-v2/tutorials/ide-v2-serial-plotter/" rel="noopener" target="_blank">Arduino IDE 2 Serial Plotter</a> <span class="text-neutral-500">— how to plot multiple variables</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/ledc.html" rel="noopener" target="_blank">LEDC (PWM) in arduino-esp32</a> <span class="text-neutral-500">— ledcAttach and ledcWrite in 3.x</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-blue-400 mb-1">Next module</h3>
+<p class="text-neutral-300">2.4 · Several tasks at once: millis(), state machines, and FreeRTOS let the robot read, decide, and control without getting stuck.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-2-2.html">← Previous: 2.2 IMU and encoders</a>
+<a class="inline-flex items-center px-5 py-3 bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors" href="modulo-2-4.html">Next: 2.4 Several tasks →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

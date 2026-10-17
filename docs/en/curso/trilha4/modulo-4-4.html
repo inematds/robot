@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="robot" name="inema-course"/>
+<title>Module 4.4 · LiDAR and maps (SLAM) | Robotics from Zero to Expert</title>
+<meta content="2D LiDAR with ROS 2: what the LaserScan message contains, how to connect an RPLIDAR C1/A1 or LD19, an explanation of SLAM, slam_toolbox in simulation, mapping your home, and saving the map for Nav2." name="description"/>
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script data-inema-manifest="" type="application/json">
+{
+  "course": "robot",
+  "tracks": [
+    {
+      "n": "1",
+      "title": "Getting started",
+      "modules": [
+        {
+          "id": "1-1",
+          "title": "What a robot is and its kit",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-1.html"
+        },
+        {
+          "id": "1-2",
+          "title": "Essential electronics",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-2.html"
+        },
+        {
+          "id": "1-3",
+          "title": "ESP32: your first program",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-3.html"
+        },
+        {
+          "id": "1-4",
+          "title": "Sensors: how the robot perceives",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-4.html"
+        },
+        {
+          "id": "1-5",
+          "title": "Motors and power",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-5.html"
+        },
+        {
+          "id": "1-6",
+          "title": "Project: obstacle-avoiding rover",
+          "topics": 6,
+          "href": "curso/trilha1/modulo-1-6.html"
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "title": "Autonomous robot",
+      "modules": [
+        {
+          "id": "2-1",
+          "title": "Control from your phone: Wi-Fi and BLE",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-1.html"
+        },
+        {
+          "id": "2-2",
+          "title": "IMU and encoders: knowing where you are",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-2.html"
+        },
+        {
+          "id": "2-3",
+          "title": "PID control in practice",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-3.html"
+        },
+        {
+          "id": "2-4",
+          "title": "Multiple tasks at once",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-4.html"
+        },
+        {
+          "id": "2-5",
+          "title": "Telemetry and data logging",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-5.html"
+        },
+        {
+          "id": "2-6",
+          "title": "Project: PID line follower",
+          "topics": 6,
+          "href": "curso/trilha2/modulo-2-6.html"
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "title": "Vision and embedded AI",
+      "modules": [
+        {
+          "id": "3-1",
+          "title": "Raspberry Pi 5 and Linux",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-1.html"
+        },
+        {
+          "id": "3-2",
+          "title": "Camera and OpenCV",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-2.html"
+        },
+        {
+          "id": "3-3",
+          "title": "Detecting objects with YOLO26",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-3.html"
+        },
+        {
+          "id": "3-4",
+          "title": "AI on the microcontroller",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-4.html"
+        },
+        {
+          "id": "3-5",
+          "title": "Raspberry Pi talks to the ESP32",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-5.html"
+        },
+        {
+          "id": "3-6",
+          "title": "Project: robot that follows an object",
+          "topics": 6,
+          "href": "curso/trilha3/modulo-3-6.html"
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "title": "ROS 2 and navigation",
+      "modules": [
+        {
+          "id": "4-1",
+          "title": "ROS 2 without the fear",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-1.html"
+        },
+        {
+          "id": "4-2",
+          "title": "Describe and simulate the robot",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-2.html"
+        },
+        {
+          "id": "4-3",
+          "title": "micro-ROS on the ESP32",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-3.html"
+        },
+        {
+          "id": "4-4",
+          "title": "LiDAR and maps (SLAM)",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-4.html"
+        },
+        {
+          "id": "4-5",
+          "title": "Navigation with Nav2",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-5.html"
+        },
+        {
+          "id": "4-6",
+          "title": "Project: robot that maps and navigates",
+          "topics": 6,
+          "href": "curso/trilha4/modulo-4-6.html"
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "title": "Modern AI and a robotic arm",
+      "modules": [
+        {
+          "id": "5-1",
+          "title": "A language model as the brain",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-1.html"
+        },
+        {
+          "id": "5-2",
+          "title": "Local voice: listen and speak",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-2.html"
+        },
+        {
+          "id": "5-3",
+          "title": "SO-101 arm and LeRobot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-3.html"
+        },
+        {
+          "id": "5-4",
+          "title": "Learning by demonstration",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-4.html"
+        },
+        {
+          "id": "5-5",
+          "title": "Simulate before going real",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-5.html"
+        },
+        {
+          "id": "5-6",
+          "title": "Final project: assistant robot",
+          "topics": 6,
+          "href": "curso/trilha5/modulo-5-6.html"
+        }
+      ]
+    },
+    {
+      "n": "6",
+      "title": "For the teacher",
+      "modules": [
+        {
+          "id": "6-1",
+          "title": "How to teach this course",
+          "topics": 8,
+          "href": "curso/trilha6/modulo-6-1.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link href="../../../assets/learn.css" rel="stylesheet"/>
+<link href="https://inematds.github.io/robot/curso/trilha4/modulo-4-4.html" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha4/modulo-4-4.html" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/robot/es/curso/trilha4/modulo-4-4.html" hreflang="es" rel="alternate"/><link href="https://inematds.github.io/robot/curso/trilha4/modulo-4-4.html" hreflang="x-default" rel="alternate"/><link href="https://inematds.github.io/robot/en/curso/trilha4/modulo-4-4.html" rel="canonical"/></head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen"><div aria-label="Idioma / Language" class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.85);border:1px solid rgba(250,204,21,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../../../curso/trilha4/modulo-4-4.html" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">PT</a><a href="modulo-4-4.html" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#FACC15">EN</a><a href="../../../es/curso/trilha4/modulo-4-4.html" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e6e6e6">ES</a></div>
+<a class="skip" href="#conteudo">Skip to content</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T4 ativa -->
+<nav aria-label="Main navigation" class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a aria-label="Robotics from Zero to Expert — home" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html">
+<span aria-hidden="true" class="text-xl sm:text-2xl">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robotics</span>
+</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span aria-hidden="true" class="text-neutral-500 hidden sm:inline">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Getting started</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autonomous robots</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Vision and AI</span></a>
+<a aria-current="page" class="nav-trail text-amber-400 bg-amber-500/10" href="index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">Modern AI</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Teacher</span></a>
+<span aria-hidden="true" class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block"></span>
+<button aria-label="My learning journey" class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">My learning journey</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Appearance" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Appearance</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Theme</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Dark</button><button data-inema-set-theme="claro" type="button">Light</button><button data-inema-set-theme="sepia" type="button">Sepia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Focus</button><button data-inema-set-theme="contraste" type="button">High contrast</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Font</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">System</button><button data-inema-set-font="leitura" type="button">Reading</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Size</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Width</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Narrow</button><button data-inema-set-linewidth="68" type="button">Medium</button><button data-inema-set-linewidth="75" type="button">Wide</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Line spacing</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compact</button><button data-inema-set-leading="1.7" type="button">Comfortable</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Accent</span><div class="inema-accent-grid"><button aria-label="Emerald accent" data-inema-set-accent="emerald" type="button"></button><button aria-label="Blue accent" data-inema-set-accent="blue" type="button"></button><button aria-label="Purple accent" data-inema-set-accent="purple" type="button"></button><button aria-label="Amber accent" data-inema-set-accent="amber" type="button"></button><button aria-label="Teal accent" data-inema-set-accent="teal" type="button"></button><button aria-label="Pink accent" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Toggle light/dark theme" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewbox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg aria-hidden="true" class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main data-inema-module="4-4" data-inema-track="4" id="conteudo">
+<!-- BREADCRUMB -->
+<nav aria-label="Trail navigation" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-amber-400" href="../../index.html">Home</a><span aria-hidden="true">/</span>
+<a class="hover:text-amber-400" href="index.html">Track 4</a><span aria-hidden="true">/</span>
+<span class="text-amber-400">Module 4.4</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full mb-4">MODULE 4.4 · FUNDAMENTALS</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">📡 LiDAR and maps (SLAM)</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">So far, your robot has known how far its wheels have turned. Now it will <strong class="text-neutral-100">see the walls all around it</strong> with a LiDAR, draw a map of the area, and figure out where it is on that map at the same time. It all starts in <strong class="text-amber-400">simulation</strong>; the real LiDAR comes in whenever you're ready.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">6</div><div class="text-xs text-neutral-400">Topics</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Advanced</div><div class="text-xs text-neutral-400">Level</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Foundation</div><div class="text-xs text-neutral-400">Type</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">2D LiDAR</div><div class="text-xs text-neutral-400">Optional (simulation available)</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Module 4.4 progress" class="inema-ring" data-inema-meter="modulo:4-4"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:4-4"><strong data-inema-meter-frac="">0 of 0</strong> topics read · <span data-inema-section-counter="">Section 1 of 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Page index" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">In this module</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-1">1. What the LiDAR sees</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-2">2. LiDAR in ROS 2</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-3">3. SLAM explained</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-4">4. Simulated slam_toolbox</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-5">5. Mapping your home or room</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-6">6. Saving and loading maps</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Detailed content</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" data-inema-topic="modulo-4-4#topico-1" id="topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🔦 What a LiDAR sees (LaserScan)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t1-p1">A <strong class="text-amber-400">2D LiDAR</strong> It is a rotating distance sensor. It emits a beam of infrared light, measures how long it takes for the light to return (or the angle at which it returns), and records the distance. Because the head rotates several times per second, each rotation becomes a “ring” of hundreds of measurements around the robot, all at the same height. It’s like an ultrasonic sensor from module 1.4, except it points in every direction at once and measures with centimeter-level precision.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-4-t1-p2"><strong>LiDAR</strong> comes from “Light Detection and Ranging”: measuring distance with light. In ROS 2, each LiDAR rotation arrives as a <strong>message</strong> of type <span class="font-mono text-xs">sensor_msgs/msg/LaserScan</span>, published on a <strong>topic</strong> that is conventionally called <span class="font-mono text-xs">/scan</span>. The message and topic are the same as in module 4.1: one node publishes, others listen.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="Top-down view of a robot with a LiDAR at the center of a room: rays extend in every direction and end at points on the walls and a box; behind the box is a shadow the LiDAR can’t see." class="w-full h-auto" role="img" viewbox="0 0 640 330">
+<defs>
+<pattern height="32" id="m44-grid1" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.12" r="1.3"></circle></pattern>
+<filter height="180%" id="m44-glow1" width="180%" x="-40%" y="-40%"><fegaussianblur result="b" stddeviation="2"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+</defs>
+<rect fill="url(#m44-grid1)" height="330" width="640"></rect>
+<path d="M40,30 L600,30 L600,300 L40,300 Z" fill="none" stroke="#a8a8b3" stroke-width="3"></path>
+<rect fill="#2a1d0a" height="60" stroke="#fbbf24" stroke-width="2" width="70" x="420" y="110"></rect>
+<text fill="#fde68a" font-family="Inter,sans-serif" font-size="14" text-anchor="middle" x="455" y="146">box</text>
+<path d="M490,110 L600,70 L600,215 L490,170 Z" fill="#38bdf8" opacity="0.08"></path>
+<text fill="#7dd3fc" font-family="Inter,sans-serif" font-size="14" text-anchor="middle" x="560" y="150">shadow</text>
+<g opacity="0.55" stroke="#f59e0b" stroke-width="1.3">
+<line x1="250" x2="40" y1="170" y2="70"></line><line x1="250" x2="40" y1="170" y2="170"></line><line x1="250" x2="40" y1="170" y2="270"></line>
+<line x1="250" x2="130" y1="170" y2="30"></line><line x1="250" x2="250" y1="170" y2="30"></line><line x1="250" x2="380" y1="170" y2="30"></line>
+<line x1="250" x2="130" y1="170" y2="300"></line><line x1="250" x2="250" y1="170" y2="300"></line><line x1="250" x2="400" y1="170" y2="300"></line>
+<line x1="250" x2="420" y1="170" y2="130"></line><line x1="250" x2="420" y1="170" y2="160"></line><line x1="250" x2="520" y1="170" y2="30"></line>
+</g>
+<g fill="#fbbf24" filter="url(#m44-glow1)">
+<circle cx="40" cy="70" r="4"></circle><circle cx="40" cy="170" r="4"></circle><circle cx="40" cy="270" r="4"></circle><circle cx="130" cy="30" r="4"></circle><circle cx="250" cy="30" r="4"></circle><circle cx="380" cy="30" r="4"></circle>
+<circle cx="130" cy="300" r="4"></circle><circle cx="250" cy="300" r="4"></circle><circle cx="400" cy="300" r="4"></circle><circle cx="420" cy="130" r="4"></circle><circle cx="420" cy="160" r="4"></circle><circle cx="520" cy="30" r="4"></circle>
+</g>
+<circle cx="250" cy="170" fill="#261a08" r="22" stroke="#f59e0b" stroke-width="2.5"></circle>
+<circle cx="250" cy="170" fill="#38bdf8" r="7"></circle>
+<text fill="#fef3c7" font-family="Inter,sans-serif" font-size="15" text-anchor="middle" x="250" y="216">robot + LiDAR</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> each amber line is a beam, and each bright dot is a returned measurement. Notice the cyan shadow behind the box: the LiDAR only sees the first surface the beam hits. To “see” behind it, the robot has to move.</p>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t1-p3">The LaserScan message doesn’t store points (x, y). It stores a <strong class="text-neutral-100">list of distances</strong> and the rules for finding the angle of each one: where the scan starts, where it ends, and how many degrees separate one measurement from the next. A measurement that didn’t return appears as <span class="font-mono text-xs">inf</span> (nothing within range) or falls outside the limits <span class="font-mono text-xs">range_min</span>/<span class="font-mono text-xs">range_max</span>.</p>
+<figure class="fig mb-3">
+<svg aria-label="LaserScan message structure: angle_min, angle_increment, and the ranges list; the angle of each measurement is angle_min plus the index times angle_increment." class="w-full h-auto" role="img" viewbox="0 0 640 250">
+<defs><pattern height="32" id="m44-grid2" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m44-grid2)" height="250" width="640"></rect>
+<g font-family="Inter,sans-serif" font-size="15">
+<text fill="#fbbf24" font-weight="600" x="20" y="34">ranges[ ] (meters)</text>
+<g text-anchor="middle">
+<rect fill="#261a08" height="44" rx="6" stroke="#f59e0b" width="88" x="20" y="50"></rect><text fill="#fef3c7" x="64" y="78">1.82</text>
+<rect fill="#261a08" height="44" rx="6" stroke="#f59e0b" width="88" x="114" y="50"></rect><text fill="#fef3c7" x="158" y="78">1.80</text>
+<rect fill="#261a08" height="44" rx="6" stroke="#f59e0b" width="88" x="208" y="50"></rect><text fill="#fef3c7" x="252" y="78">0.64</text>
+<rect fill="#0e1b26" height="44" rx="6" stroke="#38bdf8" width="88" x="302" y="50"></rect><text fill="#bfe6ff" x="346" y="78">inf</text>
+<rect fill="#261a08" height="44" rx="6" stroke="#f59e0b" width="88" x="396" y="50"></rect><text fill="#fef3c7" x="440" y="78">2.31</text>
+<text fill="#a8a8b3" x="530" y="78">…</text>
+<text fill="#a8a8b3" font-size="14" x="64" y="116">index 0</text><text fill="#a8a8b3" font-size="14" x="158" y="116">1</text><text fill="#a8a8b3" font-size="14" x="252" y="116">2</text><text fill="#a8a8b3" font-size="14" x="346" y="116">3</text><text fill="#a8a8b3" font-size="14" x="440" y="116">4</text>
+</g>
+<text fill="#7dd3fc" font-weight="600" x="20" y="160">angle = angle_min + index × angle_increment</text>
+<text fill="#d6d6dc" x="20" y="190">e.g., angle_min = −3,14 rad, increment = 0,0087 rad (~0,5°)</text>
+<text fill="#d6d6dc" x="20" y="222">index 3 returned “inf”: no obstacle within range</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> the row of boxes is the <span class="font-mono">ranges</span>. To draw the point, ROS 2 takes the index, calculates the angle using the cyan formula, and converts (angle, distance) into (x, y). RViz2 and slam_toolbox do this for you.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-5">
+<h4 class="font-bold text-amber-400 mb-3">✓ A 2D LiDAR sees well</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Walls, doors, tall furniture, and table legs at the height of the beam.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Corridors and corners: great for matching one scan to the next.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>In the dark: it brings its own light, so it doesn’t depend on the room lighting.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ A 2D LiDAR can’t see</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Glass and mirrors: the light passes through or reflects away.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Tabletops above the beam and objects below it (a toy, a step).</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Stairs going down: the floor disappears, but the horizontal beam can’t detect that.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t1-p4">LiDAR is the most widely used sensor on indoor mobile robots, from vacuum cleaners to warehouse robots. Understanding what it measures and what it doesn’t determines whether your robot will avoid the chair or hit the glass door.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">2D LiDAR</div><div class="text-xs text-neutral-400">distance in 360°</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">LaserScan</div><div class="text-xs text-neutral-400">list of distances</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">/scan</div><div class="text-xs text-neutral-400">default topic</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Shadow</div><div class="text-xs text-neutral-400">only the 1st surface</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" data-inema-topic="modulo-4-4#topico-2" id="topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🔌 Connecting the LiDAR to ROS 2</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t2-p1">The most common low-cost LiDARs for makers are the <strong class="text-neutral-100">RPLIDAR C1 or A1</strong> (Slamtec) and the <strong class="text-neutral-100">LD19</strong> (LDRobot). They all connect to a PC or Raspberry Pi 5 through a USB-to-serial adapter. The component that turns serial bytes into <span class="font-mono text-xs">/scan</span> messages is a <strong class="text-neutral-100">driver</strong>: a ROS 2 package from the manufacturer that you build in your workspace, as you did with colcon in module 4.2.</p>
+<figure class="fig mb-3">
+<svg aria-label="Data path: the LiDAR sends bytes over USB to the driver node, which publishes /scan; RViz2 and slam_toolbox subscribe to /scan; the base_link-to-laser transform tells you where the sensor is mounted." class="w-full h-auto" role="img" viewbox="0 0 640 260">
+<defs>
+<pattern height="32" id="m44-grid3" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<marker id="m44-ah3" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#fbbf24"></path></marker>
+<marker id="m44-ah3c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs>
+<rect fill="url(#m44-grid3)" height="260" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#261a08" height="70" rx="12" stroke="#f59e0b" stroke-width="2" width="120" x="14" y="70"></rect><text fill="#fbbf24" font-size="17" font-weight="600" x="74" y="102">LiDAR</text><text fill="#fef3c7" font-size="14" x="74" y="124">C1/A1/LD19</text>
+<rect fill="#2a1d0a" height="70" rx="12" stroke="#fbbf24" stroke-width="2.5" width="140" x="190" y="70"></rect><text fill="#fbbf24" font-size="17" font-weight="600" x="260" y="102">driver node</text><text fill="#fef3c7" font-size="14" x="260" y="124">manufacturer’s package</text>
+<rect fill="#0e1b26" height="56" rx="12" stroke="#38bdf8" stroke-width="2" width="200" x="420" y="24"></rect><text fill="#bfe6ff" font-size="16" x="520" y="58">RViz2 (view)</text>
+<rect fill="#0e1b26" height="56" rx="12" stroke="#38bdf8" stroke-width="2" width="200" x="420" y="130"></rect><text fill="#bfe6ff" font-size="16" x="520" y="164">slam_toolbox (map)</text>
+<text fill="#fde68a" font-size="14" x="160" y="62">USB</text>
+<text fill="#7dd3fc" font-size="15" font-weight="600" x="370" y="96">/scan</text>
+<text fill="#a8a8b3" font-size="14" x="320" y="232">TF: base_link → laser tells you where the LiDAR is mounted on the robot</text>
+</g>
+<g fill="none" stroke-width="2">
+<path d="M134,105 L182,105" marker-end="url(#m44-ah3)" stroke="#fbbf24"></path>
+<path d="M330,105 C380,105 380,52 412,52" marker-end="url(#m44-ah3c)" stroke="#38bdf8"></path>
+<path d="M330,105 C380,105 380,158 412,158" marker-end="url(#m44-ah3c)" stroke="#38bdf8"></path>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> your job is just the amber part: connect the USB and start the driver node. From <span class="font-mono">/scan</span> (cyan) onward, any ROS 2 node can use the data. The note below is the detail that most often causes problems: without the base_link → laser transform, RViz2 doesn’t know where to draw it.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-4">Step by step with a real LiDAR</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Find the port</h4><p class="text-neutral-300 text-sm">Connect the LiDAR and run <span class="font-mono text-xs">ls /dev/ttyUSB*</span>. Usually, you’ll see <span class="font-mono text-xs">/dev/ttyUSB0</span>. Give your user account permission by adding it to the <span class="font-mono text-xs">dialout</span> group (see the block below), then log out and back into your session.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Download and build the driver</h4><p class="text-neutral-300 text-sm">RPLIDAR: the <span class="font-mono text-xs">rplidar_ros</span> repository from Slamtec (ROS 2 branch). LD19: <span class="font-mono text-xs">ldlidar_stl_ros2</span> from LDRobot. Clone it into <span class="font-mono text-xs">~/ros2_ws/src</span> and build it with colcon.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Start the launch file for your model</h4><p class="text-neutral-300 text-sm">Each driver includes a launch file for each model. The name varies between versions: list the contents of the package’s <span class="font-mono text-xs">launch/</span> folder and use the one for your sensor.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">4</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">View it in RViz2</h4><p class="text-neutral-300 text-sm">In RViz2, set Fixed Frame = <span class="font-mono text-xs">laser</span> (or the frame used by the driver), click Add → LaserScan, and select the topic <span class="font-mono text-xs">/scan</span>.</p></div></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-4-t2-p2"><strong class="text-neutral-100">Goal:</strong> see the LiDAR publishing on <span class="font-mono text-xs">/scan</span>. The example uses the RPLIDAR; for the LD19, change the repository and launch file. Run this in a terminal with ROS 2 sourced (<span class="font-mono text-xs">&lt;distro&gt;</span> = jazzy or lyrical).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal</span></div>
+<pre><code><span class="c"># 1) permission to use the serial port (log out and back into your session afterward)</span>
+sudo usermod -aG dialout $USER
+
+<span class="c"># 2) driver in the workspace (check the repository README for the ROS 2 branch)</span>
+source /opt/ros/&lt;distro&gt;/setup.bash
+mkdir -p ~/ros2_ws/src &amp;&amp; cd ~/ros2_ws/src
+git clone https://github.com/Slamtec/rplidar_ros.git -b ros2
+cd ~/ros2_ws &amp;&amp; colcon build --symlink-install
+source install/setup.bash
+
+<span class="c"># 3) see which launch files the package has and start the one for your model</span>
+ls $(ros2 pkg prefix rplidar_ros)/share/rplidar_ros/launch
+ros2 launch rplidar_ros rplidar_c1_launch.py serial_port:=/dev/ttyUSB0
+
+<span class="c"># 4) in ANOTHER terminal: check the topic</span>
+ros2 topic hz /scan
+ros2 topic echo /scan --once --field ranges</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>The LiDAR starts rotating and <span class="font-mono text-xs">ros2 topic hz /scan</span> shows a steady rate (close to 10 Hz for the models mentioned; check your sensor’s specifications).</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>O <span class="font-mono text-xs">echo</span> prints a list of numbers; place your hand near the sensor and the values on that side will drop.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>“Permission denied” on the port: the dialout group membership hasn’t taken effect yet; log out of your session. Launch file not found: use the name shown by <span class="font-mono text-xs">ls</span> .</span></li>
+</ul>
+</div>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-4-t2-p3">A <strong>frame</strong> (coordinate frame) is a “point of view” with its own origin and axes: the center of the robot (<span class="font-mono text-xs">base_link</span>), the LiDAR itself (<span class="font-mono text-xs">laser</span>). TF2, covered in module 4.2, stores how one frame is positioned relative to another. If your URDF already includes the LiDAR link, robot_state_publisher publishes that relationship automatically.</p>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t2-p4">Adding a new sensor in ROS 2 always follows the same steps: port, permissions, driver, launch, topic, frame. After doing it with the LiDAR, you can connect a depth camera or IMU the same way.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Driver</div><div class="text-xs text-neutral-400">serial → /scan</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">dialout</div><div class="text-xs text-neutral-400">port permissions</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Laser frame</div><div class="text-xs text-neutral-400">where the sensor is</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">ros2 topic hz</div><div class="text-xs text-neutral-400">publishing rate</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" data-inema-topic="modulo-4-4#topico-3" id="topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🗺️ SLAM explained: mapping and localization at the same time</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t3-p1">To draw the map, the robot needs to know where it was when it took each measurement. To know where it is, it needs a map. This "chicken-and-egg" problem has a name: <strong class="text-amber-400">SLAM</strong>, simultaneous localization and mapping. The solution is to estimate both together, correcting one with the other each time the LiDAR makes a new pass.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-4-t3-p2"><strong>Odometry</strong> is the position calculated from the wheels’ rotation (module 2.2). It has <strong>drift</strong>: small errors add up, and after a few meters the robot "thinks" it is far from where it actually is. <strong>Scan matching</strong> is fitting a new LiDAR pass over previous ones, like puzzle pieces, to correct this drift. <strong>Loop closure</strong> is recognizing "I've been here before" and spreading the accumulated error across the entire path.</p>
+</div>
+<figure class="fig mb-3">
+<svg aria-label="SLAM cycle: odometry predicts where the robot has moved, the new scan is matched to the map, the position is corrected, and the map is updated; when the robot recognizes a place it has already visited, loop closure corrects the entire path." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs>
+<pattern height="32" id="m44-grid4" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern>
+<marker id="m44-ah4" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#fbbf24"></path></marker>
+<marker id="m44-ah4c" markerheight="9" markerwidth="9" orient="auto" refx="6.5" refy="4.5"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"></path></marker>
+</defs>
+<rect fill="url(#m44-grid4)" height="300" width="640"></rect>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect fill="#261a08" height="74" rx="12" stroke="#f59e0b" stroke-width="2" width="170" x="20" y="40"></rect><text fill="#fbbf24" font-size="17" font-weight="600" x="105" y="72">1. predict</text><text fill="#fef3c7" font-size="14" x="105" y="96">wheel odometry</text>
+<rect fill="#261a08" height="74" rx="12" stroke="#f59e0b" stroke-width="2" width="170" x="235" y="40"></rect><text fill="#fbbf24" font-size="17" font-weight="600" x="320" y="72">2. fit</text><text fill="#fef3c7" font-size="14" x="320" y="96">scan to map</text>
+<rect fill="#261a08" height="74" rx="12" stroke="#f59e0b" stroke-width="2" width="170" x="450" y="40"></rect><text fill="#fbbf24" font-size="17" font-weight="600" x="535" y="72">3. correct</text><text fill="#fef3c7" font-size="14" x="535" y="96">position + map</text>
+<rect fill="#0e1b26" height="74" rx="12" stroke="#38bdf8" stroke-dasharray="6 4" stroke-width="2" width="320" x="160" y="190"></rect><text fill="#7dd3fc" font-size="17" font-weight="600" x="320" y="222">loop closure</text><text fill="#bfe6ff" font-size="14" x="320" y="246">"I've been here before" → adjusts the entire path</text>
+</g>
+<g fill="none" stroke-width="2">
+<path d="M190,77 L227,77" marker-end="url(#m44-ah4)" stroke="#fbbf24"></path>
+<path d="M405,77 L442,77" marker-end="url(#m44-ah4)" stroke="#fbbf24"></path>
+<path d="M535,114 C535,160 105,160 105,122" marker-end="url(#m44-ah4)" opacity="0.6" stroke="#fbbf24"></path>
+<path d="M535,114 L480,190" marker-end="url(#m44-ah4c)" stroke="#38bdf8" stroke-dasharray="5 4"></path>
+</g>
+<text fill="#fde68a" font-family="Inter,sans-serif" font-size="14" text-anchor="middle" x="320" y="150">repeats with every LiDAR pass</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> The amber loop (predict, fit, correct) runs all the time. The dashed cyan box only appears occasionally, when the robot returns to a known place; it is what keeps the corridor from "bending" in the final map.</p>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t3-p3">In ROS 2, the standard package for SLAM with a 2D LiDAR is <strong class="text-neutral-100">slam_toolbox</strong>. It stores the robot's positions as nodes in a graph, with scans attached to them; when it closes a loop, it adjusts the entire graph. The result is published on the topic <span class="font-mono text-xs">/map</span> and in the transform <span class="font-mono text-xs">map → odom</span>, which is exactly the drift correction. Older tutorials mention ROS 1 packages; use slam_toolbox with ROS 2. Cartographer is also available, but is less actively maintained.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3 text-amber-400">Font</th><th class="text-left p-3 text-amber-400">Good at</th><th class="text-left p-3 text-amber-400">Weak at</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">Odometry (wheels)</td><td class="p-3">short term, smooth, fast</td><td class="p-3">drifts; slips on carpet</td></tr>
+<tr><td class="p-3">LiDAR (matching)</td><td class="p-3">corrects drift using walls</td><td class="p-3">featureless, uniform corridors; glass</td></tr>
+<tr><td class="p-3">Loop closure</td><td class="p-3">straightens the entire map</td><td class="p-3">only if you return to a place you've seen</td></tr>
+</tbody>
+</table>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t3-p4">When the map comes out crooked or "duplicated," you'll know where to look: poor odometry, sparse scans, or a loop that didn't close. Without this mental model, your only option is to change parameters in the dark.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">SLAM</div><div class="text-xs text-neutral-400">map + position together</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Drift</div><div class="text-xs text-neutral-400">error that accumulates</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Loop closure</div><div class="text-xs text-neutral-400">"I've been here before"</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">map → odom</div><div class="text-xs text-neutral-400">the published correction</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" data-inema-topic="modulo-4-4#topico-4" id="topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🖥️ slam_toolbox in simulation</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t4-p1">Before taking the robot into the room, map a simulated world. You have two options: use <strong class="text-neutral-100">your robot from module 4.2</strong> in Gazebo (Harmonic with Jazzy, Jetty with Lyrical), as long as it has a simulated LiDAR publishing <span class="font-mono text-xs">/scan</span>; or use the <strong class="text-neutral-100">simulated TurtleBot</strong> that comes with the Nav2 examples, without setting anything up. slam_toolbox can't tell the difference: it only needs <span class="font-mono text-xs">/scan</span>, odometry, and TF.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-4-t4-p2"><strong class="text-neutral-100">Goal:</strong> install the packages, open TurtleBot in a simulated world with SLAM enabled, and drive with the keyboard until the map appears. Simulation launch file names vary between distros: check the "Getting Started" page at docs.nav2.org.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal</span></div>
+<pre><code><span class="c"># install SLAM, Nav2, and the example robots (replace &lt;distro&gt; with jazzy or lyrical)</span>
+sudo apt update
+sudo apt install ros-&lt;distro&gt;-slam-toolbox ros-&lt;distro&gt;-navigation2 ros-&lt;distro&gt;-nav2-bringup
+sudo apt install ros-&lt;distro&gt;-nav2-minimal-tb*        <span class="c"># simulated TurtleBot (check the name in the docs)</span>
+
+<span class="c"># terminal 1: TurtleBot in Gazebo + RViz2 with slam_toolbox already enabled</span>
+source /opt/ros/&lt;distro&gt;/setup.bash
+ros2 launch nav2_bringup tb4_simulation_launch.py slam:=True headless:=False
+
+<span class="c"># terminal 2: drive with the keyboard (i, j, l, comma keys)</span>
+source /opt/ros/&lt;distro&gt;/setup.bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Gazebo opens with the robot; RViz2 shows the LiDAR points and a gray map that grows as you drive.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span><span class="font-mono text-xs">ros2 topic list</span> terminal <span class="font-mono text-xs">/map</span>, <span class="font-mono text-xs">/scan</span> e <span class="font-mono text-xs">/odom</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"Package not found" when launching? Your Nav2 may use <span class="font-mono text-xs">tb3_simulation_launch.py</span>; list <span class="font-mono text-xs">$(ros2 pkg prefix nav2_bringup)/share/nav2_bringup/launch</span>.</span></li>
+</ul>
+</div>
+<p class="text-neutral-300 leading-relaxed mb-3" data-inema-block="m4-4-t4-p3">With your own simulated (or real) robot, slam_toolbox starts on its own. The <strong class="text-neutral-100">online_async</strong> mode processes scans "as fast as it can," skipping some if the computer is busy; it's recommended for getting started and for the Raspberry Pi 5.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal</span></div>
+<pre><code><span class="c"># with your robot already publishing /scan, /odom, and TF (for simulation: use_sim_time:=true)</span>
+source /opt/ros/&lt;distro&gt;/setup.bash
+ros2 launch slam_toolbox online_async_launch.py use_sim_time:=true
+
+<span class="c"># check the frame tree: map -&gt; odom -&gt; base_link -&gt; laser</span>
+ros2 run tf2_tools view_frames</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-amber-400">How to check:</strong> o <span class="font-mono">view_frames</span> generates a PDF with the frame tree; it needs to have <span class="font-mono">map</span> at the top, followed by <span class="font-mono">odom</span>, <span class="font-mono">base_link</span> and the LiDAR frame. On the real robot, switch to <span class="font-mono">use_sim_time:=false</span>.</p>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 use_sim_time: the #1 pitfall</h3>
+<p class="text-neutral-300 text-sm">In simulation, the clock comes from Gazebo (topic <span class="font-mono text-xs">/clock</span>). If one node uses the PC clock and another uses the simulator clock, messages appear to be "from the future" or "too old," and TF complains. Rule: in simulation, use <span class="font-mono text-xs">use_sim_time:=true</span> on every node; on the real robot, use <span class="font-mono text-xs">false</span> on every node.</p>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t4-p4">In simulation, you can make mistakes for free: hit a wall, redo the map, change a parameter, all without draining the battery or scratching furniture. When you switch to the real robot, the only things that change are the sources of <span class="font-mono text-xs">/scan</span> e <span class="font-mono text-xs">/odom</span>.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">online_async</div><div class="text-xs text-neutral-400">mode to get started</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">TurtleBot</div><div class="text-xs text-neutral-400">example robot</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">use_sim_time</div><div class="text-xs text-neutral-400">simulator clock</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">view_frames</div><div class="text-xs text-neutral-400">check TF</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" data-inema-topic="modulo-4-4#topico-5" id="topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🏠 Map your home or classroom</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t5-p1">Mapping a real place is more about "how you drive" than code. slam_toolbox does the math; you choose the path, speed, and whether to return to places you've already seen. A good map comes from a slow drive, with smooth turns, passing the same landmarks twice. At this stage, you still drive the robot yourself (teleop); autonomous navigation comes in module 4.5.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-4">Mapping steps</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Prepare the environment</h4><p class="text-neutral-300 text-sm">Doors in their intended positions, wires and toys off the floor, people and pets informed. Close off or block access to stairs.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Start in a corner with walls</h4><p class="text-neutral-300 text-sm">The starting point becomes the map’s origin. A place with corners gives slam_toolbox solid reference points right from the first pass.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Drive slowly and turn slowly</h4><p class="text-neutral-300 text-sm">In teleop, lower the speed (z key) to about 0.1–0.2 m/s. Fast turns blur the map the most: the wheels slip and the odometry becomes inaccurate.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">4</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Close loops</h4><p class="text-neutral-300 text-sm">Go around a room and finish where you started; pass through the hallway again. Watch the map “straighten out” in RViz2 when the loop closes.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">5</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Save before shutting down</h4><p class="text-neutral-300 text-sm">With the map looking good on screen, save it (topic 6). If you shut down slam_toolbox first, the map will be lost.</p></div></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-5">
+<h4 class="font-bold text-amber-400 mb-3">✓ Do</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Mount the LiDAR at the highest, clearest point on the robot, with no wires crossing its beam.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Cover glass doors or mirrors with paper while mapping.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Stay within reach of the robot and the motor power switch.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Don't</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Mapping while people walk around: their legs show up as “walls” on the map.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Leaving the robot near a staircase going down: the 2D LiDAR can’t see the step.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Mapping a huge, empty hall: with no walls within range, there’s nothing to match against.</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 New here?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-4-t5-p2">Don’t have the real robot yet? You can do this whole walkthrough in the simulation from topic 4, including in a classroom with a projector: one student drives, while the class watches the map and points out where the loop closed. Gazebo also lets you build a world similar to your classroom, with boxes in place of furniture.</p>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t5-p3">The map is the foundation for everything that comes next: if it has duplicate walls or gaps, Nav2 will plan paths through walls or reject paths that are clear. Ten minutes of careful mapping can save hours of navigation tuning.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Origin</div><div class="text-xs text-neutral-400">where you started</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Slow turn</div><div class="text-xs text-neutral-400">less blur</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Closed loop</div><div class="text-xs text-neutral-400">return to the start</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Stairs</div><div class="text-xs text-neutral-400">block them first</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" data-inema-topic="modulo-4-4#topico-6" id="topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">💾 Save and load maps</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Mark this topic as a question" type="button"><span aria-hidden="true">?</span><span>I have a question</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t6-p1">The map published by slam_toolbox is an <strong class="text-amber-400">occupancy map</strong>: the floor divided into small squares (cells) a few centimeters across, each marked as free, occupied, or unknown. Saving this map creates two files: an image <span class="font-mono text-xs">.pgm</span> (the “picture” of the cells) and a <span class="font-mono text-xs">.yaml</span> that specifies the size of each cell and the location of the origin.</p>
+<figure class="fig mb-3">
+<svg aria-label="Grid occupancy map: white cells are free (value 0), black cells are occupied (value 100), and gray cells are unknown (value -1); each cell has a resolution of 5 cm." class="w-full h-auto" role="img" viewbox="0 0 640 300">
+<defs><pattern height="32" id="m44-grid6" patternunits="userSpaceOnUse" width="32"><circle cx="1.3" cy="1.3" fill="#f59e0b" opacity="0.1" r="1.3"></circle></pattern></defs>
+<rect fill="url(#m44-grid6)" height="300" width="640"></rect>
+<g stroke="#272730" stroke-width="1">
+<rect fill="#6b6b78" height="240" width="240" x="30" y="30"></rect>
+<rect fill="#e6e6e6" height="180" width="180" x="60" y="60"></rect>
+<rect fill="#0c0c10" height="30" width="180" x="60" y="60"></rect><rect fill="#0c0c10" height="180" width="30" x="60" y="60"></rect>
+<rect fill="#0c0c10" height="120" width="30" x="210" y="60"></rect><rect fill="#0c0c10" height="30" width="30" x="150" y="150"></rect>
+<rect fill="#0c0c10" height="30" width="90" x="60" y="210"></rect>
+</g>
+<g opacity="0.6" stroke="#272730" stroke-width="0.8">
+<path d="M60,30 V270 M90,30 V270 M120,30 V270 M150,30 V270 M180,30 V270 M210,30 V270 M240,30 V270"></path>
+<path d="M30,60 H270 M30,90 H270 M30,120 H270 M30,150 H270 M30,180 H270 M30,210 H270 M30,240 H270"></path>
+</g>
+<g font-family="Inter,sans-serif" font-size="15">
+<rect fill="#e6e6e6" height="26" width="26" x="310" y="40"></rect><text fill="#fef3c7" x="350" y="59">free = 0</text>
+<rect fill="#0c0c10" height="26" stroke="#fbbf24" width="26" x="310" y="86"></rect><text fill="#fef3c7" x="350" y="105">occupied = 100</text>
+<rect fill="#6b6b78" height="26" width="26" x="310" y="132"></rect><text fill="#fef3c7" x="350" y="151">unknown = −1</text>
+<text fill="#7dd3fc" font-weight="600" x="310" y="200">resolution: 0.05 m per cell</text>
+<text fill="#d6d6dc" x="310" y="228">mapa.pgm stores the colors</text>
+<text fill="#d6d6dc" x="310" y="254">mapa.yaml stores the scale and origin</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">How to read this map:</strong> Each small square is a cell on the map. Gray shows where the LiDAR has never reached; white is clear floor; black is a wall or piece of furniture. The black square in the middle is an isolated obstacle, such as a cabinet. With 5 cm cells, a 5 m × 4 m room becomes a 100 × 80 pixel image.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-4-t6-p2"><strong class="text-neutral-100">Goal:</strong> save the current map to <span class="font-mono text-xs">~/mapas</span>, check the configuration file, and open the saved map again to use it with Nav2.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button class="copy-btn" onclick="copyCode(this)" type="button"><span class="copy-label">Copy</span><span class="copy-done">Copied</span></button><span class="code-file">terminal</span></div>
+<pre><code><span class="c"># with slam_toolbox STILL running and the map on screen</span>
+source /opt/ros/&lt;distro&gt;/setup.bash
+mkdir -p ~/mapas &amp;&amp; cd ~/mapas
+ros2 run nav2_map_server map_saver_cli -f mapa
+
+<span class="c"># check the two files that were created</span>
+ls -l mapa.pgm mapa.yaml
+cat mapa.yaml
+
+<span class="c"># later, to navigate using the saved map (module 4.5)</span>
+ros2 launch nav2_bringup bringup_launch.py map:=$HOME/mapas/mapa.yaml</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">How to check</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>The terminal ends with a message saying the map was saved, and you’ll see <span class="font-mono text-xs">mapa.pgm</span> e <span class="font-mono text-xs">mapa.yaml</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>O <span class="font-mono text-xs">mapa.yaml</span> has lines like <span class="font-mono text-xs">image: mapa.pgm</span>, <span class="font-mono text-xs">resolution: 0.05</span> e <span class="font-mono text-xs">origin: [x, y, angle]</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Opening the <span class="font-mono text-xs">.pgm</span> in an image editor lets you see the floor plan in white, black, and gray.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>“Failed to receive map”? slam_toolbox was shut down, or the topic <span class="font-mono text-xs">/map</span> doesn’t exist; check with <span class="font-mono text-xs">ros2 topic list</span>.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Two ways to save</h3>
+<p class="text-neutral-300 text-sm">O <span class="font-mono text-xs">map_saver_cli</span> saves the image Nav2 uses to navigate. slam_toolbox can also save its own <strong class="text-neutral-100">graph</strong> (the “Serialize Map” button in the RViz2 SlamToolboxPlugin panel): with it, you can continue mapping another day or use slam_toolbox’s own localization mode. Keep both files; you can even touch up the PGM in an image editor (paint a restricted area black).</p>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Why learn this</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-4-t6-p3">Mapping from scratch every time you turn on the robot is slow and unstable. With the map saved, the robot starts up, localizes itself, and is ready to navigate—that’s exactly what Nav2 expects in the next module.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Key concepts</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Occupancy</div><div class="text-xs text-neutral-400">free/occupied/?</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Resolution</div><div class="text-xs text-neutral-400">meters per cell</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">.pgm + .yaml</div><div class="text-xs text-neutral-400">image + scale</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Serialize</div><div class="text-xs text-neutral-400">SLAM graph</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Mark as read</span><span class="inema-label-done">Read</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 rounded-xl border border-amber-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Module summary</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">2D LiDAR = ring of distances</strong><span class="text-neutral-400"> published as LaserScan on /scan; it can’t see glass, steps, or anything outside the beam’s height.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Connect the sensor to ROS 2</strong><span class="text-neutral-400">: port, permissions, driver, launch, topic, and frame.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">SLAM</strong><span class="text-neutral-400">: predict using odometry, match the scan, correct; closing the loop straightens the map.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">slam_toolbox</strong><span class="text-neutral-400"> is the standard in ROS 2; start with the simulated TurtleBot and keep use_sim_time consistent.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Saved map</strong><span class="text-neutral-400"> = mapa.pgm + mapa.yaml, ready for Nav2.</span></div></div>
+</div>
+<h3 class="font-semibold text-amber-400 mb-3">To go further</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/SteveMacenski/slam_toolbox" rel="noopener" target="_blank">slam_toolbox (GitHub)</a> <span class="text-neutral-500">— modes, parameters, and the RViz2 plugin</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.nav2.org/getting_started/index.html" rel="noopener" target="_blank">Nav2: Getting Started</a> <span class="text-neutral-500">— installation and TurtleBot simulation for your distro</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.nav2.org/tutorials/docs/navigation2_with_slam.html" rel="noopener" target="_blank">Nav2: navigating while mapping</a> <span class="text-neutral-500">— SLAM with Nav2 running</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.ros.org/en/lyrical/" rel="noopener" target="_blank">ROS 2 documentation</a> <span class="text-neutral-500">— replace lyrical with jazzy in the URL if that’s your distro</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/Slamtec/rplidar_ros" rel="noopener" target="_blank">rplidar_ros</a> e <a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/ldrobotSensorTeam/ldlidar_stl_ros2" rel="noopener" target="_blank">ldlidar_stl_ros2</a> <span class="text-neutral-500">— drivers for the LiDARs mentioned</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-amber-400 mb-1">Next module</h3>
+<p class="text-neutral-300">4.5 · Navigation with Nav2: the robot localizes itself on the saved map and drives to wherever you tell it to go.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-4-3.html">← Previous: 4.3 micro-ROS on ESP32</a>
+<a class="inline-flex items-center px-5 py-3 bg-amber-700 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors" href="modulo-4-5.html">Next: 4.5 Navigation with Nav2 →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robotics from Zero to Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · MIT License · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>
