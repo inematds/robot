@@ -50,6 +50,12 @@ Para conferir: `python3 scripts/validate.py pt|en|es` e `python3 scripts/compile
 
 **Robótica de Cero a Experto, edición 2026.** Curso abierto y gratuito de INEMA.CLUB: del primer LED en el ESP32 al brazo robótico que aprende por demostración. Seis rutas (primeros pasos, robot autónomo, visión e IA embebida, ROS 2 y navegación, IA moderna y el brazo SO-101, y una ruta para el docente), 31 módulos, sin carga horaria. → [inematds.github.io/robot/es/](https://inematds.github.io/robot/es/)
 
+## Mais no INEMA.CLUB
+
+- [Ficha deste curso](https://www.inema.club/cursos/29-robotica-do-zero-ao-expert-do-primeiro-led-ao-robo-com-ia/)
+- [Guia: como aprender inteligência artificial](https://www.inema.club/aprender-inteligencia-artificial/)
+- [Todos os cursos](https://www.inema.club/cursos/)
+
 ## Licença
 
 MIT. Veja [LICENSE](LICENSE).
