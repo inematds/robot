@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="inema-course" content="robot">
+<title>Módulo 1.2 · Eletrônica essencial | Robótica do Zero ao Expert</title>
+<meta name="description" content="Eletrônica para robótica do zero: tensão, corrente e resistência, lei de Ohm e o resistor do LED, protoboard, multímetro, lógica de 3,3 V do ESP32, divisor de tensão e pull-up.">
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script type="application/json" data-inema-manifest>
+{
+  "course": "robot",
+  "tracks": [
+    { "n": "1", "title": "Primeiros passos", "modules": [
+      { "id": "1-1", "title": "O que é um robô e o seu kit", "topics": 6, "href": "curso/trilha1/modulo-1-1.html" },
+      { "id": "1-2", "title": "Eletrônica essencial", "topics": 6, "href": "curso/trilha1/modulo-1-2.html" },
+      { "id": "1-3", "title": "ESP32: o primeiro programa", "topics": 6, "href": "curso/trilha1/modulo-1-3.html" },
+      { "id": "1-4", "title": "Sensores: o robô percebe", "topics": 6, "href": "curso/trilha1/modulo-1-4.html" },
+      { "id": "1-5", "title": "Motores e energia", "topics": 6, "href": "curso/trilha1/modulo-1-5.html" },
+      { "id": "1-6", "title": "Projeto: rover que desvia de obstáculos", "topics": 6, "href": "curso/trilha1/modulo-1-6.html" }
+    ]},
+    { "n": "2", "title": "Robô autônomo", "modules": [
+      { "id": "2-1", "title": "Controle pelo celular: Wi-Fi e BLE", "topics": 6, "href": "curso/trilha2/modulo-2-1.html" },
+      { "id": "2-2", "title": "IMU e encoders: saber onde está", "topics": 6, "href": "curso/trilha2/modulo-2-2.html" },
+      { "id": "2-3", "title": "Controle PID na prática", "topics": 6, "href": "curso/trilha2/modulo-2-3.html" },
+      { "id": "2-4", "title": "Várias tarefas ao mesmo tempo", "topics": 6, "href": "curso/trilha2/modulo-2-4.html" },
+      { "id": "2-5", "title": "Telemetria e registro de dados", "topics": 6, "href": "curso/trilha2/modulo-2-5.html" },
+      { "id": "2-6", "title": "Projeto: seguidor de linha com PID", "topics": 6, "href": "curso/trilha2/modulo-2-6.html" }
+    ]},
+    { "n": "3", "title": "Visão e IA embarcada", "modules": [
+      { "id": "3-1", "title": "Raspberry Pi 5 e Linux", "topics": 6, "href": "curso/trilha3/modulo-3-1.html" },
+      { "id": "3-2", "title": "Câmera e OpenCV", "topics": 6, "href": "curso/trilha3/modulo-3-2.html" },
+      { "id": "3-3", "title": "Detectar objetos com YOLO26", "topics": 6, "href": "curso/trilha3/modulo-3-3.html" },
+      { "id": "3-4", "title": "IA dentro do microcontrolador", "topics": 6, "href": "curso/trilha3/modulo-3-4.html" },
+      { "id": "3-5", "title": "Raspberry Pi conversa com o ESP32", "topics": 6, "href": "curso/trilha3/modulo-3-5.html" },
+      { "id": "3-6", "title": "Projeto: robô que segue um objeto", "topics": 6, "href": "curso/trilha3/modulo-3-6.html" }
+    ]},
+    { "n": "4", "title": "ROS 2 e navegação", "modules": [
+      { "id": "4-1", "title": "ROS 2 sem medo", "topics": 6, "href": "curso/trilha4/modulo-4-1.html" },
+      { "id": "4-2", "title": "Descrever e simular o robô", "topics": 6, "href": "curso/trilha4/modulo-4-2.html" },
+      { "id": "4-3", "title": "micro-ROS no ESP32", "topics": 6, "href": "curso/trilha4/modulo-4-3.html" },
+      { "id": "4-4", "title": "LiDAR e mapas (SLAM)", "topics": 6, "href": "curso/trilha4/modulo-4-4.html" },
+      { "id": "4-5", "title": "Navegação com Nav2", "topics": 6, "href": "curso/trilha4/modulo-4-5.html" },
+      { "id": "4-6", "title": "Projeto: robô que mapeia e navega", "topics": 6, "href": "curso/trilha4/modulo-4-6.html" }
+    ]},
+    { "n": "5", "title": "IA moderna e braço robótico", "modules": [
+      { "id": "5-1", "title": "Modelo de linguagem como cérebro", "topics": 6, "href": "curso/trilha5/modulo-5-1.html" },
+      { "id": "5-2", "title": "Voz local: ouvir e falar", "topics": 6, "href": "curso/trilha5/modulo-5-2.html" },
+      { "id": "5-3", "title": "Braço SO-101 e LeRobot", "topics": 6, "href": "curso/trilha5/modulo-5-3.html" },
+      { "id": "5-4", "title": "Aprender por demonstração", "topics": 6, "href": "curso/trilha5/modulo-5-4.html" },
+      { "id": "5-5", "title": "Simular antes do real", "topics": 6, "href": "curso/trilha5/modulo-5-5.html" },
+      { "id": "5-6", "title": "Projeto final: robô assistente", "topics": 6, "href": "curso/trilha5/modulo-5-6.html" }
+    ]},
+    { "n": "6", "title": "Para o professor", "modules": [
+      { "id": "6-1", "title": "Como ministrar este curso", "topics": 8, "href": "curso/trilha6/modulo-6-1.html" }
+    ]}
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link rel="stylesheet" href="../../assets/learn.css">
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T1 ativa -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600" aria-label="Navegação principal">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html" aria-label="Robótica do Zero ao Expert — início">
+<span class="text-xl sm:text-2xl" aria-hidden="true">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-emerald-400 bg-emerald-500/10" aria-current="page" href="index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeiros passos</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autônomo</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visão e IA</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Professor</span></a>
+<span class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block" aria-hidden="true"></span>
+<button class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button" aria-label="Minha jornada">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Minha jornada</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Aparência" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Aparência</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Escuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sépia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Foco</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fonte</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Leitura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamanho</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Largura</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estreito</button><button data-inema-set-linewidth="68" type="button">Médio</button><button data-inema-set-linewidth="75" type="button">Largo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Entrelinha</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Confortável</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento roxo" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento âmbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/escuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewBox="0 0 20 20" aria-hidden="true"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main id="conteudo" data-inema-module="1-2" data-inema-track="1">
+<!-- BREADCRUMB -->
+<nav aria-label="Trilha de navegação" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-emerald-400" href="../../index.html">Início</a><span aria-hidden="true">/</span>
+<a class="hover:text-emerald-400" href="index.html">Trilha 1</a><span aria-hidden="true">/</span>
+<span class="text-emerald-400">Módulo 1.2</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full mb-4">MÓDULO 1.2 · FUNDAMENTO</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">⚡ Eletrônica essencial</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Tudo o que o robô faz passa por fios. Aqui você fecha o mínimo de eletrônica para não queimar nada: <strong class="text-neutral-100">tensão, corrente e resistência</strong>, a lei de Ohm aplicada ao LED, a protoboard, o multímetro e o detalhe que mais derruba iniciante no ESP32: <strong class="text-emerald-400">a lógica é de 3,3 V</strong>.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">6</div><div class="text-xs text-neutral-400">Tópicos</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">Iniciante</div><div class="text-xs text-neutral-400">Nível</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">Fundamento</div><div class="text-xs text-neutral-400">Tipo</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-emerald-400">Opcional</div><div class="text-xs text-neutral-400">Hardware (Wokwi serve)</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progresso do módulo 1.2" class="inema-ring" data-inema-meter="modulo:1-2"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:1-2"><strong data-inema-meter-frac="">0 de 0</strong> tópicos lidos · <span data-inema-section-counter="">Seção 1 de 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Índice da página" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">Neste módulo</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-1">1. Tensão, corrente, resistência</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-2">2. Lei de Ohm e o LED</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-3">3. Protoboard</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-4">4. Multímetro</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-5">5. Digital, analógico, 3,3 V</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-emerald-400" href="#topico-6">6. Divisor e pull-up</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Conteúdo detalhado</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" id="topico-1" data-inema-topic="modulo-1-2#topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">💧 Tensão, corrente e resistência</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-2-t1-p1">Pense numa caixa-d'água ligada a um cano. A altura da água empurra a água para baixo: isso é a <strong class="text-emerald-400">tensão</strong>. A quantidade de água que passa por segundo no cano é a <strong class="text-emerald-400">corrente</strong>. Um trecho estreito do cano segura o fluxo: isso é a <strong class="text-emerald-400">resistência</strong>. Nos circuitos é igual, só que no lugar da água estão elétrons, e o "cano" precisa formar um caminho fechado de volta à fonte.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-2-t1-p2"><strong>Tensão</strong> (V, volt) é a diferença de "pressão elétrica" entre dois pontos; você sempre mede entre dois pontos, um deles geralmente o GND. <strong>Corrente</strong> (A, ampère) é quanto de carga passa por segundo; no ESP32 falamos em miliampères (mA, milésimos de ampère). <strong>Resistência</strong> (Ω, ohm) é quanto um componente dificulta a passagem. <strong>GND</strong> é o ponto de referência, o "zero volt" do circuito.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Analogia da caixa-d'água: a altura da água é a tensão, o fluxo no cano é a corrente e o estreitamento do cano é a resistência; o circuito elétrico equivalente tem bateria, fio, resistor e retorno ao GND." class="w-full h-auto" viewBox="0 0 640 300">
+<defs>
+<pattern id="m12-grid1" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#10b981" opacity="0.12"/></pattern>
+<marker id="m12-ah1" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"/></marker>
+<filter id="m12-glow1" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="640" height="300" fill="url(#m12-grid1)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<text x="160" y="28" fill="#34d399" font-size="17" font-weight="600">água</text>
+<text x="480" y="28" fill="#7dd3fc" font-size="17" font-weight="600">eletricidade</text>
+<rect x="40" y="50" width="90" height="130" rx="8" fill="#0e2018" stroke="#34d399" stroke-width="2"/>
+<rect x="44" y="80" width="82" height="96" rx="5" fill="#38bdf8" opacity="0.35"/>
+<text x="85" y="205" fill="#d1fae5" font-size="15">altura =</text>
+<text x="85" y="225" fill="#34d399" font-size="15" font-weight="600">tensão</text>
+<path d="M130,160 L180,160 L180,150 L230,150" fill="none" stroke="#34d399" stroke-width="10" stroke-linejoin="round" opacity="0.6"/>
+<path d="M230,150 L262,150" fill="none" stroke="#34d399" stroke-width="4"/>
+<path d="M262,150 L300,150" fill="none" stroke="#34d399" stroke-width="10" opacity="0.6"/>
+<path d="M140,135 L220,135" stroke="#38bdf8" stroke-width="2" marker-end="url(#m12-ah1)"/>
+<text x="180" y="122" fill="#bfe6ff" font-size="14">fluxo = corrente</text>
+<text x="246" y="182" fill="#d1fae5" font-size="14">cano estreito</text>
+<text x="246" y="200" fill="#34d399" font-size="15" font-weight="600">= resistência</text>
+<line x1="320" y1="40" x2="320" y2="260" stroke="#272730" stroke-width="2"/>
+<g filter="url(#m12-glow1)"><rect x="360" y="90" width="44" height="80" rx="6" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/></g>
+<text x="382" y="122" fill="#bfe6ff" font-size="16" font-weight="600">+</text>
+<text x="382" y="158" fill="#bfe6ff" font-size="16" font-weight="600">−</text>
+<text x="382" y="80" fill="#bfe6ff" font-size="14">bateria</text>
+<path d="M404,110 L470,110" stroke="#38bdf8" stroke-width="3" fill="none"/>
+<path d="M470,110 l7,-11 l11,22 l11,-22 l11,22 l11,-22 l7,11" stroke="#fbbf24" stroke-width="3" fill="none"/>
+<text x="499" y="86" fill="#fde68a" font-size="15">resistor</text>
+<path d="M528,110 L600,110 L600,230 L382,230 L382,174" stroke="#38bdf8" stroke-width="3" fill="none" marker-end="url(#m12-ah1)"/>
+<text x="492" y="252" fill="#bfe6ff" font-size="14">volta pelo GND (circuito fechado)</text>
+<text x="160" y="282" fill="#a8a8b3" font-size="14">sem desnível, a água para</text>
+<text x="480" y="282" fill="#a8a8b3" font-size="14">sem caminho de volta, nada flui</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">Como ler:</strong> compare os dois lados. À esquerda, quanto mais alta a caixa, mais pressão; o trecho fino do cano limita o fluxo. À direita, a bateria é a caixa, o resistor é o cano fino e a seta ciano mostra que a corrente precisa voltar ao polo negativo (GND). Fio solto em qualquer ponto = circuito aberto = corrente zero.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3">Grandeza</th><th class="text-left p-3">Unidade</th><th class="text-left p-3">No seu robô</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">Tensão</td><td class="p-3">volt (V)</td><td class="p-3">3,3 V nos pinos do ESP32; 5 V no USB; 4,8 a 6 V em 4 pilhas AA</td></tr>
+<tr><td class="p-3">Corrente</td><td class="p-3">ampère (A), mA</td><td class="p-3">LED: 5 a 10 mA; ESP32 com Wi-Fi: até umas centenas de mA; motor TT: centenas de mA</td></tr>
+<tr><td class="p-3">Resistência</td><td class="p-3">ohm (Ω), kΩ</td><td class="p-3">220 Ω no LED; 10 kΩ em divisores e pull-ups</td></tr>
+</tbody>
+</table>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-2-t1-p3">Toda escolha de peça do robô é uma pergunta sobre essas três grandezas: a bateria tem tensão suficiente? O driver aguenta a corrente do motor? Que resistor protege o LED? Sem elas, você compra no escuro e descobre o erro pelo cheiro de queimado.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Volt (V)</div><div class="text-xs text-neutral-400">pressão entre dois pontos</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Ampère (A)</div><div class="text-xs text-neutral-400">quanto passa por segundo</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Ohm (Ω)</div><div class="text-xs text-neutral-400">quanto segura o fluxo</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Circuito fechado</div><div class="text-xs text-neutral-400">sempre volta ao GND</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" id="topico-2" data-inema-topic="modulo-1-2#topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🧮 Lei de Ohm e o resistor do LED</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-2-t2-p1">A <strong class="text-emerald-400">lei de Ohm</strong> liga as três grandezas: <strong class="text-neutral-100">V = R × I</strong>. Sabendo duas, você calcula a terceira. Na bancada, a conta que mais aparece é a do resistor do LED: o LED "consome" uma parte fixa da tensão e o resistor precisa segurar o resto, limitando a corrente a um valor seguro para o LED e para o pino do ESP32.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-2-t2-p2">A <strong>queda de tensão</strong> (Vf) do LED é a tensão que ele "usa" quando acende: cerca de 2,0 V no vermelho, 2,1 V no amarelo e perto de 3,0 V no azul e no branco. Um <strong>resistor</strong> não tem lado certo; o LED tem. Os valores vêm pintados em <strong>código de cores</strong>: 220 Ω = vermelho, vermelho, marrom; 10 kΩ = marrom, preto, laranja (a quarta faixa, dourada, é a tolerância de 5%).</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Cálculo do resistor do LED: o pino dá 3,3 volts, o LED vermelho usa 2,0 volts, sobram 1,3 volt no resistor; com 220 ohms a corrente fica em cerca de 6 miliampères." class="w-full h-auto" viewBox="0 0 640 280">
+<defs>
+<pattern id="m12-grid2" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#10b981" opacity="0.12"/></pattern>
+<filter id="m12-glow2" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="640" height="280" fill="url(#m12-grid2)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect x="20" y="40" width="190" height="56" rx="12" fill="#0e2018" stroke="#34d399" stroke-width="2"/>
+<text x="115" y="66" fill="#34d399" font-size="17" font-weight="600">pino: 3,3 V</text>
+<text x="115" y="86" fill="#d1fae5" font-size="14">a tensão total</text>
+<rect x="225" y="40" width="190" height="56" rx="12" fill="#2a0f12" stroke="#f87171" stroke-width="2"/>
+<text x="320" y="66" fill="#fca5a5" font-size="17" font-weight="600">LED: 2,0 V</text>
+<text x="320" y="86" fill="#fecaca" font-size="14">queda fixa (vermelho)</text>
+<g filter="url(#m12-glow2)"><rect x="430" y="40" width="190" height="56" rx="12" fill="#13261d" stroke="#10b981" stroke-width="2.5"/></g>
+<text x="525" y="66" fill="#34d399" font-size="17" font-weight="600">resistor: 1,3 V</text>
+<text x="525" y="86" fill="#d1fae5" font-size="14">o que sobra</text>
+<text x="215" y="74" fill="#a8a8b3" font-size="20">−</text>
+<text x="422" y="74" fill="#a8a8b3" font-size="20">=</text>
+<rect x="60" y="130" width="520" height="56" rx="12" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/>
+<text x="320" y="156" fill="#bfe6ff" font-size="17" font-weight="600">R = V ÷ I = 1,3 V ÷ 0,010 A = 130 Ω</text>
+<text x="320" y="176" fill="#9ad6ff" font-size="14">mínimo para 10 mA; use o valor comercial acima</text>
+<rect x="60" y="206" width="520" height="56" rx="12" fill="#13261d" stroke="#34d399" stroke-width="2"/>
+<text x="320" y="232" fill="#34d399" font-size="17" font-weight="600">com 220 Ω: I = 1,3 ÷ 220 ≈ 6 mA</text>
+<text x="320" y="252" fill="#d1fae5" font-size="14">brilho bom, pino folgado, LED frio</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">Como ler:</strong> a linha de cima reparte a tensão (o que o pino dá menos o que o LED usa sobra para o resistor). A caixa ciano aplica a lei de Ohm para achar o resistor mínimo. A de baixo confere a corrente com o valor que você realmente vai usar: 220 Ω, o mesmo do pisca-LED do módulo 1.1.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-4">A conta em quatro passos</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Tensão da fonte</h4><p class="text-neutral-300 text-sm">Pino do ESP32 = 3,3 V. Se o LED for ligado em 5 V, use 5 V na conta.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Subtraia a queda do LED</h4><p class="text-neutral-300 text-sm">Vermelho ≈ 2,0 V. Sobram 1,3 V para o resistor.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Escolha a corrente</h4><p class="text-neutral-300 text-sm">Entre 5 e 10 mA basta para indicador. Mantenha cada pino do ESP32 abaixo de uns 12 mA; ele não é fonte de força.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">4</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Divida e arredonde para cima</h4><p class="text-neutral-300 text-sm">R = 1,3 ÷ 0,010 = 130 Ω. Valores comerciais próximos: 150, 220, 330 Ω. Na dúvida, o maior: o LED brilha um pouco menos e nada esquenta.</p></div></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-5">
+<h4 class="font-bold text-emerald-400 mb-3">✓ Faça</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Um resistor para cada LED, mesmo que sejam iguais.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Arredondar o resistor para o valor comercial maior.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Para LED azul ou branco em 3,3 V, usar 47 a 100 Ω (sobra pouca tensão).</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Não faça</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>LED direto no pino, sem resistor: queima o LED e força o pino.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Um resistor só para vários LEDs em paralelo: a corrente se divide mal.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Ligar motor, buzzer grande ou fita de LED direto num GPIO.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-2-t2-p3">É a conta mais repetida da robótica de bancada. A mesma lógica (tensão que sobra dividida pela corrente desejada) aparece no divisor de tensão do HC-SR04, na escolha do resistor de base de um transistor e na leitura de bateria do rover.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">V = R × I</div><div class="text-xs text-neutral-400">duas dão a terceira</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Queda do LED</div><div class="text-xs text-neutral-400">2 V vermelho, 3 V azul</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Corrente segura</div><div class="text-xs text-neutral-400">5 a 10 mA por LED</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Código de cores</div><div class="text-xs text-neutral-400">220 Ω = vermelho, vermelho, marrom</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" id="topico-3" data-inema-topic="modulo-1-2#topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🧩 Protoboard: como as trilhas se ligam</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-2-t3-p1">A <strong class="text-emerald-400">protoboard</strong> (placa de ensaio) deixa você montar circuitos sem solda, só encaixando fios e componentes. Por dentro, cada furo está ligado a outros por lâminas de metal escondidas. Quem não conhece esse mapa monta tudo "certo" na fileira errada. São duas regras: no meio, os <strong class="text-neutral-100">5 furos de uma mesma coluna</strong> estão ligados entre si; nas bordas, as <strong class="text-neutral-100">linhas compridas de + e −</strong> (os barramentos) correm ao longo da placa.</p>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Mapa interno da protoboard: os barramentos de mais e menos correm na horizontal pelas bordas; no centro, cada coluna de cinco furos está ligada na vertical; o vão central separa as duas metades." class="w-full h-auto" viewBox="0 0 640 320">
+<defs>
+<pattern id="m12-holes" width="22" height="22" patternUnits="userSpaceOnUse" x="44" y="0"><rect x="7" y="7" width="7" height="7" rx="1.5" fill="#3a3a46"/></pattern>
+<filter id="m12-glow3" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect x="20" y="20" width="600" height="250" rx="12" fill="#16161e" stroke="#3a3a46" stroke-width="2"/>
+<rect x="44" y="32" width="550" height="22" fill="url(#m12-holes)"/>
+<rect x="44" y="236" width="550" height="22" fill="url(#m12-holes)"/>
+<rect x="44" y="70" width="550" height="66" fill="url(#m12-holes)"/>
+<rect x="44" y="154" width="550" height="66" fill="url(#m12-holes)"/>
+<rect x="24" y="138" width="592" height="14" fill="#0c0c10"/>
+<line x1="48" y1="43" x2="590" y2="43" stroke="#f87171" stroke-width="3" opacity="0.9"/>
+<line x1="48" y1="247" x2="590" y2="247" stroke="#38bdf8" stroke-width="3" opacity="0.85"/>
+<line x1="165" y1="74" x2="165" y2="132" stroke="#34d399" stroke-width="4" opacity="0.9"/>
+<line x1="187" y1="74" x2="187" y2="132" stroke="#34d399" stroke-width="4" opacity="0.9"/>
+<line x1="165" y1="158" x2="165" y2="216" stroke="#fbbf24" stroke-width="4" opacity="0.9"/>
+<g font-family="Inter,sans-serif">
+<text x="604" y="48" fill="#fca5a5" font-size="16" font-weight="600" text-anchor="end">+</text>
+<text x="604" y="252" fill="#7dd3fc" font-size="16" font-weight="600" text-anchor="end">−</text>
+<rect x="204" y="82" width="200" height="48" rx="6" fill="#101016" opacity="0.92"/><rect x="204" y="172" width="230" height="28" rx="6" fill="#101016" opacity="0.92"/><text x="210" y="100" fill="#34d399" font-size="15">colunas de 5 ligadas ↕</text>
+<text x="210" y="122" fill="#d1fae5" font-size="14">(cada coluna é um "nó")</text>
+<text x="210" y="190" fill="#fde68a" font-size="15">a metade de baixo é outro nó</text>
+<text x="320" y="150" fill="#a8a8b3" font-size="14" text-anchor="middle">vão central: separa as metades</text>
+<text x="320" y="300" fill="#a8a8b3" font-size="14" text-anchor="middle">barramentos: + em cima e − embaixo, ao longo da placa</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">Como ler:</strong> cada traço colorido é uma lâmina de metal por baixo dos furos. As verdes mostram duas colunas vizinhas: elas NÃO se tocam. A âmbar mostra que a mesma coluna do outro lado do vão é outro ponto. As linhas vermelha (+) e ciano (−) são os barramentos de alimentação. Em algumas placas compridas o barramento é cortado no meio: confira com o multímetro (tópico 4).</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-5">
+<h4 class="font-bold text-emerald-400 mb-3">✓ Montagem limpa</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Fio vermelho para +, preto ou azul para GND, sempre.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>ESP32 encaixado sobre o vão central, um lado de pinos em cada metade.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Jumpers curtos e rentes à placa: fica fácil seguir o caminho.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Componente com as duas pernas em colunas diferentes.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Erros clássicos</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Resistor com as duas pernas na mesma coluna: ele fica "em curto" e não faz nada.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Ligar + e − na mesma coluna: curto-circuito direto na fonte.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Motor alimentado pela protoboard: as lâminas não aguentam a corrente.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>ESP32 largo ocupando todos os furos: alguns DevKits não deixam coluna livre; use duas protoboards lado a lado.</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-2-t3-p2">Um <strong>jumper</strong> é o fiozinho com ponta rígida (macho-macho para protoboard, macho-fêmea para ligar em pinos de módulos). Um <strong>curto-circuito</strong> é quando + e − se encontram sem nada no meio para limitar a corrente: a fonte entrega tudo o que pode, o fio esquenta e a bateria pode estufar.</p>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-2-t3-p3">Metade dos circuitos que "não funcionam" estão certos no papel e errados uma fileira para o lado. Conhecer o mapa interno faz você achar o defeito olhando, em vez de reescrever o código.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Barramento</div><div class="text-xs text-neutral-400">linha comprida de + e −</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Jumper</div><div class="text-xs text-neutral-400">fio de ligação rápida</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Curto-circuito</div><div class="text-xs text-neutral-400">+ encontra − sem carga</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Montagem limpa</div><div class="text-xs text-neutral-400">cores fixas, fios curtos</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" id="topico-4" data-inema-topic="modulo-1-2#topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">📏 Multímetro: medir antes de ligar</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-2-t4-p1">O <strong class="text-emerald-400">multímetro</strong> é o instrumento que transforma "acho que está certo" em certeza. Um modelo digital simples resolve tudo o que a Trilha 1 pede: medir a <strong class="text-neutral-100">tensão</strong> de uma bateria, conferir o valor de um <strong class="text-neutral-100">resistor</strong> e testar a <strong class="text-neutral-100">continuidade</strong> de um fio (se ele está inteiro ou se dois pontos estão ligados).</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-2-t4-p2"><strong>DC</strong> (corrente contínua, símbolo V com traço reto) é o que pilhas, baterias e o ESP32 usam; <strong>AC</strong> (alternada, símbolo com onda) é a tomada, que você não vai medir neste curso. <strong>Continuidade</strong> é o modo que apita quando há ligação entre as pontas. A ponteira <strong>preta</strong> vai no borne COM e no GND do circuito; a <strong>vermelha</strong> vai no borne VΩ e no ponto que você quer medir.</p>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-4">Três medidas que você vai repetir sempre</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Tensão da bateria (circuito ligado)</h4><p class="text-neutral-300 text-sm">Seletor em V DC, escala 20 V. Preta no −, vermelha no +. Quatro pilhas NiMH carregadas mostram perto de 5,2 a 5,6 V; abaixo de uns 4,4 V é hora de recarregar. Leitura negativa só indica ponteiras trocadas.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Valor de um resistor (circuito desligado)</h4><p class="text-neutral-300 text-sm">Seletor em Ω, escala 2 kΩ para um de 220 Ω. Encoste uma ponteira em cada perna, sem segurar as duas pontas com os dedos (seu corpo vira um resistor em paralelo). Esperado: 209 a 231 Ω para 5% de tolerância.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><span class="text-emerald-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Continuidade de um fio ou trilha (desligado)</h4><p class="text-neutral-300 text-sm">Seletor no símbolo de som. Encoste as pontas: tem que apitar. Depois teste o jumper suspeito ou dois furos da protoboard. Sem apito = fio partido ou furos que não se ligam.</p></div></div>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-2">⚠️ Resistência e continuidade só com tudo desligado</h3>
+<p class="text-neutral-300 text-sm">Nesses modos o próprio multímetro injeta uma pequena corrente. Medir com a bateria ligada dá leitura errada e pode danificar o aparelho. E nunca deixe a ponteira vermelha no borne de corrente (10A ou mA) para medir tensão: vira um curto-circuito pelo multímetro.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-5">
+<h4 class="font-bold text-emerald-400 mb-3">✓ Hábito bom</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Medir a bateria antes de culpar o código.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Conferir que o pino 3V3 do ESP32 mostra perto de 3,3 V.</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Começar pela escala maior quando não souber o valor.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Hábito ruim</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Girar o seletor com as ponteiras encostadas no circuito.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Medir corrente sem saber o que está fazendo (fica para depois).</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Esquecer o multímetro ligado: a bateria de 9 V dele acaba.</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Sem multímetro ainda?</h3>
+<p class="text-neutral-300 text-sm">No Wokwi existe a peça "Voltmeter" e o próprio ESP32 mede tensão pelo ADC (tópico 6). Mas um multímetro digital básico é das ferramentas mais baratas e úteis da bancada; vale tê-lo antes dos motores.</p>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-2-t4-p3">Quando o rover do módulo 1.6 parar no meio da sala, a primeira pergunta é "a bateria está boa?". Quem mede em segundos não perde a tarde desconfiando do programa. E conferir continuidade antes de ligar é o que salva placas de um curto que você não viu.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Escala DC</div><div class="text-xs text-neutral-400">V com traço reto</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Continuidade</div><div class="text-xs text-neutral-400">apita se há ligação</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Preta no GND</div><div class="text-xs text-neutral-400">referência da medida</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Desligado</div><div class="text-xs text-neutral-400">para medir Ω e continuidade</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" id="topico-5" data-inema-topic="modulo-1-2#topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🔢 Digital, analógico e lógica de 3,3 V</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-2-t5-p1">Um sinal <strong class="text-emerald-400">digital</strong> só tem dois estados: ligado (HIGH) ou desligado (LOW), como um interruptor. Um sinal <strong class="text-emerald-400">analógico</strong> varia continuamente, como a tensão de um potenciômetro girando ou de uma bateria descarregando. O ESP32 lê os dois: o digital com <span class="font-mono text-xs">digitalRead()</span> e o analógico pelo ADC com <span class="font-mono text-xs">analogRead()</span>. E aqui está o ponto crítico: <strong class="text-neutral-100">no ESP32, HIGH é 3,3 V, não 5 V</strong>.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-2-t5-p2"><strong>GPIO</strong> (entrada e saída de uso geral) é um pino que o programa configura como entrada ou saída. <strong>ADC</strong> (conversor analógico-digital) transforma uma tensão em número: no ESP32 ele tem 12 bits, ou seja, de 0 a 4095. <strong>Nível lógico</strong> é a faixa de tensão que a placa entende como 0 ou 1. Um <strong>conversor de nível</strong> é um módulo pequeno que traduz sinais de 5 V para 3,3 V e vice-versa.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Comparação de sinais: o digital salta entre 0 e 3,3 volts; o analógico sobe e desce suavemente e o ADC transforma cada valor em um número de 0 a 4095; acima de 3,3 volts fica a zona proibida para os pinos do ESP32." class="w-full h-auto" viewBox="0 0 640 300">
+<defs>
+<pattern id="m12-grid5" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#10b981" opacity="0.1"/></pattern>
+</defs>
+<rect width="640" height="300" fill="url(#m12-grid5)"/>
+<rect x="70" y="30" width="550" height="44" fill="#3b0f10" opacity="0.55"/>
+<line x1="70" y1="74" x2="620" y2="74" stroke="#f87171" stroke-width="2" stroke-dasharray="6 5"/>
+<line x1="70" y1="234" x2="620" y2="234" stroke="#3a3a46" stroke-width="2"/>
+<line x1="70" y1="30" x2="70" y2="234" stroke="#3a3a46" stroke-width="2"/>
+<path d="M80,234 L80,90 L160,90 L160,234 L230,234 L230,90 L330,90 L330,234" fill="none" stroke="#34d399" stroke-width="3"/>
+<path d="M360,220 C410,210 420,110 470,120 C520,130 520,200 560,180 C590,165 600,120 615,110" fill="none" stroke="#38bdf8" stroke-width="3"/>
+<g font-family="Inter,sans-serif">
+<text x="62" y="78" fill="#fca5a5" font-size="14" text-anchor="end">3,6</text>
+<text x="62" y="96" fill="#d1fae5" font-size="14" text-anchor="end">3,3</text>
+<text x="62" y="238" fill="#a8a8b3" font-size="14" text-anchor="end">0 V</text>
+<text x="345" y="57" fill="#fca5a5" font-size="15" text-anchor="middle">zona proibida: 5 V aqui queima o pino</text>
+<text x="205" y="262" fill="#34d399" font-size="16" font-weight="600" text-anchor="middle">digital: HIGH ou LOW</text>
+<text x="490" y="262" fill="#7dd3fc" font-size="16" font-weight="600" text-anchor="middle">analógico: qualquer valor</text>
+<text x="490" y="284" fill="#bfe6ff" font-size="14" text-anchor="middle">ADC: 0 V → 0 · 3,3 V → 4095</text>
+<text x="205" y="284" fill="#d1fae5" font-size="14" text-anchor="middle">digitalRead() → 1 ou 0</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">Como ler:</strong> à esquerda, a linha verde só ocupa dois andares, 0 e 3,3 V. À direita, a linha ciano passa por todos os valores no meio, e o ADC dá um número proporcional. A faixa vermelha no topo é o limite: o ESP32 tolera no máximo uns 3,6 V num pino, então um sensor que devolve 5 V precisa de divisor de tensão (tópico 6) ou conversor de nível.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3">Peça do kit</th><th class="text-left p-3">Sinal que devolve</th><th class="text-left p-3">Cuidado no ESP32</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">Botão</td><td class="p-3">digital</td><td class="p-3">usar pull-up (tópico 6)</td></tr>
+<tr><td class="p-3">Potenciômetro</td><td class="p-3">analógico</td><td class="p-3">alimentar com 3,3 V, não 5 V</td></tr>
+<tr><td class="p-3">HC-SR04 (ECHO)</td><td class="p-3">pulso digital de 5 V</td><td class="p-3">divisor de tensão no ECHO</td></tr>
+<tr><td class="p-3">Sensor IR de obstáculo</td><td class="p-3">digital</td><td class="p-3">alimentar com 3,3 V quando o módulo aceitar</td></tr>
+</tbody>
+</table>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Qual pino usar para o ADC</h3>
+<p class="text-neutral-300 text-sm">No ESP32 clássico (WROOM-32), prefira os pinos do ADC1 (GPIO 32 a 39). Os do ADC2 param de ler quando o Wi-Fi está ligado, e isso só aparece na Trilha 2, quando você já esqueceu o motivo. Os GPIO 34 a 39 são só entrada: ótimos para ler sensores, inúteis para acender LED.</p>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-2-t5-p3">Muitos tutoriais e módulos foram feitos para o Arduino Uno, que trabalha em 5 V. Ligar um desses direto no ESP32 é o jeito mais rápido de matar um pino, às vezes a placa inteira. Saber qual sinal cada peça devolve decide o pino, a função de leitura e se precisa de proteção.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">HIGH / LOW</div><div class="text-xs text-neutral-400">3,3 V / 0 V no ESP32</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">ADC</div><div class="text-xs text-neutral-400">tensão → 0 a 4095</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">GPIO</div><div class="text-xs text-neutral-400">pino de entrada ou saída</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Conversor de nível</div><div class="text-xs text-neutral-400">5 V ↔ 3,3 V</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" id="topico-6" data-inema-topic="modulo-1-2#topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🪜 Divisor de tensão e resistor de pull-up</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-2-t6-p1">Dois circuitos de dois componentes aparecem em quase todo robô. O <strong class="text-emerald-400">divisor de tensão</strong> usa dois resistores em série para entregar uma fração da tensão: <strong class="text-neutral-100">Vsaída = Ventrada × R2 ÷ (R1 + R2)</strong>. Com dois resistores iguais, a saída é a metade. O <strong class="text-emerald-400">pull-up</strong> é um resistor que "puxa" uma entrada para 3,3 V enquanto nada acontece, para o pino nunca ficar indefinido.</p>
+<div class="bg-dark-800 border border-emerald-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-emerald-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m1-2-t6-p2">Uma <strong>entrada flutuante</strong> é um pino de entrada ligado a nada: ele capta ruído do ambiente e a leitura troca sozinha entre 0 e 1. O ESP32 tem um <strong>pull-up interno</strong> (um resistor de dezenas de kΩ dentro do chip) que você liga no código com <span class="font-mono text-xs">INPUT_PULLUP</span>. Com ele, o botão fica entre o pino e o GND: solto lê 1, apertado lê 0.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Dois circuitos: à esquerda, divisor com dois resistores de 10 quiloohms reduz os cerca de 5,2 volts da bateria para 2,6 volts no GPIO 34; à direita, botão entre o GPIO 4 e o GND, com pull-up interno ligando o pino a 3,3 volts." class="w-full h-auto" viewBox="0 0 640 320">
+<defs>
+<pattern id="m12-grid6" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#10b981" opacity="0.1"/></pattern>
+<filter id="m12-glow6" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="640" height="320" fill="url(#m12-grid6)"/>
+<line x1="320" y1="20" x2="320" y2="300" stroke="#272730" stroke-width="2"/>
+<g font-family="Inter,sans-serif">
+<text x="160" y="30" fill="#34d399" font-size="17" font-weight="600" text-anchor="middle">divisor de tensão</text>
+<text x="40" y="66" fill="#fca5a5" font-size="15">bateria ≈ 5,2 V</text>
+<path d="M100,74 L100,96" stroke="#f87171" stroke-width="3"/>
+<path d="M100,96 l-11,7 l22,11 l-22,11 l22,11 l-22,11 l11,7" stroke="#fbbf24" stroke-width="3" fill="none"/>
+<text x="130" y="128" fill="#fde68a" font-size="15">R1 = 10 kΩ</text>
+<path d="M100,154 L100,176" stroke="#34d399" stroke-width="3"/>
+<g filter="url(#m12-glow6)"><circle cx="100" cy="176" r="6" fill="#34d399"/></g>
+<path d="M106,176 L210,176" stroke="#34d399" stroke-width="3"/>
+<text x="216" y="172" fill="#34d399" font-size="15" font-weight="600">GPIO 34</text>
+<text x="216" y="192" fill="#d1fae5" font-size="14">≈ 2,6 V</text>
+<path d="M100,176 L100,198" stroke="#34d399" stroke-width="3"/>
+<path d="M100,198 l-11,7 l22,11 l-22,11 l22,11 l-22,11 l11,7" stroke="#fbbf24" stroke-width="3" fill="none"/>
+<text x="130" y="230" fill="#fde68a" font-size="15">R2 = 10 kΩ</text>
+<path d="M100,256 L100,276 M80,276 L120,276" stroke="#38bdf8" stroke-width="3"/>
+<text x="100" y="298" fill="#7dd3fc" font-size="14" text-anchor="middle">GND</text>
+<text x="480" y="30" fill="#34d399" font-size="17" font-weight="600" text-anchor="middle">botão com pull-up</text>
+<rect x="350" y="60" width="130" height="150" rx="12" fill="#13261d" stroke="#10b981" stroke-width="2"/>
+<text x="415" y="86" fill="#34d399" font-size="15" font-weight="600" text-anchor="middle">ESP32</text>
+<text x="455" y="112" fill="#d1fae5" font-size="14" text-anchor="middle">3,3 V</text>
+<path d="M455,118 l-9,6 l18,9 l-18,9 l18,9 l-9,6" stroke="#fbbf24" stroke-width="2.5" fill="none"/>
+<text x="362" y="140" fill="#d1fae5" font-size="14">pull-up</text><text x="362" y="158" fill="#d1fae5" font-size="14">interno</text>
+<path d="M455,157 L455,196 L480,196" stroke="#34d399" stroke-width="2.5" fill="none"/>
+<text x="505" y="186" fill="#34d399" font-size="14" text-anchor="middle">GPIO 4</text>
+<path d="M480,196 L530,196" stroke="#34d399" stroke-width="3"/>
+<circle cx="534" cy="196" r="4" fill="#38bdf8"/><circle cx="580" cy="196" r="4" fill="#38bdf8"/>
+<path d="M534,182 L578,170" stroke="#38bdf8" stroke-width="3"/>
+<text x="557" y="160" fill="#bfe6ff" font-size="14" text-anchor="middle">botão</text>
+<path d="M584,196 L604,196 L604,262 M584,262 L624,262" stroke="#38bdf8" stroke-width="3" fill="none"/>
+<text x="604" y="284" fill="#7dd3fc" font-size="14" text-anchor="middle">GND</text>
+<text x="420" y="262" fill="#d1fae5" font-size="14" text-anchor="middle">solto: lê 1</text>
+<text x="420" y="282" fill="#d1fae5" font-size="14" text-anchor="middle">apertado: lê 0</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-emerald-400">Como ler:</strong> à esquerda, siga a tensão de cima para baixo: os dois resistores iguais dividem a bateria ao meio e o ponto verde do meio vai ao GPIO 34, sempre abaixo de 3,3 V. À direita, o resistor interno liga o GPIO 4 aos 3,3 V; quando você aperta o botão, o pino fica ligado direto ao GND e lê 0. A lógica "invertida" (apertado = 0) é normal com pull-up.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m1-2-t6-p3"><strong class="text-neutral-100">Objetivo:</strong> ler a tensão de 4 pilhas AA pelo divisor e o estado de um botão com pull-up interno, mostrando os dois no Serial Monitor duas vezes por segundo. No Wokwi, troque a bateria por um potenciômetro ligado entre 3,3 V e GND (a saída do meio no GPIO 34) e veja a tensão "da bateria" mudar.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">bateria-e-botao.ino</span></div>
+<pre><code><span class="c">// Divisor de tensão + botão com pull-up (ESP32, pacote esp32 3.x)</span>
+<span class="c">// Bateria → R1 10k → GPIO 34 → R2 10k → GND   |   Botão: GPIO 4 ↔ GND</span>
+
+<span class="k">const int</span> PINO_BATERIA = 34;   <span class="c">// ADC1, só entrada</span>
+<span class="k">const int</span> PINO_BOTAO   = 4;    <span class="c">// tem pull-up interno</span>
+<span class="k">const float</span> FATOR_DIVISOR = 2.0;  <span class="c">// (R1 + R2) / R2 = (10k + 10k) / 10k</span>
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_BOTAO, INPUT_PULLUP);  <span class="c">// solto = HIGH, apertado = LOW</span>
+  analogReadResolution(12);           <span class="c">// 0 a 4095</span>
+  Serial.println(<span class="s">"Leitura de bateria e botao pronta"</span>);
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">int</span> bruto = analogRead(PINO_BATERIA);               <span class="c">// número de 0 a 4095</span>
+  <span class="k">int</span> mvPino = analogReadMilliVolts(PINO_BATERIA);    <span class="c">// já em mV, calibrado</span>
+  <span class="k">float</span> vBateria = mvPino * FATOR_DIVISOR / 1000.0;  <span class="c">// desfaz o divisor</span>
+  <span class="k">bool</span> apertado = (digitalRead(PINO_BOTAO) == LOW);
+
+  Serial.print(<span class="s">"ADC: "</span>);        Serial.print(bruto);
+  Serial.print(<span class="s">" | pino: "</span>);    Serial.print(mvPino);   Serial.print(<span class="s">" mV"</span>);
+  Serial.print(<span class="s">" | bateria: "</span>); Serial.print(vBateria, 2); Serial.print(<span class="s">" V"</span>);
+  Serial.print(<span class="s">" | botao: "</span>);   Serial.println(apertado ? <span class="s">"APERTADO"</span> : <span class="s">"solto"</span>);
+  delay(500);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>Com 4 pilhas NiMH carregadas, "bateria" mostra perto de 5,2 a 5,6 V; confira com o multímetro (diferença de até uns 0,1 V é normal).</span></li>
+<li class="flex items-start gap-2"><span class="text-emerald-400">✓</span><span>"botao" muda para APERTADO só enquanto você segura.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"botao" trocando sozinho? O pino escolhido não tem pull-up (GPIO 34 a 39) ou o fio está solto.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>ADC parado em 4095? O pino está recebendo 3,3 V ou mais: falta o divisor ou ele está montado ao contrário.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-red-400 mb-2">⚠️ Calcule antes de ligar na bateria</h3>
+<p class="text-neutral-300 text-sm">Com 2 células 18650 em série (até 8,4 V), dois resistores iguais entregariam 4,2 V ao pino: acima do limite. Use R1 = 20 kΩ e R2 = 10 kΩ (divide por 3, máximo de 2,8 V) e troque o FATOR_DIVISOR para 3.0. Sempre refaça a conta com a tensão MÁXIMA da bateria carregada.</p>
+</div>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m1-2-t6-p4">O divisor é o que protege o ESP32 do pino ECHO de 5 V do HC-SR04 (módulo 1.4) e o que deixa o rover avisar que a bateria está acabando. O pull-up é o que faz botões, chaves de fim de curso e sensores de "colisão" lerem sem dar sinais fantasmas.</p>
+<h3 class="text-lg font-semibold text-emerald-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Divisor</div><div class="text-xs text-neutral-400">Vin × R2 ÷ (R1 + R2)</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Pull-up interno</div><div class="text-xs text-neutral-400">INPUT_PULLUP</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">Entrada flutuante</div><div class="text-xs text-neutral-400">lê ruído ao acaso</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-emerald-400 font-semibold text-sm">analogReadMilliVolts</div><div class="text-xs text-neutral-400">ADC já em mV</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-emerald-900/30 via-dark-800 to-dark-800 rounded-xl border border-emerald-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Resumo do módulo</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Tensão empurra, corrente flui, resistência segura</strong><span class="text-neutral-400">, e só há corrente com caminho fechado até o GND.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">V = R × I</strong><span class="text-neutral-400">: LED vermelho em 3,3 V pede pelo menos 130 Ω; 220 Ω dá cerca de 6 mA.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Protoboard</strong><span class="text-neutral-400">: colunas de 5 ligadas no meio, barramentos nas bordas, vão central separa.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Multímetro</strong><span class="text-neutral-400">: tensão com tudo ligado; resistência e continuidade com tudo desligado.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">ESP32 é 3,3 V</strong><span class="text-neutral-400">: 5 V num pino queima; divisor ou conversor de nível resolvem.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-emerald-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Divisor e pull-up</strong><span class="text-neutral-400">: medir a bateria com segurança e ler botões sem sinal fantasma.</span></div></div>
+</div>
+<h3 class="font-semibold text-emerald-400 mb-3">Para ir além</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/adc.html" rel="noopener" target="_blank">ADC no Arduino-ESP32 (Espressif)</a> <span class="text-neutral-500">— analogRead, analogReadMilliVolts e atenuação</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/gpio.html" rel="noopener" target="_blank">GPIO no Arduino-ESP32</a> <span class="text-neutral-500">— pinMode, INPUT_PULLUP e cuidados</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://learn.sparkfun.com/tutorials/how-to-use-a-breadboard" rel="noopener" target="_blank">Como usar uma protoboard (SparkFun)</a> <span class="text-neutral-500">— fotos do interno da placa</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://learn.sparkfun.com/tutorials/how-to-use-a-multimeter" rel="noopener" target="_blank">Como usar um multímetro (SparkFun)</a> <span class="text-neutral-500">— tensão, resistência e continuidade</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.wokwi.com/" rel="noopener" target="_blank">Documentação do Wokwi</a> <span class="text-neutral-500">— testar os circuitos sem hardware</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-emerald-400 mb-1">Próximo módulo</h3>
+<p class="text-neutral-300">1.3 · ESP32: o primeiro programa. Arduino IDE 2.x, pacote esp32 3.x, primeiro upload na placa real, Serial Monitor, entradas e PWM na API nova.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-1-1.html">← Anterior: 1.1 O que é um robô</a>
+<a class="inline-flex items-center px-5 py-3 bg-emerald-700 text-white rounded-lg font-semibold hover:bg-emerald-600 transition-colors" href="modulo-1-3.html">Próximo: 1.3 ESP32 →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica do Zero ao Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licença MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="inema-course" content="robot">
+<title>Módulo 2.1 · Controle pelo celular: Wi-Fi e BLE | Robótica do Zero ao Expert</title>
+<meta name="description" content="Controle o rover pelo celular com ESP32 (pacote 3.x): Wi-Fi em modo estação e ponto de acesso, servidor web com botões, WebSocket com joystick, BLE e watchdog de comando para parar quando o sinal cai.">
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script type="application/json" data-inema-manifest>
+{
+  "course": "robot",
+  "tracks": [
+    { "n": "1", "title": "Primeiros passos", "modules": [
+      { "id": "1-1", "title": "O que é um robô e o seu kit", "topics": 6, "href": "curso/trilha1/modulo-1-1.html" },
+      { "id": "1-2", "title": "Eletrônica essencial", "topics": 6, "href": "curso/trilha1/modulo-1-2.html" },
+      { "id": "1-3", "title": "ESP32: o primeiro programa", "topics": 6, "href": "curso/trilha1/modulo-1-3.html" },
+      { "id": "1-4", "title": "Sensores: o robô percebe", "topics": 6, "href": "curso/trilha1/modulo-1-4.html" },
+      { "id": "1-5", "title": "Motores e energia", "topics": 6, "href": "curso/trilha1/modulo-1-5.html" },
+      { "id": "1-6", "title": "Projeto: rover que desvia de obstáculos", "topics": 6, "href": "curso/trilha1/modulo-1-6.html" }
+    ]},
+    { "n": "2", "title": "Robô autônomo", "modules": [
+      { "id": "2-1", "title": "Controle pelo celular: Wi-Fi e BLE", "topics": 6, "href": "curso/trilha2/modulo-2-1.html" },
+      { "id": "2-2", "title": "IMU e encoders: saber onde está", "topics": 6, "href": "curso/trilha2/modulo-2-2.html" },
+      { "id": "2-3", "title": "Controle PID na prática", "topics": 6, "href": "curso/trilha2/modulo-2-3.html" },
+      { "id": "2-4", "title": "Várias tarefas ao mesmo tempo", "topics": 6, "href": "curso/trilha2/modulo-2-4.html" },
+      { "id": "2-5", "title": "Telemetria e registro de dados", "topics": 6, "href": "curso/trilha2/modulo-2-5.html" },
+      { "id": "2-6", "title": "Projeto: seguidor de linha com PID", "topics": 6, "href": "curso/trilha2/modulo-2-6.html" }
+    ]},
+    { "n": "3", "title": "Visão e IA embarcada", "modules": [
+      { "id": "3-1", "title": "Raspberry Pi 5 e Linux", "topics": 6, "href": "curso/trilha3/modulo-3-1.html" },
+      { "id": "3-2", "title": "Câmera e OpenCV", "topics": 6, "href": "curso/trilha3/modulo-3-2.html" },
+      { "id": "3-3", "title": "Detectar objetos com YOLO26", "topics": 6, "href": "curso/trilha3/modulo-3-3.html" },
+      { "id": "3-4", "title": "IA dentro do microcontrolador", "topics": 6, "href": "curso/trilha3/modulo-3-4.html" },
+      { "id": "3-5", "title": "Raspberry Pi conversa com o ESP32", "topics": 6, "href": "curso/trilha3/modulo-3-5.html" },
+      { "id": "3-6", "title": "Projeto: robô que segue um objeto", "topics": 6, "href": "curso/trilha3/modulo-3-6.html" }
+    ]},
+    { "n": "4", "title": "ROS 2 e navegação", "modules": [
+      { "id": "4-1", "title": "ROS 2 sem medo", "topics": 6, "href": "curso/trilha4/modulo-4-1.html" },
+      { "id": "4-2", "title": "Descrever e simular o robô", "topics": 6, "href": "curso/trilha4/modulo-4-2.html" },
+      { "id": "4-3", "title": "micro-ROS no ESP32", "topics": 6, "href": "curso/trilha4/modulo-4-3.html" },
+      { "id": "4-4", "title": "LiDAR e mapas (SLAM)", "topics": 6, "href": "curso/trilha4/modulo-4-4.html" },
+      { "id": "4-5", "title": "Navegação com Nav2", "topics": 6, "href": "curso/trilha4/modulo-4-5.html" },
+      { "id": "4-6", "title": "Projeto: robô que mapeia e navega", "topics": 6, "href": "curso/trilha4/modulo-4-6.html" }
+    ]},
+    { "n": "5", "title": "IA moderna e braço robótico", "modules": [
+      { "id": "5-1", "title": "Modelo de linguagem como cérebro", "topics": 6, "href": "curso/trilha5/modulo-5-1.html" },
+      { "id": "5-2", "title": "Voz local: ouvir e falar", "topics": 6, "href": "curso/trilha5/modulo-5-2.html" },
+      { "id": "5-3", "title": "Braço SO-101 e LeRobot", "topics": 6, "href": "curso/trilha5/modulo-5-3.html" },
+      { "id": "5-4", "title": "Aprender por demonstração", "topics": 6, "href": "curso/trilha5/modulo-5-4.html" },
+      { "id": "5-5", "title": "Simular antes do real", "topics": 6, "href": "curso/trilha5/modulo-5-5.html" },
+      { "id": "5-6", "title": "Projeto final: robô assistente", "topics": 6, "href": "curso/trilha5/modulo-5-6.html" }
+    ]},
+    { "n": "6", "title": "Para o professor", "modules": [
+      { "id": "6-1", "title": "Como ministrar este curso", "topics": 8, "href": "curso/trilha6/modulo-6-1.html" }
+    ]}
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link rel="stylesheet" href="../../assets/learn.css">
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T2 ativa -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600" aria-label="Navegação principal">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html" aria-label="Robótica do Zero ao Expert — início">
+<span class="text-xl sm:text-2xl" aria-hidden="true">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeiros passos</span></a>
+<a class="nav-trail text-blue-400 bg-blue-500/10" aria-current="page" href="index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autônomo</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visão e IA</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Professor</span></a>
+<span class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block" aria-hidden="true"></span>
+<button class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button" aria-label="Minha jornada">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Minha jornada</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Aparência" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Aparência</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Escuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sépia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Foco</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fonte</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Leitura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamanho</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Largura</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estreito</button><button data-inema-set-linewidth="68" type="button">Médio</button><button data-inema-set-linewidth="75" type="button">Largo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Entrelinha</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Confortável</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento roxo" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento âmbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/escuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewBox="0 0 20 20" aria-hidden="true"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main id="conteudo" data-inema-module="2-1" data-inema-track="2">
+<!-- BREADCRUMB -->
+<nav aria-label="Trilha de navegação" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-blue-400" href="../../index.html">Início</a><span aria-hidden="true">/</span>
+<a class="hover:text-blue-400" href="index.html">Trilha 2</a><span aria-hidden="true">/</span>
+<span class="text-blue-400">Módulo 2.1</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full mb-4">MÓDULO 2.1 · PRÁTICA</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">📱 Controle pelo celular: Wi-Fi e BLE</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">O ESP32 já tem Wi-Fi e Bluetooth no chip. Neste módulo você usa os dois para <strong class="text-neutral-100">dirigir o rover pelo celular</strong>: uma página com botões, um joystick no navegador sem atraso e um app BLE. E, antes de tudo, a regra que separa brinquedo de robô seguro: <strong class="text-blue-400">perdeu o sinal, o robô para</strong>.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">6</div><div class="text-xs text-neutral-400">Tópicos</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Intermediário</div><div class="text-xs text-neutral-400">Nível</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Prática</div><div class="text-xs text-neutral-400">Tipo</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Rover da T1</div><div class="text-xs text-neutral-400">Hardware</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progresso do módulo 2.1" class="inema-ring" data-inema-meter="modulo:2-1"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:2-1"><strong data-inema-meter-frac="">0 de 0</strong> tópicos lidos · <span data-inema-section-counter="">Seção 1 de 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Índice da página" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">Neste módulo</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-1">1. Estação e ponto de acesso</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-2">2. Servidor web com botões</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-3">3. WebSocket sem atraso</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-4">4. BLE pelo app</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-5">5. Segurança e watchdog</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-6">6. Joystick no navegador</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Conteúdo detalhado</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" id="topico-1" data-inema-topic="modulo-2-1#topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">📶 Wi-Fi: modo estação e ponto de acesso</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t1-p1">O Wi-Fi do ESP32 funciona de dois jeitos. No <strong class="text-blue-400">modo estação</strong> (STA) ele entra na rede da sua casa ou escola, como um celular qualquer, e recebe um endereço do roteador. No <strong class="text-blue-400">modo ponto de acesso</strong> (AP) ele cria a própria rede: o celular se conecta direto no robô, sem roteador. Para o robô que vai para a rua, a feira de ciências ou a quadra, o AP é o caminho mais previsível.</p>
+<div class="bg-dark-800 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-1-t1-p2">O <strong>SSID</strong> é o nome da rede que aparece no celular. O <strong>endereço IP</strong> é o "número da casa" de cada aparelho na rede (ex.: 192.168.4.1). Um <strong>roteador</strong> distribui esses endereços. No modo AP, o próprio ESP32 faz esse papel e fica sempre em 192.168.4.1.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Comparação dos dois modos de Wi-Fi: no modo estação, celular e ESP32 se ligam ao roteador da casa, que dá o endereço; no modo ponto de acesso, o celular se liga direto à rede criada pelo ESP32, no endereço 192.168.4.1." class="w-full h-auto" viewBox="0 0 640 300">
+<defs><pattern id="m21-grid1" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#3b82f6" opacity="0.12"/></pattern>
+<filter id="m21-glow1" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="640" height="300" fill="url(#m21-grid1)"/>
+<line x1="320" y1="20" x2="320" y2="280" stroke="#272730" stroke-width="2"/><g font-family="Inter,sans-serif" text-anchor="middle"><text x="160" y="34" fill="#60a5fa" font-size="18" font-weight="600">ESTAÇÃO (STA)</text>
+<text x="480" y="34" fill="#38bdf8" font-size="18" font-weight="600">PONTO DE ACESSO (AP)</text><rect x="100" y="66" width="120" height="50" rx="10" fill="#1c1c26" stroke="#a8a8b3" stroke-width="2"/><text x="160" y="97" fill="#e6e6e6" font-size="15">roteador</text>
+<rect x="30" y="190" width="110" height="50" rx="10" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/><text x="85" y="221" fill="#bfe6ff" font-size="15">celular</text><rect x="180" y="190" width="110" height="50" rx="10" fill="#0e1622" stroke="#60a5fa" stroke-width="2"/><text x="235" y="221" fill="#dbeafe" font-size="15">ESP32</text>
+<g filter="url(#m21-glow1)"><rect x="420" y="66" width="120" height="50" rx="10" fill="#0e1622" stroke="#3b82f6" stroke-width="2.5"/></g><text x="480" y="97" fill="#dbeafe" font-size="15">ESP32</text>
+<rect x="425" y="190" width="110" height="50" rx="10" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/><text x="480" y="221" fill="#bfe6ff" font-size="15">celular</text><text x="160" y="276" fill="#a8a8b3" font-size="14">IP dado pelo roteador</text>
+<text x="480" y="276" fill="#a8a8b3" font-size="14">IP fixo 192.168.4.1</text></g><g fill="none" stroke-width="2" stroke-dasharray="6 5" opacity="0.8"><path d="M140,116 L95,186" stroke="#38bdf8"/><path d="M180,116 L225,186" stroke="#60a5fa"/><path d="M480,116 L480,186" stroke="#38bdf8"/></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Como ler:</strong> à esquerda, tudo passa pelo roteador; se ele estiver longe ou a rede pedir login, o robô fica sem controle. À direita, o ESP32 é a própria rede e o celular fala com ele direto. O sketch abaixo tenta o primeiro e cai no segundo se não conseguir.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-1-t1-p3"><strong class="text-neutral-100">Objetivo:</strong> tentar entrar na sua rede por 10 segundos; se falhar, criar a rede própria do robô. O Serial Monitor mostra qual modo venceu e o endereço para abrir no navegador.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">wifi-sta-ou-ap.ino</span></div>
+<pre><code><span class="c">// Wi-Fi: tenta modo estação, cai para ponto de acesso (pacote esp32 3.x)</span>
+<span class="k">#include</span> &lt;WiFi.h&gt;
+
+<span class="k">const char</span>* REDE_SSID  = <span class="s">"&lt;seu_wifi&gt;"</span>;      <span class="c">// troque pelo nome da sua rede</span>
+<span class="k">const char</span>* REDE_SENHA = <span class="s">"&lt;sua_senha&gt;"</span>;
+<span class="k">const char</span>* AP_SSID    = <span class="s">"RoverINEMA"</span>;
+<span class="k">const char</span>* AP_SENHA   = <span class="s">"troque1234"</span>;      <span class="c">// mínimo de 8 caracteres</span>
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(REDE_SSID, REDE_SENHA);
+  Serial.print(<span class="s">"Conectando"</span>);
+  <span class="k">unsigned long</span> inicio = millis();
+  <span class="k">while</span> (WiFi.status() != WL_CONNECTED &amp;&amp; millis() - inicio &lt; 10000) {
+    delay(250);
+    Serial.print(<span class="s">"."</span>);
+  }
+  Serial.println();
+  <span class="k">if</span> (WiFi.status() == WL_CONNECTED) {
+    Serial.print(<span class="s">"Modo ESTACAO. Abra http://"</span>);
+    Serial.println(WiFi.localIP());
+  } <span class="k">else</span> {
+    WiFi.disconnect(<span class="k">true</span>);
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP(AP_SSID, AP_SENHA);
+    Serial.print(<span class="s">"Modo PONTO DE ACESSO. Conecte em RoverINEMA e abra http://"</span>);
+    Serial.println(WiFi.softAPIP());
+  }
+}
+
+<span class="k">void</span> loop() {                                   <span class="c">// a cada 5 s: quantos aparelhos estão na rede do robô</span>
+  <span class="k">if</span> (WiFi.getMode() == WIFI_AP) { Serial.print(<span class="s">"Clientes: "</span>); Serial.println(WiFi.softAPgetStationNum()); }
+  delay(5000);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Com SSID e senha certos: "Modo ESTACAO. Abra http://192.168.x.y".</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Com a senha errada de propósito: depois de 10 s, a rede "RoverINEMA" aparece no celular e o contador de clientes sobe para 1 quando você entra.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Nunca conecta? O ESP32 só enxerga redes de 2,4 GHz; redes só de 5 GHz não aparecem para ele.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t1-p4">Todo controle remoto deste módulo, e a telemetria do 2.5, começa com o ESP32 na rede. Escolher o modo certo evita a cena clássica da feira: o robô funcionava em casa e não conecta no Wi-Fi da escola, que pede login no navegador.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">STA</div><div class="text-xs text-neutral-400">entra numa rede</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">AP</div><div class="text-xs text-neutral-400">cria a própria rede</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">IP</div><div class="text-xs text-neutral-400">endereço na rede</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">2,4 GHz</div><div class="text-xs text-neutral-400">a faixa que o ESP32 usa</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" id="topico-2" data-inema-topic="modulo-2-1#topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🌐 Servidor web no ESP32: uma página com botões</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t2-p1">A biblioteca <span class="font-mono text-xs">WebServer</span>, que já vem no pacote esp32 3.x, transforma a placa num pequeno site. Você registra <strong class="text-neutral-100">rotas</strong> ("quem pedir /cmd?d=F, roda esta função") e o navegador do celular vira o controle remoto. Não precisa instalar app nenhum.</p>
+<div class="bg-dark-800 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-1-t2-p2"><strong>HTTP</strong> é a conversa do navegador com um site: o navegador faz um <strong>pedido</strong> (GET /cmd?d=F) e o servidor manda uma <strong>resposta</strong> (texto ou página). Cada clique abre uma conversa nova, que leva algumas dezenas de milissegundos. Para botões, basta; para um joystick, veremos no tópico 3 que não.</p>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-1-t2-p3"><strong class="text-neutral-100">Objetivo:</strong> servir uma página com cinco botões. Cada toque chama uma rota, o ESP32 escreve o comando no Serial Monitor e acende o LED do GPIO 2 enquanto o robô "anda". Teste primeiro sem motores; no tópico 6 você troca o LED pelos motores.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">botoes-web.ino</span></div>
+<pre><code><span class="c">// Página com botões servida pelo ESP32 (WebServer do pacote esp32 3.x)</span>
+<span class="k">#include</span> &lt;WiFi.h&gt;
+<span class="k">#include</span> &lt;WebServer.h&gt;
+
+WebServer server(80);
+<span class="k">const int</span> PINO_LED = 2;
+
+<span class="k">const char</span> PAGINA[] = R<span class="s">"html(
+&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset="utf-8"&gt;&lt;meta name="viewport" content="width=device-width,initial-scale=1"&gt;
+&lt;style&gt;body{font-family:sans-serif;text-align:center;background:#111;color:#eee}
+button{width:90px;height:60px;margin:6px;font-size:18px;border-radius:10px}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;h2&gt;Rover INEMA&lt;/h2&gt;
+&lt;button onclick="c('F')"&gt;Frente&lt;/button&gt;&lt;br&gt;&lt;button onclick="c('L')"&gt;Esq.&lt;/button&gt;&lt;button onclick="c('S')"&gt;Parar&lt;/button&gt;
+&lt;button onclick="c('R')"&gt;Dir.&lt;/button&gt;&lt;br&gt;&lt;button onclick="c('B')"&gt;Ré&lt;/button&gt;&lt;p id="st"&gt;pronto&lt;/p&gt;
+&lt;script&gt;function c(d){fetch('/cmd?d='+d).then(r=&gt;r.text()).then(t=&gt;document.getElementById('st').textContent=t)}&lt;/script&gt;
+&lt;/body&gt;&lt;/html&gt;)html"</span>;
+
+<span class="k">void</span> paginaInicial() { server.send(200, <span class="s">"text/html"</span>, PAGINA); }
+
+<span class="k">void</span> comando() {
+  String d = server.arg(<span class="s">"d"</span>);                   <span class="c">// F, B, L, R ou S</span>
+  digitalWrite(PINO_LED, d != <span class="s">"S"</span>);            <span class="c">// LED aceso = "em movimento"</span>
+  Serial.print(<span class="s">"Comando: "</span>); Serial.println(d);
+  server.send(200, <span class="s">"text/plain"</span>, <span class="s">"ok: "</span> + d);
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_LED, OUTPUT);
+  WiFi.softAP(<span class="s">"RoverINEMA"</span>, <span class="s">"troque1234"</span>);
+  server.on(<span class="s">"/"</span>, paginaInicial);
+  server.on(<span class="s">"/cmd"</span>, comando);
+  server.begin();
+  Serial.print(<span class="s">"Conecte em RoverINEMA e abra http://"</span>);
+  Serial.println(WiFi.softAPIP());
+}
+
+<span class="k">void</span> loop() {
+  server.handleClient();                          <span class="c">// atende os pedidos que chegaram</span>
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>No celular, entre na rede RoverINEMA e abra http://192.168.4.1: aparecem os cinco botões.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Tocar em "Frente" escreve "Comando: F" no Serial Monitor, acende o LED e a página mostra "ok: F".</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>A página abre mas os botões não respondem? O celular pode ter saído da rede do robô por "falta de internet"; mande ele manter a conexão.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-5">
+<h4 class="font-bold text-blue-400 mb-3">✓ Faça</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Chamar <span class="font-mono text-xs">server.handleClient()</span> em todo giro do loop.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Guardar a página numa constante e responder rápido.</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Usar um botão "Parar" grande e sempre visível.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Evite</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span><span class="font-mono text-xs">delay()</span> longo no loop: a página trava até ele acabar.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Carregar imagens e bibliotecas da internet: no modo AP não há internet.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Comando "andar" sem comando "parar" correspondente.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t2-p4">Uma página servida pelo próprio robô funciona em qualquer celular, sem loja de apps. O mesmo servidor depois mostra telemetria, ajusta ganhos do PID do 2.3 e liga e desliga modos, sem regravar o ESP32.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Rota</div><div class="text-xs text-neutral-400">endereço → função</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">GET + parâmetro</div><div class="text-xs text-neutral-400">/cmd?d=F</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">handleClient</div><div class="text-xs text-neutral-400">atende no loop</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">fetch</div><div class="text-xs text-neutral-400">pedido sem recarregar</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" id="topico-3" data-inema-topic="modulo-2-1#topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">⚡ WebSocket: controle sem atraso</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t3-p1">Com HTTP, cada comando abre e fecha uma conversa. Um joystick manda a posição dez vezes por segundo; abrir dez conversas por segundo gera fila, atraso e comandos chegando fora de ordem. O <strong class="text-blue-400">WebSocket</strong> abre <strong class="text-neutral-100">um canal só</strong>, que fica aberto, e as mensagens passam por ele nos dois sentidos com poucos milissegundos de atraso.</p>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Linha do tempo comparando HTTP e WebSocket: no HTTP, cada comando abre conexão, envia e fecha, com espaços vazios entre eles; no WebSocket, uma conexão aberta uma vez carrega muitas mensagens curtas seguidas." class="w-full h-auto" viewBox="0 0 640 260">
+<defs><pattern id="m21-grid3" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#3b82f6" opacity="0.1"/></pattern>
+<filter id="m21-glow3" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="640" height="260" fill="url(#m21-grid3)"/><g font-family="Inter,sans-serif">
+<text x="20" y="40" fill="#a8a8b3" font-size="16" font-weight="600">HTTP</text><line x1="20" y1="80" x2="620" y2="80" stroke="#3a3a46" stroke-width="2"/><rect x="30" y="62" width="130" height="36" rx="6" fill="#1c1c26" stroke="#a8a8b3" stroke-width="2"/>
+<rect x="230" y="62" width="130" height="36" rx="6" fill="#1c1c26" stroke="#a8a8b3" stroke-width="2"/><rect x="430" y="62" width="130" height="36" rx="6" fill="#1c1c26" stroke="#a8a8b3" stroke-width="2"/><text x="95" y="86" fill="#e6e6e6" font-size="14" text-anchor="middle">abre·envia·fecha</text>
+<text x="295" y="86" fill="#e6e6e6" font-size="14" text-anchor="middle">abre·envia·fecha</text><text x="495" y="86" fill="#e6e6e6" font-size="14" text-anchor="middle">abre·envia·fecha</text><text x="20" y="150" fill="#60a5fa" font-size="16" font-weight="600">WebSocket</text>
+<g filter="url(#m21-glow3)"><rect x="30" y="172" width="590" height="36" rx="18" fill="#0e1622" stroke="#3b82f6" stroke-width="2"/></g>
+<g fill="#38bdf8"><circle cx="70" cy="190" r="6"/><circle cx="125" cy="190" r="6"/><circle cx="180" cy="190" r="6"/><circle cx="235" cy="190" r="6"/><circle cx="290" cy="190" r="6"/><circle cx="345" cy="190" r="6"/><circle cx="400" cy="190" r="6"/><circle cx="455" cy="190" r="6"/><circle cx="510" cy="190" r="6"/><circle cx="565" cy="190" r="6"/></g>
+<text x="320" y="240" fill="#bfe6ff" font-size="15" text-anchor="middle">canal aberto uma vez · cada ponto é uma posição do joystick</text><text x="620" y="40" fill="#a8a8b3" font-size="14" text-anchor="end">tempo →</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Como ler:</strong> na linha de cima, três comandos ocupam a linha inteira, cada um pagando o custo de abrir e fechar. Na de baixo, o mesmo tempo carrega dez comandos. Para dirigir, o que importa é o tempo entre mexer o dedo e a roda responder.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm text-left"><thead class="bg-dark-700 text-neutral-200"><tr><th class="p-3 font-semibold">Situação</th><th class="p-3 font-semibold">Use</th><th class="p-3 font-semibold">Por quê</th></tr></thead><tbody class="divide-y divide-dark-600 text-neutral-300"><tr class="bg-dark-800"><td class="p-3">Botões, ajustes, ligar modo</td><td class="p-3 font-semibold text-blue-400">HTTP</td><td class="p-3">poucos pedidos, simples de testar</td></tr><tr class="bg-dark-800"><td class="p-3">Joystick, volante, telemetria contínua</td><td class="p-3 font-semibold text-blue-400">WebSocket</td><td class="p-3">fluxo constante, baixo atraso, mão dupla</td></tr><tr class="bg-dark-800"><td class="p-3">Sem rede, só o celular perto</td><td class="p-3 font-semibold text-blue-400">BLE</td><td class="p-3">baixo consumo, sem roteador (tópico 4)</td></tr></tbody></table>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Biblioteca extra</h3>
+<p class="text-neutral-300 text-sm">O pacote esp32 traz <span class="font-mono text-xs">WiFi</span> e <span class="font-mono text-xs">WebServer</span>, mas não um servidor WebSocket. Instale pelo Gerenciador de Bibliotecas da Arduino IDE a biblioteca <strong class="text-neutral-100">WebSockets</strong>, de Markus Sattler (links2004), e use a versão mais recente indicada no repositório. Ela roda na porta 81, ao lado do servidor web da porta 80.</p>
+</div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t3-p2">O protocolo que você vai inventar é mínimo: o navegador manda o texto <span class="font-mono text-xs">x,y</span>, com cada número de -100 a 100 (ex.: <span class="font-mono text-xs">0,80</span> = frente a 80%). O ESP32 converte isso em velocidade de cada roda. O código completo, com página, WebSocket e motores, está no tópico 6.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t3-p3">Robô dirigido com atraso de meio segundo bate na parede antes de obedecer. O WebSocket também é a base do painel ao vivo do 2.5: o mesmo canal que leva o comando traz de volta a velocidade e o ângulo do robô.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Latência</div><div class="text-xs text-neutral-400">dedo → roda</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Canal aberto</div><div class="text-xs text-neutral-400">uma conexão, muitas mensagens</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Mão dupla</div><div class="text-xs text-neutral-400">comando vai, dado volta</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Protocolo "x,y"</div><div class="text-xs text-neutral-400">texto curto e fácil de depurar</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" id="topico-4" data-inema-topic="modulo-2-1#topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🔵 BLE: controlar pelo app do celular</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t4-p1">O <strong class="text-blue-400">BLE</strong> (Bluetooth Low Energy) liga o celular ao robô sem rede nenhuma, gastando pouca bateria. Em vez de páginas, ele organiza os dados em <strong class="text-neutral-100">serviços</strong> e <strong class="text-neutral-100">características</strong>: o robô anuncia "tenho um serviço de comandos", o app se conecta e escreve um valor numa característica. O pacote esp32 3.x já traz a biblioteca BLE; a alternativa NimBLE-Arduino, mais leve, é opcional.</p>
+<div class="bg-dark-800 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-1-t4-p2">Pense numa <strong>característica</strong> como uma caixinha com nome (um <strong>UUID</strong>, código longo e único) onde o app pode escrever ou ler. Um <strong>serviço</strong> é a gaveta que agrupa caixinhas. <strong>Anunciar</strong> (advertising) é o robô gritando o próprio nome para os celulares em volta o encontrarem.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Estrutura BLE do rover: o celular com app genérico escreve uma letra na característica RX, dentro do serviço de comandos do ESP32; o ESP32 lê a letra e manda nos motores." class="w-full h-auto" viewBox="0 0 640 250">
+<defs><pattern id="m21-grid4" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#3b82f6" opacity="0.1"/></pattern><marker id="m21-ah4" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"/></marker>
+<filter id="m21-glow4" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="640" height="250" fill="url(#m21-grid4)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle"><rect x="20" y="70" width="140" height="110" rx="14" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/><text x="90" y="112" fill="#7dd3fc" font-size="17" font-weight="600">celular</text><text x="90" y="138" fill="#bfe6ff" font-size="14">app BLE</text><text x="90" y="160" fill="#bfe6ff" font-size="14">escreve "F"</text>
+<rect x="230" y="30" width="390" height="190" rx="16" fill="#0e1622" stroke="#60a5fa" stroke-width="2"/><text x="425" y="58" fill="#60a5fa" font-size="17" font-weight="600">ESP32 "RoverINEMA"</text>
+<rect x="250" y="76" width="230" height="124" rx="12" fill="#101a2b" stroke="#60a5fa" stroke-width="1.6" stroke-dasharray="6 4"/><text x="365" y="100" fill="#dbeafe" font-size="15">serviço de comandos</text><g filter="url(#m21-glow4)"><rect x="275" y="120" width="180" height="56" rx="10" fill="#0e1622" stroke="#3b82f6" stroke-width="2.5"/></g>
+<text x="365" y="145" fill="#dbeafe" font-size="15" font-weight="600">característica RX</text><text x="365" y="166" fill="#bfdbfe" font-size="14">pode escrever</text>
+<rect x="500" y="110" width="105" height="64" rx="10" fill="#1c1c26" stroke="#a8a8b3" stroke-width="2"/><text x="552" y="148" fill="#e6e6e6" font-size="15">motores</text></g><path d="M160,140 L268,148" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#m21-ah4)"/><path d="M455,148 L494,144" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#m21-ah4)"/>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Como ler:</strong> a caixa tracejada é o serviço; dentro dele, a característica com brilho é o único lugar onde o app escreve. A letra que chega ali vira comando de motor. Os UUIDs do código abaixo seguem o padrão "UART sobre BLE" que muitos apps genéricos já reconhecem.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-1-t4-p3"><strong class="text-neutral-100">Objetivo:</strong> receber letras pelo BLE (F, B, L, R, S), mostrar no Serial Monitor e acender o LED. Use um app genérico gratuito como nRF Connect ou LightBlue para escrever na característica.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">ble-comandos.ino</span></div>
+<pre><code><span class="c">// Comandos por BLE com a biblioteca BLE embutida no pacote esp32 3.x</span>
+<span class="k">#include</span> &lt;BLEDevice.h&gt;
+<span class="k">#include</span> &lt;BLEServer.h&gt;
+
+<span class="k">#define</span> SERVICO_UUID <span class="s">"6E400001-B5A3-F393-E0A9-E50E24DCCA9E"</span>
+<span class="k">#define</span> RX_UUID      <span class="s">"6E400002-B5A3-F393-E0A9-E50E24DCCA9E"</span>
+<span class="k">const int</span> PINO_LED = 2;
+<span class="k">volatile char</span> ultimoCmd = <span class="s">'S'</span>;
+
+<span class="k">class</span> ConexaoCb : <span class="k">public</span> BLEServerCallbacks {
+  <span class="k">void</span> onConnect(BLEServer* s) { Serial.println(<span class="s">"Celular conectado"</span>); }
+  <span class="k">void</span> onDisconnect(BLEServer* s) {
+    ultimoCmd = <span class="s">'S'</span>;                              <span class="c">// perdeu o celular: para</span>
+    Serial.println(<span class="s">"Desconectou: PARADO. Anunciando de novo."</span>);
+    BLEDevice::startAdvertising();
+  }
+};
+
+<span class="k">class</span> RxCb : <span class="k">public</span> BLECharacteristicCallbacks {
+  <span class="k">void</span> onWrite(BLECharacteristic* c) {
+    String v = c-&gt;getValue();                       <span class="c">// na 3.x o valor chega como String</span>
+    <span class="k">if</span> (v.length() == 0) <span class="k">return</span>;
+    <span class="k">char</span> cmd = toupper(v[0]);
+    <span class="k">if</span> (strchr(<span class="s">"FBLRS"</span>, cmd)) { ultimoCmd = cmd; Serial.print(<span class="s">"Comando BLE: "</span>); Serial.println(cmd); }
+  }
+};
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(PINO_LED, OUTPUT);
+  BLEDevice::init(<span class="s">"RoverINEMA"</span>);
+  BLEServer* srv = BLEDevice::createServer();
+  srv-&gt;setCallbacks(<span class="k">new</span> ConexaoCb());
+  BLEService* servico = srv-&gt;createService(SERVICO_UUID);
+  BLECharacteristic* rx = servico-&gt;createCharacteristic(RX_UUID,
+      BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR);
+  rx-&gt;setCallbacks(<span class="k">new</span> RxCb());
+  servico-&gt;start();
+  BLEDevice::getAdvertising()-&gt;addServiceUUID(SERVICO_UUID);
+  BLEDevice::startAdvertising();
+  Serial.println(<span class="s">"BLE pronto: procure RoverINEMA no app"</span>);
+}
+
+<span class="k">void</span> loop() {
+  digitalWrite(PINO_LED, ultimoCmd != <span class="s">'S'</span>);         <span class="c">// aqui entram os motores (tópico 6)</span>
+  delay(20);
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>No app, "RoverINEMA" aparece na busca. Conecte: o Serial Monitor mostra "Celular conectado".</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Escreva o texto F na característica 6E400002: aparece "Comando BLE: F" e o LED acende. S apaga.</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Desligue o Bluetooth do celular com o LED aceso: aparece "Desconectou: PARADO" e o LED apaga.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Wi-Fi e BLE no mesmo sketch</h3>
+<p class="text-neutral-300 text-sm">Cada um sozinho cabe na memória padrão. Juntos, o programa costuma passar do espaço de aplicação: em Ferramentas → Partition Scheme, escolha "Huge APP". O ESP32 divide um rádio só entre os dois, então o alcance e o atraso pioram um pouco. Para o rover, escolha um dos dois.</p>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t4-p4">BLE funciona onde não há Wi-Fi, gasta menos e é o mesmo padrão de controles de jogo, relógios e sensores de academia. Entender serviço e característica também ajuda a ler sensores BLE prontos no robô, sem fio.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Serviço</div><div class="text-xs text-neutral-400">gaveta de dados</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Característica</div><div class="text-xs text-neutral-400">caixinha que o app escreve</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">UUID</div><div class="text-xs text-neutral-400">nome único</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Advertising</div><div class="text-xs text-neutral-400">robô se anuncia</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" id="topico-5" data-inema-topic="modulo-2-1#topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🛡️ Segurança: senha e parada se perder a conexão</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t5-p1">Sem fio, duas coisas dão errado: alguém que não devia entra no controle, e o sinal cai no meio de um comando "frente". No primeiro caso, uma senha resolve. No segundo, a resposta é o <strong class="text-blue-400">watchdog de comando</strong>: o robô só se move enquanto recebe comandos novos. Se passar um tempo curto (300 ms, por exemplo) sem nada chegar, ele para sozinho, mesmo que o último comando fosse "frente".</p>
+<div class="bg-dark-800 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-1-t5-p2"><strong>Watchdog</strong> ("cão de guarda") é um temporizador que precisa ser "alimentado" de tempos em tempos. Se ninguém alimentar, ele age. Aqui, cada comando que chega alimenta o cão; o silêncio faz o robô parar. Isso se chama projetar para <strong>falha segura</strong>: o estado sem informação é o estado parado.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Gráfico no tempo: comandos chegam a cada 100 milissegundos e o motor fica ligado; o sinal cai, nenhum comando chega, e 300 milissegundos depois o watchdog desliga o motor." class="w-full h-auto" viewBox="0 0 640 270">
+<defs><pattern id="m21-grid5" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#3b82f6" opacity="0.1"/></pattern></defs><rect width="640" height="270" fill="url(#m21-grid5)"/><g font-family="Inter,sans-serif"><text x="20" y="44" fill="#7dd3fc" font-size="15" font-weight="600">comandos</text>
+<g stroke="#38bdf8" stroke-width="3"><line x1="140" y1="30" x2="140" y2="60"/><line x1="180" y1="30" x2="180" y2="60"/><line x1="220" y1="30" x2="220" y2="60"/><line x1="260" y1="30" x2="260" y2="60"/><line x1="300" y1="30" x2="300" y2="60"/></g>
+<rect x="310" y="24" width="150" height="42" rx="8" fill="#2a0f18" stroke="#f87171" stroke-width="2" stroke-dasharray="5 4"/><text x="385" y="51" fill="#fecaca" font-size="14" text-anchor="middle">sinal caiu</text><text x="20" y="134" fill="#60a5fa" font-size="15" font-weight="600">motor</text>
+<path d="M120,160 L140,160 L140,110 L420,110 L420,160 L620,160" fill="none" stroke="#60a5fa" stroke-width="3"/><text x="250" y="102" fill="#dbeafe" font-size="14" text-anchor="middle">ligado</text><line x1="300" y1="190" x2="420" y2="190" stroke="#fbbf24" stroke-width="2"/>
+<line x1="300" y1="182" x2="300" y2="198" stroke="#fbbf24" stroke-width="2"/><line x1="420" y1="182" x2="420" y2="198" stroke="#fbbf24" stroke-width="2"/><text x="360" y="218" fill="#fde68a" font-size="15" text-anchor="middle">300 ms sem nada</text>
+<text x="520" y="150" fill="#bfe6ff" font-size="15" text-anchor="middle">parado</text><text x="320" y="254" fill="#a8a8b3" font-size="14" text-anchor="middle">o último comando era "frente", mas o silêncio vence</text></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Como ler:</strong> cada traço ciano é um comando chegando. Enquanto eles chegam, o motor (linha azul) segue ligado. Quando param, a régua âmbar conta 300 ms e o motor cai para zero. Sem o watchdog, a linha azul ficaria no alto até a bateria acabar ou o robô bater.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-5">
+<h4 class="font-bold text-blue-400 mb-3">✓ Robô sem fio seguro</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Senha no AP (8 caracteres ou mais) e troca da senha de exemplo.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Watchdog de comando: parar após 200 a 500 ms de silêncio.</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Parar ao desconectar (WebSocket ou BLE).</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Velocidade máxima limitada no ESP32, não só na página.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Receita de acidente</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Rede aberta, sem senha, numa feira cheia de celulares.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"Frente" que vale até chegar um "parar".</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Confiar que a página do celular vai mandar o "parar".</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Testar o primeiro controle com o robô no chão perto da escada.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-4">Teste do watchdog em 4 passos</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Rodas no ar</h4><p class="text-neutral-300 text-sm">Apoie o rover num estojo ou caixa, com as rodas livres.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Segure "frente"</h4><p class="text-neutral-300 text-sm">Com o joystick do tópico 6, mantenha o dedo para cima: as rodas giram.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Corte o sinal</h4><p class="text-neutral-300 text-sm">Ative o modo avião do celular sem soltar o dedo.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">4</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Confira</h4><p class="text-neutral-300 text-sm">As rodas param em menos de meio segundo e o Serial Monitor mostra "watchdog: sem comando, PARADO". Só então leve o robô ao chão.</p></div></div>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t5-p3">Robôs de verdade, de aspirador a empilhadeira autônoma, param quando perdem o controle. Você vai usar a mesma ideia no 3.5, quando o Raspberry Pi mandar comandos ao ESP32, e na Trilha 4, com o tópico /cmd_vel do ROS 2.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Watchdog</div><div class="text-xs text-neutral-400">silêncio = parar</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Falha segura</div><div class="text-xs text-neutral-400">sem dado, sem movimento</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Timeout</div><div class="text-xs text-neutral-400">200 a 500 ms</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Senha WPA2</div><div class="text-xs text-neutral-400">só quem deve entra</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" id="topico-6" data-inema-topic="modulo-2-1#topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🕹️ Joystick no navegador para o rover</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t6-p1">Agora tudo junto: o ESP32 cria a rede, serve uma página com um joystick redondo, recebe a posição do dedo pelo WebSocket e converte em velocidade das duas rodas. A conversão é a <strong class="text-blue-400">mistura diferencial</strong>: roda esquerda = y + x, roda direita = y − x. Dedo para cima, as duas giram iguais; dedo para a direita, a esquerda acelera e a direita freia, e o robô vira.</p>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Mistura diferencial: o joystick dá x e y; a roda esquerda recebe y mais x e a roda direita recebe y menos x. Exemplos: para cima, as duas rodas iguais; para a direita, a esquerda para frente e a direita para trás, e o robô gira no lugar." class="w-full h-auto" viewBox="0 0 640 280">
+<defs><pattern id="m21-grid6" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#3b82f6" opacity="0.1"/></pattern><marker id="m21-ah6" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#60a5fa"/></marker>
+<filter id="m21-glow6" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="640" height="280" fill="url(#m21-grid6)"/>
+<circle cx="110" cy="140" r="86" fill="#0e1622" stroke="#60a5fa" stroke-width="2"/><line x1="24" y1="140" x2="196" y2="140" stroke="#3a3a46" stroke-width="1.5"/><line x1="110" y1="54" x2="110" y2="226" stroke="#3a3a46" stroke-width="1.5"/>
+<g filter="url(#m21-glow6)"><circle cx="160" cy="100" r="22" fill="#3b82f6" opacity="0.9"/></g><g font-family="Inter,sans-serif"><text x="186" y="160" fill="#bfdbfe" font-size="15">x</text><text x="118" y="48" fill="#bfdbfe" font-size="15">y</text>
+<text x="110" y="256" fill="#dbeafe" font-size="15" text-anchor="middle">x = 50, y = 40</text><rect x="250" y="60" width="370" height="56" rx="12" fill="#0e1622" stroke="#60a5fa" stroke-width="2"/><text x="270" y="95" fill="#dbeafe" font-size="17">esquerda = y + x = 90</text>
+<rect x="250" y="134" width="370" height="56" rx="12" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/><text x="270" y="169" fill="#bfe6ff" font-size="17">direita = y − x = −10</text><text x="250" y="226" fill="#a8a8b3" font-size="15">esquerda forte, direita quase parada:</text>
+<text x="250" y="248" fill="#a8a8b3" font-size="15">o rover faz uma curva fechada para a direita</text></g><path d="M200,110 L242,92" fill="none" stroke="#60a5fa" stroke-width="1.8" marker-end="url(#m21-ah6)"/><path d="M200,150 L242,160" fill="none" stroke="#60a5fa" stroke-width="1.8" marker-end="url(#m21-ah6)"/>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Como ler:</strong> o ponto azul é o dedo, a 50 para a direita e 40 para cima. As duas contas à direita viram a velocidade de cada roda, em porcentagem. Valores negativos giram a roda para trás; acima de 100 o código corta em 100.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-1-t6-p2"><strong class="text-neutral-100">Objetivo:</strong> dirigir o rover da Trilha 1 pelo celular, com joystick, WebSocket, parada ao desconectar e watchdog de 300 ms. Ligação no TB6612FNG: PWMA 25, AIN1 26, AIN2 27, PWMB 14, BIN1 16, BIN2 17, STBY ligado no 3V3 (o mesmo mapa de toda a Trilha 2; troque se o seu rover usa outros pinos). Precisa da biblioteca WebSockets (tópico 3).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">rover-joystick.ino</span></div>
+<pre><code><span class="c">// Rover com joystick no navegador: WebServer + WebSocket + watchdog (pacote esp32 3.x)</span>
+<span class="k">#include</span> &lt;WiFi.h&gt;
+<span class="k">#include</span> &lt;WebServer.h&gt;
+<span class="k">#include</span> &lt;WebSocketsServer.h&gt;   <span class="c">// biblioteca "WebSockets" (Markus Sattler)</span>
+
+<span class="k">const int</span> PWMA = 25, AIN1 = 26, AIN2 = 27;        <span class="c">// motor esquerdo</span>
+<span class="k">const int</span> PWMB = 14, BIN1 = 16, BIN2 = 17;        <span class="c">// motor direito</span>
+<span class="k">const int</span> VEL_MAX = 200;                          <span class="c">// teto de PWM (0 a 255): limite de segurança</span>
+<span class="k">const unsigned long</span> TIMEOUT_MS = 300;             <span class="c">// watchdog de comando</span>
+
+WebServer server(80);
+WebSocketsServer ws(81);
+<span class="k">unsigned long</span> ultimoComando = 0;
+<span class="k">bool</span> andando = <span class="k">false</span>;
+
+<span class="k">const char</span> PAGINA[] = R<span class="s">"html(
+&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset="utf-8"&gt;&lt;meta name="viewport" content="width=device-width,initial-scale=1"&gt;
+&lt;style&gt;body{font-family:sans-serif;text-align:center;background:#111;color:#eee}
+#pad{width:260px;height:260px;margin:20px auto;border-radius:50%;background:#222;position:relative;touch-action:none}#dot{width:70px;height:70px;border-radius:50%;background:#3b82f6;position:absolute;left:95px;top:95px}&lt;/style&gt;
+&lt;/head&gt;&lt;body&gt;&lt;h2&gt;Rover INEMA&lt;/h2&gt;&lt;div id="pad"&gt;&lt;div id="dot"&gt;&lt;/div&gt;&lt;/div&gt;&lt;p id="st"&gt;conectando...&lt;/p&gt;
+&lt;script&gt;
+var pad=document.getElementById('pad'),dot=document.getElementById('dot'),st=document.getElementById('st');
+var ws=new WebSocket('ws://'+location.hostname+':81/'),x=0,y=0,ativo=false;
+ws.onopen=function(){st.textContent='conectado'};ws.onclose=function(){st.textContent='desconectado'};function mover(e){var r=pad.getBoundingClientRect(),dx=e.clientX-r.left-130,dy=e.clientY-r.top-130,d=Math.hypot(dx,dy);
+if(d&gt;95){dx=dx*95/d;dy=dy*95/d}dot.style.left=(95+dx)+'px';dot.style.top=(95+dy)+'px';
+x=Math.round(dx/95*100);y=Math.round(-dy/95*100)}
+function soltar(){ativo=false;x=0;y=0;dot.style.left='95px';dot.style.top='95px'}
+pad.onpointerdown=function(e){ativo=true;pad.setPointerCapture(e.pointerId);mover(e)};
+pad.onpointermove=function(e){if(ativo)mover(e)};pad.onpointerup=soltar;pad.onpointercancel=soltar;
+setInterval(function(){if(ws.readyState===1)ws.send(x+','+y)},100);
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;)html"</span>;
+
+<span class="k">void</span> motor(<span class="k">int</span> pwm, <span class="k">int</span> in1, <span class="k">int</span> in2, <span class="k">int</span> v) {   <span class="c">// v de -255 a 255</span>
+  v = constrain(v, -VEL_MAX, VEL_MAX);
+  digitalWrite(in1, v &gt; 0);
+  digitalWrite(in2, v &lt; 0);
+  ledcWrite(pwm, abs(v));                             <span class="c">// API 3.x: ledcWrite recebe o PINO</span>
+}
+
+<span class="k">void</span> parar() { motor(PWMA, AIN1, AIN2, 0); motor(PWMB, BIN1, BIN2, 0); andando = <span class="k">false</span>; }
+
+<span class="k">void</span> aoReceber(uint8_t num, WStype_t tipo, uint8_t* dados, size_t tam) {
+  <span class="k">if</span> (tipo == WStype_TEXT) {
+    <span class="k">char</span> buf[24];
+    size_t n = tam &lt; <span class="k">sizeof</span>(buf) - 1 ? tam : <span class="k">sizeof</span>(buf) - 1;
+    memcpy(buf, dados, n); buf[n] = 0;
+    <span class="k">int</span> x = 0, y = 0;
+    <span class="k">if</span> (sscanf(buf, <span class="s">"%d,%d"</span>, &amp;x, &amp;y) == 2) {
+      motor(PWMA, AIN1, AIN2, (y + x) * 255 / 100);  <span class="c">// mistura diferencial</span>
+      motor(PWMB, BIN1, BIN2, (y - x) * 255 / 100);
+      ultimoComando = millis();                      <span class="c">// alimenta o watchdog</span>
+      andando = (x != 0 || y != 0);
+    }
+  } <span class="k">else if</span> (tipo == WStype_DISCONNECTED) {
+    parar();
+    Serial.printf(<span class="s">"Cliente %u saiu: PARADO\n"</span>, num);
+  } <span class="k">else if</span> (tipo == WStype_CONNECTED) {
+    Serial.printf(<span class="s">"Cliente %u conectou\n"</span>, num);
+  }
+}
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  <span class="k">int</span> saidas[] = {AIN1, AIN2, BIN1, BIN2};
+  <span class="k">for</span> (<span class="k">int</span> p : saidas) pinMode(p, OUTPUT);
+  ledcAttach(PWMA, 20000, 8);                         <span class="c">// 20 kHz, 8 bits (0 a 255)</span>
+  ledcAttach(PWMB, 20000, 8);
+  parar();
+  WiFi.softAP(<span class="s">"RoverINEMA"</span>, <span class="s">"troque1234"</span>);
+  server.on(<span class="s">"/"</span>, []() { server.send(200, <span class="s">"text/html"</span>, PAGINA); });
+  server.begin();
+  ws.begin();
+  ws.onEvent(aoReceber);
+  Serial.print(<span class="s">"Conecte em RoverINEMA e abra http://"</span>);
+  Serial.println(WiFi.softAPIP());
+}
+
+<span class="k">void</span> loop() {
+  server.handleClient();
+  ws.loop();
+  <span class="k">if</span> (andando &amp;&amp; millis() - ultimoComando &gt; TIMEOUT_MS) {
+    parar();
+    Serial.println(<span class="s">"watchdog: sem comando, PARADO"</span>);
+  }
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Com as rodas no ar, abra http://192.168.4.1: a página diz "conectado" e o Serial Monitor, "Cliente 0 conectou".</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Dedo para cima: as duas rodas para a frente. Dedo para a direita: as rodas giram em sentidos opostos. Soltar: param.</span></li>
+<li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Fechar a aba com o dedo para cima: "Cliente 0 saiu: PARADO". Modo avião: "watchdog: sem comando, PARADO".</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Uma roda gira ao contrário? Inverta os dois fios daquele motor no driver, não o código.</span></li>
+</ul>
+</div>
+<div class="bg-dark-800 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-1-t6-p3">O texto entre <span class="font-mono text-xs">R"html(</span> e <span class="font-mono text-xs">)html"</span> é uma <strong>string crua</strong> do C++: tudo dentro dela, aspas e quebras de linha incluídas, vira texto sem precisar de barra invertida. É o jeito mais limpo de guardar uma página HTML inteira dentro do sketch.</p>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-1-t6-p4">Com o rover dirigível pelo celular, você testa cada módulo seguinte com o robô no chão e com as mãos livres: leva até a pista, posiciona, solta. É também a base do modo "manual" que você vai querer em qualquer robô autônomo, para tirá-lo de um canto quando a autonomia errar.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Mistura diferencial</div><div class="text-xs text-neutral-400">y + x e y − x</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Pointer events</div><div class="text-xs text-neutral-400">dedo e mouse iguais</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">VEL_MAX</div><div class="text-xs text-neutral-400">teto no robô</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">10 envios/s</div><div class="text-xs text-neutral-400">alimenta o watchdog</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 rounded-xl border border-blue-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Resumo do módulo</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Estação ou ponto de acesso</strong><span class="text-neutral-400">: entre na rede da casa ou crie a do robô; o AP é o mais previsível fora de casa.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">WebServer para botões</strong><span class="text-neutral-400">: rotas simples, nenhum app para instalar.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">WebSocket para controle contínuo</strong><span class="text-neutral-400">: um canal aberto, comandos com pouco atraso.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">BLE sem rede</strong><span class="text-neutral-400">: serviço, característica e um app genérico.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Silêncio = parar</strong><span class="text-neutral-400">: watchdog de comando, parada ao desconectar e velocidade máxima no próprio robô.</span></div></div>
+</div>
+<h3 class="font-semibold text-blue-400 mb-3">Para ir além</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/wifi.html" rel="noopener" target="_blank">Wi-Fi API (arduino-esp32)</a> <span class="text-neutral-500">— modos STA e AP, eventos de conexão</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/ble.html" rel="noopener" target="_blank">BLE API (arduino-esp32)</a> <span class="text-neutral-500">— a biblioteca BLE embutida</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/migration_guides/2.x_to_3.0.html" rel="noopener" target="_blank">Guia de migração 2.x → 3.0</a> <span class="text-neutral-500">— o que mudou em Wi-Fi e BLE</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/Links2004/arduinoWebSockets" rel="noopener" target="_blank">Biblioteca WebSockets (Links2004)</a> <span class="text-neutral-500">— exemplos e versão atual</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/h2zero/NimBLE-Arduino" rel="noopener" target="_blank">NimBLE-Arduino</a> <span class="text-neutral-500">— alternativa BLE mais leve (opcional)</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-blue-400 mb-1">Próximo módulo</h3>
+<p class="text-neutral-300">2.2 · IMU e encoders: o robô passa a saber quanto girou, quanto andou e onde está.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">← Anterior: índice da Trilha 2</a>
+<a class="inline-flex items-center px-5 py-3 bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors" href="modulo-2-2.html">Próximo: 2.2 IMU e encoders →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica do Zero ao Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licença MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

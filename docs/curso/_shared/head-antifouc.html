@@ -1,0 +1,92 @@
+<!--
+  robot · SNIPPET ANTI-FOUC (cole como PRIMEIRA coisa dentro do <head>)
+  ======================================================================
+  Erro Crítico #18. Este <script> é BLOQUEANTE de propósito: aplica o tema
+  (.dark + data-theme), o acento e as variáveis de leitura ANTES do primeiro
+  paint — matando o flash de tema (FOUC) a cada navegação.
+
+  ORDEM no <head> (obrigatória):
+    1. <meta charset> + <meta viewport> + <meta name="inema-course" content="robot">
+    2. ESTE script anti-FOUC                  <-- antes de tudo
+    3. <script type="application/json" data-inema-manifest> ... </script>  (manifesto)
+    4. <script src="https://cdn.tailwindcss.com"></script> + tailwind.config
+    5. <link href="...Inter..."> (Google Fonts)
+    6. <style> ... CSS base v1 + light-mode (Sec. 1.5) ... </style>
+    7. <link rel="stylesheet" href="REL/assets/learn.css">   <-- DEPOIS do CSS base
+
+  Troque REL pelo caminho relativo da pasta assets:
+    landing  (index.html, raiz)      -> REL = "."        => "assets/learn.css"
+    módulo/índice (curso/trilhaN/)   -> REL = "../.."     => "../../assets/learn.css"
+
+  - Lê inema.prefs (global, cross-curso). Sem ela, faz fallback ao localStorage.theme legado.
+  - try/catch total: qualquer erro => default dark (preserva a marca INEMA).
+  - Independente de learn.js: se o módulo grande falhar, o tema já foi aplicado.
+-->
+<script>
+(function () {
+  try {
+    var html = document.documentElement;
+    var DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+    function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; }
+    var p = clone(DEF);
+    try {
+      var raw = localStorage.getItem('inema.prefs');
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k];
+        }
+      } else {
+        var legacy = localStorage.getItem('theme');
+        if (legacy === 'light') p.theme = 'claro';
+        else if (legacy === 'dark') p.theme = 'inema-dark';
+      }
+    } catch (e) { p = clone(DEF); }
+
+    var THEMES = {
+      'inema-dark': { dark: true,  attr: null,        cs: 'dark'  },
+      'claro':      { dark: false, attr: null,        cs: 'light' },
+      'sepia':      { dark: false, attr: 'sepia',     cs: 'light' },
+      'foco':       { dark: null,  attr: 'foco',      cs: null    },
+      'contraste':  { dark: true,  attr: 'contraste', cs: 'dark'  }
+    };
+    var t = THEMES[p.theme] || THEMES['inema-dark'];
+
+    if (t.dark === true) html.classList.add('dark');
+    else if (t.dark === false) html.classList.remove('dark');
+
+    if (t.attr) html.setAttribute('data-theme', t.attr);
+    else html.removeAttribute('data-theme');
+
+    html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+
+    html.setAttribute('data-font', p.font || 'inter');
+    html.setAttribute('data-accent', p.accent || 'emerald');
+
+    var s = html.style;
+    var scale = (+p.fontScale || 100);
+    s.setProperty('--inema-font-scale', (scale / 100).toString());
+    s.setProperty('font-size', scale + '%');
+    s.setProperty('--measure', (+p.lineWidth || 68) + 'ch');
+    s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+    var fam = p.font === 'system'
+      ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+      : (p.font === 'leitura'
+        ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif'
+        : '"Inter", system-ui, sans-serif');
+    s.setProperty('--font-body', fam);
+
+    var ACC = {
+      emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66],
+      amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60]
+    };
+    var a = ACC[p.accent] || ACC.emerald;
+    s.setProperty('--accent-h', a[0] + '');
+    s.setProperty('--accent-s', a[1] + '%');
+    s.setProperty('--accent-l', a[2] + '%');
+    s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+  } catch (err) {
+    try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {}
+  }
+})();
+</script>

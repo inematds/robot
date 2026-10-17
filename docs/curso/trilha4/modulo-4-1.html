@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="inema-course" content="robot">
+<title>Módulo 4.1 · ROS 2 sem medo | Robótica do Zero ao Expert</title>
+<meta name="description" content="ROS 2 para iniciantes: o que é, Lyrical ou Jazzy, instalar no Ubuntu, Docker ou Raspberry Pi, nós, tópicos, serviços, ações, parâmetros e o primeiro nó em Python com rclpy.">
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script type="application/json" data-inema-manifest>
+{
+  "course": "robot",
+  "tracks": [
+    { "n": "1", "title": "Primeiros passos", "modules": [
+      { "id": "1-1", "title": "O que é um robô e o seu kit", "topics": 6, "href": "curso/trilha1/modulo-1-1.html" },
+      { "id": "1-2", "title": "Eletrônica essencial", "topics": 6, "href": "curso/trilha1/modulo-1-2.html" },
+      { "id": "1-3", "title": "ESP32: o primeiro programa", "topics": 6, "href": "curso/trilha1/modulo-1-3.html" },
+      { "id": "1-4", "title": "Sensores: o robô percebe", "topics": 6, "href": "curso/trilha1/modulo-1-4.html" },
+      { "id": "1-5", "title": "Motores e energia", "topics": 6, "href": "curso/trilha1/modulo-1-5.html" },
+      { "id": "1-6", "title": "Projeto: rover que desvia de obstáculos", "topics": 6, "href": "curso/trilha1/modulo-1-6.html" }
+    ]},
+    { "n": "2", "title": "Robô autônomo", "modules": [
+      { "id": "2-1", "title": "Controle pelo celular: Wi-Fi e BLE", "topics": 6, "href": "curso/trilha2/modulo-2-1.html" },
+      { "id": "2-2", "title": "IMU e encoders: saber onde está", "topics": 6, "href": "curso/trilha2/modulo-2-2.html" },
+      { "id": "2-3", "title": "Controle PID na prática", "topics": 6, "href": "curso/trilha2/modulo-2-3.html" },
+      { "id": "2-4", "title": "Várias tarefas ao mesmo tempo", "topics": 6, "href": "curso/trilha2/modulo-2-4.html" },
+      { "id": "2-5", "title": "Telemetria e registro de dados", "topics": 6, "href": "curso/trilha2/modulo-2-5.html" },
+      { "id": "2-6", "title": "Projeto: seguidor de linha com PID", "topics": 6, "href": "curso/trilha2/modulo-2-6.html" }
+    ]},
+    { "n": "3", "title": "Visão e IA embarcada", "modules": [
+      { "id": "3-1", "title": "Raspberry Pi 5 e Linux", "topics": 6, "href": "curso/trilha3/modulo-3-1.html" },
+      { "id": "3-2", "title": "Câmera e OpenCV", "topics": 6, "href": "curso/trilha3/modulo-3-2.html" },
+      { "id": "3-3", "title": "Detectar objetos com YOLO26", "topics": 6, "href": "curso/trilha3/modulo-3-3.html" },
+      { "id": "3-4", "title": "IA dentro do microcontrolador", "topics": 6, "href": "curso/trilha3/modulo-3-4.html" },
+      { "id": "3-5", "title": "Raspberry Pi conversa com o ESP32", "topics": 6, "href": "curso/trilha3/modulo-3-5.html" },
+      { "id": "3-6", "title": "Projeto: robô que segue um objeto", "topics": 6, "href": "curso/trilha3/modulo-3-6.html" }
+    ]},
+    { "n": "4", "title": "ROS 2 e navegação", "modules": [
+      { "id": "4-1", "title": "ROS 2 sem medo", "topics": 6, "href": "curso/trilha4/modulo-4-1.html" },
+      { "id": "4-2", "title": "Descrever e simular o robô", "topics": 6, "href": "curso/trilha4/modulo-4-2.html" },
+      { "id": "4-3", "title": "micro-ROS no ESP32", "topics": 6, "href": "curso/trilha4/modulo-4-3.html" },
+      { "id": "4-4", "title": "LiDAR e mapas (SLAM)", "topics": 6, "href": "curso/trilha4/modulo-4-4.html" },
+      { "id": "4-5", "title": "Navegação com Nav2", "topics": 6, "href": "curso/trilha4/modulo-4-5.html" },
+      { "id": "4-6", "title": "Projeto: robô que mapeia e navega", "topics": 6, "href": "curso/trilha4/modulo-4-6.html" }
+    ]},
+    { "n": "5", "title": "IA moderna e braço robótico", "modules": [
+      { "id": "5-1", "title": "Modelo de linguagem como cérebro", "topics": 6, "href": "curso/trilha5/modulo-5-1.html" },
+      { "id": "5-2", "title": "Voz local: ouvir e falar", "topics": 6, "href": "curso/trilha5/modulo-5-2.html" },
+      { "id": "5-3", "title": "Braço SO-101 e LeRobot", "topics": 6, "href": "curso/trilha5/modulo-5-3.html" },
+      { "id": "5-4", "title": "Aprender por demonstração", "topics": 6, "href": "curso/trilha5/modulo-5-4.html" },
+      { "id": "5-5", "title": "Simular antes do real", "topics": 6, "href": "curso/trilha5/modulo-5-5.html" },
+      { "id": "5-6", "title": "Projeto final: robô assistente", "topics": 6, "href": "curso/trilha5/modulo-5-6.html" }
+    ]},
+    { "n": "6", "title": "Para o professor", "modules": [
+      { "id": "6-1", "title": "Como ministrar este curso", "topics": 8, "href": "curso/trilha6/modulo-6-1.html" }
+    ]}
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link rel="stylesheet" href="../../assets/learn.css">
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T4 ativa -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600" aria-label="Navegação principal">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html" aria-label="Robótica do Zero ao Expert — início">
+<span class="text-xl sm:text-2xl" aria-hidden="true">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeiros passos</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autônomo</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visão e IA</span></a>
+<a class="nav-trail text-amber-400 bg-amber-500/10" aria-current="page" href="index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Professor</span></a>
+<span class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block" aria-hidden="true"></span>
+<button class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button" aria-label="Minha jornada">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Minha jornada</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Aparência" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Aparência</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Escuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sépia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Foco</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fonte</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Leitura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamanho</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Largura</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estreito</button><button data-inema-set-linewidth="68" type="button">Médio</button><button data-inema-set-linewidth="75" type="button">Largo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Entrelinha</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Confortável</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento roxo" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento âmbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/escuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewBox="0 0 20 20" aria-hidden="true"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main id="conteudo" data-inema-module="4-1" data-inema-track="4">
+<!-- BREADCRUMB -->
+<nav aria-label="Trilha de navegação" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-amber-400" href="../../index.html">Início</a><span aria-hidden="true">/</span>
+<a class="hover:text-amber-400" href="index.html">Trilha 4</a><span aria-hidden="true">/</span>
+<span class="text-amber-400">Módulo 4.1</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full mb-4">MÓDULO 4.1 · FUNDAMENTO</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🧩 ROS 2 sem medo</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">O ROS 2 parece enorme porque tem muita coisa pronta. Para começar você só precisa de cinco ideias: <strong class="text-neutral-100">nó, tópico, mensagem, serviço e ação</strong>. Neste módulo você escolhe a distro, instala (ou roda em Docker), lê o grafo pelo terminal e escreve <strong class="text-amber-400">o seu primeiro nó em Python</strong>.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">6</div><div class="text-xs text-neutral-400">Tópicos</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Intermediário</div><div class="text-xs text-neutral-400">Nível</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Fundamento</div><div class="text-xs text-neutral-400">Tipo</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-amber-400">Só o PC</div><div class="text-xs text-neutral-400">Hardware exigido</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progresso do módulo 4.1" class="inema-ring" data-inema-meter="modulo:4-1"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:4-1"><strong data-inema-meter-frac="">0 de 0</strong> tópicos lidos · <span data-inema-section-counter="">Seção 1 de 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Índice da página" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">Neste módulo</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-1">1. O que é o ROS 2</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-2">2. Lyrical ou Jazzy</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-3">3. Instalar</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-4">4. Nós e tópicos</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-5">5. Serviços, ações, parâmetros</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-amber-400" href="#topico-6">6. Primeiro nó em Python</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Conteúdo detalhado</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" id="topico-1" data-inema-topic="modulo-4-1#topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🧠 O que é o ROS 2 e por que usar</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-1-t1-p1">Até a Trilha 3, o robô era um ou dois programas que você escrevia inteiros. Quando entram LiDAR, mapa, câmera e navegação, um programa só vira um nó impossível de manter. O <strong class="text-amber-400">ROS 2</strong> (Robot Operating System 2) resolve isso: cada tarefa vira um programa pequeno, e todos trocam dados por <strong class="text-neutral-100">nome</strong>, sem saber quem está do outro lado nem em qual computador. Apesar do nome, ele não é um sistema operacional: roda em cima do Linux, como um conjunto de bibliotecas e ferramentas.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-1-t1-p2"><strong>Middleware</strong> é o software "do meio": fica entre os seus programas e a rede e cuida de entregar as mensagens. No ROS 2 esse papel é do <strong>DDS</strong> (Data Distribution Service), um padrão industrial que descobre sozinho quem publica e quem assina cada dado. Um <strong>pacote</strong> é a unidade de código que você instala ou escreve: um driver de LiDAR, o Nav2, o seu robô.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Robô como grafo ROS 2: quatro nós (driver do LiDAR, câmera, navegação e base com motores) ligados a uma faixa central de comunicação DDS, que pode estar no mesmo computador ou na rede Wi-Fi." class="w-full h-auto" viewBox="0 0 640 300">
+<defs>
+<pattern id="m41-grid1" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#f59e0b" opacity="0.12"/></pattern>
+<filter id="m41-glow1" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="640" height="300" fill="url(#m41-grid1)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<g filter="url(#m41-glow1)"><rect x="40" y="128" width="560" height="44" rx="22" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/></g>
+<text x="320" y="156" fill="#7dd3fc" font-size="16" font-weight="600">DDS: entrega as mensagens por nome</text>
+<rect x="30" y="24" width="160" height="66" rx="12" fill="#1f1604" stroke="#fbbf24" stroke-width="2"/><text x="110" y="52" fill="#fbbf24" font-size="16" font-weight="600">driver LiDAR</text><text x="110" y="74" fill="#fde68a" font-size="14">publica /scan</text>
+<rect x="240" y="24" width="160" height="66" rx="12" fill="#1f1604" stroke="#fbbf24" stroke-width="2"/><text x="320" y="52" fill="#fbbf24" font-size="16" font-weight="600">câmera</text><text x="320" y="74" fill="#fde68a" font-size="14">publica /image</text>
+<rect x="450" y="24" width="160" height="66" rx="12" fill="#1f1604" stroke="#fbbf24" stroke-width="2"/><text x="530" y="52" fill="#fbbf24" font-size="16" font-weight="600">navegação</text><text x="530" y="74" fill="#fde68a" font-size="14">assina /scan</text>
+<rect x="130" y="210" width="170" height="66" rx="12" fill="#1f1604" stroke="#fbbf24" stroke-width="2"/><text x="215" y="238" fill="#fbbf24" font-size="16" font-weight="600">base (ESP32)</text><text x="215" y="260" fill="#fde68a" font-size="14">assina /cmd_vel</text>
+<rect x="340" y="210" width="170" height="66" rx="12" fill="#1f1604" stroke="#fbbf24" stroke-width="2" stroke-dasharray="5 4"/><text x="425" y="238" fill="#fbbf24" font-size="16" font-weight="600">RViz no PC</text><text x="425" y="260" fill="#fde68a" font-size="14">outro computador</text>
+</g>
+<g stroke="#fbbf24" stroke-width="1.8" opacity="0.55"><path d="M110,90 L110,128"/><path d="M320,90 L320,128"/><path d="M530,90 L530,128"/><path d="M215,172 L215,210"/><path d="M425,172 L425,210"/></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">Como ler:</strong> cada caixa âmbar é um programa independente (um nó). Nenhum fala direto com o outro: todos se ligam à faixa ciano. A navegação pede "/scan" e recebe do driver do LiDAR sem saber quem ele é. A caixa tracejada está em outro computador da rede e participa do mesmo jeito.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-5">
+<h4 class="font-bold text-amber-400 mb-3">✓ Use ROS 2 quando</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>O robô tem LiDAR, mapa ou navegação.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Há mais de um computador (Pi, PC, ESP32) trabalhando junto.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Você quer simular antes de montar.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Não precisa de ROS 2 para</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Seguidor de linha ou rover que desvia (Trilhas 1 e 2).</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Um ESP32 sozinho, sem computador por perto.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Um protótipo de fim de semana com um sensor só.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-1-t1-p3">O ROS 2 é o idioma comum da robótica de pesquisa e de boa parte da indústria. Aprendendo o básico, você passa a usar de graça drivers de sensores, o slam_toolbox para mapas e o Nav2 para navegação, em vez de escrever tudo do zero.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Middleware</div><div class="text-xs text-neutral-400">entrega as mensagens</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">DDS</div><div class="text-xs text-neutral-400">descobre quem fala</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Grafo ROS</div><div class="text-xs text-neutral-400">nós + ligações</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Pacote</div><div class="text-xs text-neutral-400">unidade de código</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" id="topico-2" data-inema-topic="modulo-4-1#topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">📅 Qual distro: Lyrical ou Jazzy</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-1-t2-p1">O ROS 2 sai em <strong class="text-neutral-100">distribuições</strong> (distros) com nome de tartaruga, uma por ano. As de número par, lançadas em maio, são <strong class="text-amber-400">LTS</strong> (suporte longo, cinco anos) e casam com uma versão LTS do Ubuntu. Em outubro de 2026 há duas boas escolhas: <strong class="text-neutral-100">Lyrical Luth</strong>, lançada em 22/05/2026 para o Ubuntu 26.04 e suportada até maio de 2031, e <strong class="text-neutral-100">Jazzy Jalisco</strong>, a LTS anterior, para o Ubuntu 24.04, suportada até 2029 e com mais tutoriais e pacotes prontos.</p>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Linha do tempo de suporte: Humble termina em maio de 2027; Jazzy vai de 2024 a 2029 com Ubuntu 24.04 e Gazebo Harmonic; Lyrical vai de 2026 a 2031 com Ubuntu 26.04 e Gazebo Jetty. A marca de outubro de 2026 mostra que Jazzy e Lyrical estão no meio do suporte." class="w-full h-auto" viewBox="0 0 640 270">
+<defs><pattern id="m41-grid2" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#f59e0b" opacity="0.1"/></pattern></defs>
+<rect width="640" height="270" fill="url(#m41-grid2)"/>
+<g font-family="Inter,sans-serif" font-size="14" fill="#a8a8b3" text-anchor="middle">
+<text x="40" y="250">2022</text><text x="150" y="250">2024</text><text x="260" y="250">2026</text><text x="370" y="250">2028</text><text x="480" y="250">2030</text><text x="590" y="250">2032</text>
+</g>
+<g stroke="#272730" stroke-width="1"><path d="M40,30 L40,232"/><path d="M150,30 L150,232"/><path d="M260,30 L260,232"/><path d="M370,30 L370,232"/><path d="M480,30 L480,232"/><path d="M590,30 L590,232"/></g>
+<path d="M307,26 L307,232" stroke="#38bdf8" stroke-width="2" stroke-dasharray="5 5"/>
+<text x="315" y="22" fill="#7dd3fc" font-family="Inter,sans-serif" font-size="14">hoje (out/2026)</text>
+<g font-family="Inter,sans-serif" font-size="15">
+<rect x="58" y="40" width="278" height="34" rx="8" fill="#26201a" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="6 4"/><text x="70" y="62" fill="#e5e7eb">Humble · fim mai/2027</text>
+<rect x="168" y="100" width="275" height="38" rx="8" fill="#1f1604" stroke="#fbbf24" stroke-width="2"/><text x="180" y="124" fill="#fde68a">Jazzy · Ubuntu 24.04 · Harmonic</text>
+<rect x="282" y="164" width="275" height="38" rx="8" fill="#2a1d05" stroke="#f59e0b" stroke-width="2.5"/><text x="294" y="188" fill="#fde68a">Lyrical · Ubuntu 26.04 · Jetty</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">Como ler:</strong> cada barra é o período em que a distro recebe correções. A linha ciano é hoje. A Humble (cinza tracejada) acaba em menos de um ano: não comece por ela. Jazzy e Lyrical cobrem você por anos; cada uma traz o Ubuntu e o Gazebo do mesmo par.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3 text-neutral-200">Se você...</th><th class="text-left p-3 text-neutral-200">Escolha</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">vai começar do zero hoje, em um PC novo</td><td class="p-3"><strong class="text-amber-400">Lyrical</strong> (Ubuntu 26.04, Gazebo Jetty)</td></tr>
+<tr><td class="p-3">segue um tutorial, livro ou robô que pede Jazzy</td><td class="p-3"><strong class="text-amber-400">Jazzy</strong> (Ubuntu 24.04, Gazebo Harmonic)</td></tr>
+<tr><td class="p-3">precisa de um pacote que ainda não saiu para Lyrical</td><td class="p-3"><strong class="text-amber-400">Jazzy</strong>, ou Lyrical em Docker para testar</td></tr>
+<tr><td class="p-3">tem um projeto antigo em Humble</td><td class="p-3">Planeje migrar para Jazzy antes de maio/2027</td></tr>
+</tbody>
+</table>
+</div>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-1-t2-p2">Neste curso os comandos usam <span class="font-mono text-xs">&lt;distro&gt;</span> como parte variável: troque por <span class="font-mono text-xs">lyrical</span> ou <span class="font-mono text-xs">jazzy</span>, sempre em minúsculas. Exemplo: <span class="font-mono text-xs">source /opt/ros/jazzy/setup.bash</span>. O resto do comando é igual nas duas.</p>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-1-t2-p3">A maioria dos "não funciona" em ROS vem de mistura: tutorial de uma distro, pacote de outra, Gazebo de uma terceira. Decidir a distro no começo e manter o par Ubuntu ↔ ROS ↔ Gazebo evita esse tipo de defeito.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Distro</div><div class="text-xs text-neutral-400">versão nomeada do ROS</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">LTS</div><div class="text-xs text-neutral-400">cinco anos de suporte</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Par oficial</div><div class="text-xs text-neutral-400">Ubuntu ↔ ROS ↔ Gazebo</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">&lt;distro&gt;</div><div class="text-xs text-neutral-400">lyrical ou jazzy</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" id="topico-3" data-inema-topic="modulo-4-1#topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">📦 Instalar (Ubuntu, Docker ou Pi)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-1-t3-p1">Há três caminhos. No <strong class="text-neutral-100">Ubuntu</strong> (no PC ou numa máquina virtual), você instala pacotes prontos e tem o melhor desempenho no Gazebo. Com <strong class="text-neutral-100">Docker</strong>, você roda um contêiner que já vem com o ROS, em qualquer Linux (e no Windows ou macOS, com mais ajuste para janelas gráficas). No <strong class="text-neutral-100">Raspberry Pi 5</strong>, a forma direta é instalar o Ubuntu da mesma versão da distro; no Raspberry Pi OS, use Docker.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-4">Passo a passo no Ubuntu</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Confira o Ubuntu</h4><p class="text-neutral-300 text-sm">Lyrical pede Ubuntu 26.04; Jazzy pede 24.04. Veja com <span class="font-mono text-xs">lsb_release -a</span>.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Adicione o repositório do ROS</h4><p class="text-neutral-300 text-sm">Siga a seção "Setup Sources" da página oficial de instalação da sua distro em docs.ros.org. Esse passo muda de tempos em tempos; copie de lá, não de tutoriais antigos.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><span class="text-amber-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Instale e ative</h4><p class="text-neutral-300 text-sm">Rode o bloco abaixo. O pacote <span class="font-mono text-xs">desktop</span> traz RViz2, exemplos e ferramentas; <span class="font-mono text-xs">ros-dev-tools</span> traz o colcon e o rosdep.</p></div></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-1-t3-p2"><strong class="text-neutral-100">Objetivo:</strong> instalar o ROS 2 e deixar cada terminal novo já com ele ativado.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal (Ubuntu)</span></div>
+<pre><code><span class="c"># depois de configurar o repositório pela página oficial</span>
+sudo apt update &amp;&amp; sudo apt upgrade -y
+sudo apt install -y ros-&lt;distro&gt;-desktop ros-dev-tools
+<span class="c"># ativa o ROS em todo terminal novo</span>
+echo <span class="s">"source /opt/ros/&lt;distro&gt;/setup.bash"</span> &gt;&gt; ~/.bashrc
+source ~/.bashrc
+<span class="c"># teste: dois nós de exemplo, um em cada terminal</span>
+ros2 run demo_nodes_cpp talker
+ros2 run demo_nodes_py listener</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>O talker imprime "Publishing: 'Hello World: 1'", "...: 2"; o listener imprime "I heard: [Hello World: 1]".</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span><span class="font-mono text-xs">printenv ROS_DISTRO</span> mostra lyrical ou jazzy.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"ros2: command not found"? Faltou o <span class="font-mono text-xs">source</span> neste terminal.</span></li>
+</ul>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-1-t3-p3"><strong class="text-neutral-100">Caminho rápido com Docker:</strong> a imagem oficial <span class="font-mono text-xs">osrf/ros:&lt;distro&gt;-desktop</span> já vem com tudo. As opções de <span class="font-mono text-xs">DISPLAY</span> deixam o contêiner abrir janelas (RViz, turtlesim) no seu Linux. Confira as tags disponíveis no Docker Hub antes de baixar.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal (Docker no Linux)</span></div>
+<pre><code><span class="c"># permite que o contêiner use a tela (rode uma vez por sessão)</span>
+xhost +local:docker
+docker run -it --rm --net=host \
+  -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v ~/ros2_ws:/root/ros2_ws \
+  osrf/ros:&lt;distro&gt;-desktop
+<span class="c"># dentro do contêiner o ROS já está ativado:</span>
+ros2 run turtlesim turtlesim_node</code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-amber-400">Como verificar:</strong> abre uma janela azul com uma tartaruga no meio. A pasta <span class="font-mono">~/ros2_ws</span> do seu PC aparece dentro do contêiner em <span class="font-mono">/root/ros2_ws</span>, então o código que você escrever não some quando o contêiner fechar.</p>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 E no Raspberry Pi 5?</h3>
+<p class="text-neutral-300 text-sm">Grave o Ubuntu Server da versão do par (26.04 para Lyrical, 24.04 para Jazzy) com o Raspberry Pi Imager e instale <span class="font-mono text-xs">ros-&lt;distro&gt;-ros-base</span> (sem as ferramentas gráficas). Visualize no PC: RViz e Gazebo pesam demais para o Pi. Se quiser manter o Raspberry Pi OS da Trilha 3, use a imagem <span class="font-mono text-xs">ros:&lt;distro&gt;-ros-base</span> no Docker.</p>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-1-t3-p4">Instalar certo uma vez poupa horas depois. O Docker também é a saída para sala de aula: todos os alunos rodam exatamente a mesma imagem, sem diferenças entre máquinas.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">desktop</div><div class="text-xs text-neutral-400">ROS + ferramentas gráficas</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">ros-base</div><div class="text-xs text-neutral-400">enxuto, para o robô</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">source</div><div class="text-xs text-neutral-400">ativa o ROS no terminal</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Contêiner</div><div class="text-xs text-neutral-400">ambiente igual em todo PC</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" id="topico-4" data-inema-topic="modulo-4-1#topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🔗 Nós, tópicos, mensagens</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-1-t4-p1">Um <strong class="text-amber-400">nó</strong> é um processo que faz uma coisa: ler o LiDAR, girar os motores, planejar a rota. Nós conversam por <strong class="text-amber-400">tópicos</strong>, canais com nome como <span class="font-mono text-sm">/cmd_vel</span> ou <span class="font-mono text-sm">/scan</span>. Quem envia é o <strong class="text-neutral-100">publisher</strong>; quem recebe é o <strong class="text-neutral-100">subscriber</strong>. Um tópico pode ter vários de cada lado. O conteúdo tem formato fixo, a <strong class="text-amber-400">mensagem</strong>: <span class="font-mono text-sm">/cmd_vel</span> usa <span class="font-mono text-sm">geometry_msgs/msg/Twist</span>, com velocidade linear e angular.</p>
+<div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-amber-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m4-1-t4-p2"><strong>Twist</strong> é a mensagem de "quero andar assim": <span class="font-mono text-xs">linear.x</span> em metros por segundo (para a frente) e <span class="font-mono text-xs">angular.z</span> em radianos por segundo (girar; positivo é anti-horário visto de cima). Um robô diferencial ignora os outros quatro campos. <strong>QoS</strong> (qualidade de serviço) é o combinado de entrega de cada tópico, como "guardar as últimas 10 mensagens".</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Grafo de nós e tópicos: o nó teleop publica no tópico /cmd_vel, que é assinado pelo nó base; o nó lidar publica em /scan, assinado por slam e por rviz2. Nós são caixas, tópicos são cápsulas." class="w-full h-auto" viewBox="0 0 640 280">
+<defs>
+<pattern id="m41-grid4" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#f59e0b" opacity="0.1"/></pattern>
+<marker id="m41-ah4" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#fbbf24"/></marker>
+</defs>
+<rect width="640" height="280" fill="url(#m41-grid4)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle" font-size="16">
+<rect x="20" y="40" width="140" height="56" rx="10" fill="#1f1604" stroke="#fbbf24" stroke-width="2"/><text x="90" y="74" fill="#fde68a">teleop</text>
+<rect x="250" y="44" width="140" height="48" rx="24" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/><text x="320" y="74" fill="#7dd3fc">/cmd_vel</text>
+<rect x="480" y="40" width="140" height="56" rx="10" fill="#1f1604" stroke="#fbbf24" stroke-width="2"/><text x="550" y="74" fill="#fde68a">base</text>
+<rect x="20" y="168" width="140" height="56" rx="10" fill="#1f1604" stroke="#fbbf24" stroke-width="2"/><text x="90" y="202" fill="#fde68a">lidar</text>
+<rect x="250" y="172" width="140" height="48" rx="24" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/><text x="320" y="202" fill="#7dd3fc">/scan</text>
+<rect x="480" y="140" width="140" height="50" rx="10" fill="#1f1604" stroke="#fbbf24" stroke-width="2"/><text x="550" y="171" fill="#fde68a">slam</text>
+<rect x="480" y="208" width="140" height="50" rx="10" fill="#1f1604" stroke="#fbbf24" stroke-width="2"/><text x="550" y="239" fill="#fde68a">rviz2</text>
+<text x="205" y="30" fill="#a8a8b3" font-size="14">publica</text><text x="435" y="30" fill="#a8a8b3" font-size="14">assina</text>
+<text x="320" y="125" fill="#a8a8b3" font-size="14">Twist: linear.x, angular.z</text>
+</g>
+<g fill="none" stroke="#fbbf24" stroke-width="1.8" opacity="0.7">
+<path d="M160,68 L242,68" marker-end="url(#m41-ah4)"/><path d="M390,68 L472,68" marker-end="url(#m41-ah4)"/>
+<path d="M160,196 L242,196" marker-end="url(#m41-ah4)"/><path d="M390,190 L472,168" marker-end="url(#m41-ah4)"/><path d="M390,202 L472,230" marker-end="url(#m41-ah4)"/>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">Como ler:</strong> caixas retas são nós (programas); cápsulas ciano são tópicos (canais). A seta sai de quem publica e entra em quem assina. Repare que /scan tem dois assinantes: o mesmo dado do laser alimenta o mapa e a tela sem nenhum código extra.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-1-t4-p3"><strong class="text-neutral-100">Objetivo:</strong> inspecionar um grafo de verdade com o turtlesim. Abra três terminais (todos com o ROS ativado).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal</span></div>
+<pre><code><span class="c"># terminal 1: o simulador da tartaruga</span>
+ros2 run turtlesim turtlesim_node
+<span class="c"># terminal 2: dirija com as setas do teclado</span>
+ros2 run turtlesim turtle_teleop_key
+<span class="c"># terminal 3: olhe o grafo</span>
+ros2 node list
+ros2 topic list -t
+ros2 topic info /turtle1/cmd_vel
+ros2 interface show geometry_msgs/msg/Twist
+ros2 topic echo /turtle1/pose
+<span class="c"># publique você mesmo: a tartaruga anda em círculo</span>
+ros2 topic pub --rate 2 /turtle1/cmd_vel geometry_msgs/msg/Twist <span class="s">"{linear: {x: 1.0}, angular: {z: 0.8}}"</span></code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span><span class="font-mono text-xs">ros2 node list</span> mostra <span class="font-mono text-xs">/turtlesim</span> e <span class="font-mono text-xs">/teleop_turtle</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span><span class="font-mono text-xs">topic info</span> diz "Publisher count: 1, Subscription count: 1" (2 publishers quando o <span class="font-mono text-xs">topic pub</span> estiver rodando).</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>O <span class="font-mono text-xs">echo</span> imprime x, y e theta mudando enquanto a tartaruga anda. Para ver o grafo desenhado, rode <span class="font-mono text-xs">rqt_graph</span>.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-1-t4-p4">Quando o robô não anda, o primeiro passo é sempre o mesmo: <span class="font-mono text-sm">ros2 topic echo /cmd_vel</span>. Se o comando chega, o defeito está no motor; se não chega, está em quem publica. Ler o grafo pelo terminal é a ferramenta de diagnóstico mais usada de toda a trilha.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Nó</div><div class="text-xs text-neutral-400">um processo, uma tarefa</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Tópico</div><div class="text-xs text-neutral-400">canal com nome</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Mensagem</div><div class="text-xs text-neutral-400">formato do dado</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">topic echo</div><div class="text-xs text-neutral-400">ver o que passa</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" id="topico-5" data-inema-topic="modulo-4-1#topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🔁 Serviços, ações e parâmetros</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-1-t5-p1">Tópico é fluxo contínuo, sem resposta. Para os outros casos o ROS 2 tem mais três peças. Um <strong class="text-amber-400">serviço</strong> é pergunta e resposta rápida: "crie uma tartaruga aqui", "salve o mapa". Uma <strong class="text-amber-400">ação</strong> é uma tarefa demorada com progresso e possibilidade de cancelar: "vá até a cozinha" (o Nav2 inteiro funciona assim). Um <strong class="text-amber-400">parâmetro</strong> é um ajuste do nó que você muda sem recompilar: velocidade máxima, nome da porta serial, cor do fundo.</p>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Três padrões de comunicação lado a lado: tópico, um fluxo contínuo de mensagens em um sentido; serviço, uma requisição seguida de uma resposta; ação, um objetivo seguido de vários retornos de progresso e um resultado final." class="w-full h-auto" viewBox="0 0 640 290">
+<defs>
+<pattern id="m41-grid5" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#f59e0b" opacity="0.1"/></pattern>
+<marker id="m41-ah5" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#fbbf24"/></marker>
+<marker id="m41-ah5c" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"/></marker>
+</defs>
+<rect width="640" height="290" fill="url(#m41-grid5)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<text x="110" y="34" fill="#fbbf24" font-size="18" font-weight="600">tópico</text>
+<text x="320" y="34" fill="#fbbf24" font-size="18" font-weight="600">serviço</text>
+<text x="530" y="34" fill="#fbbf24" font-size="18" font-weight="600">ação</text>
+<g font-size="14" fill="#fde68a"><text x="50" y="62">A</text><text x="170" y="62">B</text><text x="260" y="62">cliente</text><text x="380" y="62">servidor</text><text x="470" y="62">cliente</text><text x="590" y="62">servidor</text></g>
+</g>
+<g stroke-width="1.6" stroke="#a8a8b3" opacity="0.5"><path d="M50,70 L50,250"/><path d="M170,70 L170,250"/><path d="M260,70 L260,250"/><path d="M380,70 L380,250"/><path d="M470,70 L470,250"/><path d="M590,70 L590,250"/></g>
+<g fill="none" stroke-width="1.8">
+<path d="M50,90 L162,90" stroke="#fbbf24" marker-end="url(#m41-ah5)"/><path d="M50,120 L162,120" stroke="#fbbf24" marker-end="url(#m41-ah5)"/><path d="M50,150 L162,150" stroke="#fbbf24" marker-end="url(#m41-ah5)"/><path d="M50,180 L162,180" stroke="#fbbf24" marker-end="url(#m41-ah5)"/><path d="M50,210 L162,210" stroke="#fbbf24" marker-end="url(#m41-ah5)"/>
+<path d="M260,100 L372,120" stroke="#fbbf24" marker-end="url(#m41-ah5)"/><path d="M380,170 L268,190" stroke="#38bdf8" marker-end="url(#m41-ah5c)"/>
+<path d="M470,90 L582,104" stroke="#fbbf24" marker-end="url(#m41-ah5)"/><path d="M590,130 L478,140" stroke="#38bdf8" stroke-dasharray="5 4" marker-end="url(#m41-ah5c)"/><path d="M590,165 L478,175" stroke="#38bdf8" stroke-dasharray="5 4" marker-end="url(#m41-ah5c)"/><path d="M590,215 L478,230" stroke="#38bdf8" marker-end="url(#m41-ah5c)"/>
+</g>
+<g font-family="Inter,sans-serif" font-size="14" text-anchor="middle">
+<text x="110" y="276" fill="#a8a8b3">sem resposta</text>
+<text x="320" y="106" fill="#fde68a">pedido</text><text x="320" y="204" fill="#bfe6ff">resposta</text><text x="320" y="276" fill="#a8a8b3">rápido, uma vez</text>
+<text x="530" y="88" fill="#fde68a">objetivo</text><text x="530" y="160" fill="#bfe6ff">progresso</text><text x="530" y="244" fill="#bfe6ff">resultado</text><text x="530" y="276" fill="#a8a8b3">longo, cancelável</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">Como ler:</strong> as linhas verticais são os dois lados da conversa, e o tempo corre para baixo. No tópico, A só envia. No serviço, o cliente espera uma única resposta. Na ação, o servidor manda progresso (tracejado) enquanto trabalha e, no fim, o resultado.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal (com o turtlesim aberto)</span></div>
+<pre><code><span class="c"># serviço: cria uma segunda tartaruga</span>
+ros2 service list
+ros2 service call /spawn turtlesim/srv/Spawn <span class="s">"{x: 2.0, y: 2.0, theta: 0.0, name: 'robo2'}"</span>
+<span class="c"># parâmetro: muda a cor do fundo sem reiniciar</span>
+ros2 param list /turtlesim
+ros2 param set /turtlesim background_r 150
+<span class="c"># ação: gira até 90 graus (1,57 rad) e mostra o progresso</span>
+ros2 action list
+ros2 action send_goal --feedback /turtle1/rotate_absolute turtlesim/action/RotateAbsolute <span class="s">"{theta: 1.57}"</span></code></pre>
+</div>
+<p class="text-xs text-neutral-400 mb-6"><strong class="text-amber-400">Como verificar:</strong> aparece uma tartaruga nova em (2, 2); o fundo fica arroxeado; o terminal da ação imprime várias linhas "Feedback: remaining: ..." e termina com "Goal finished with status: SUCCEEDED".</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-amber-900/20 rounded-xl border border-amber-500/30 p-5">
+<h4 class="font-bold text-amber-400 mb-3">✓ Padrão certo</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Leitura de sensor e velocidade: tópico.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Ligar um relé, salvar o mapa: serviço.</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Ir até um ponto, girar o braço: ação.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Gambiarra comum</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Serviço que demora 30 s (trava quem chamou).</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Tópico "/pronto" para simular uma resposta.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Constante no código que deveria ser parâmetro.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-1-t5-p2">No módulo 4.5 você vai mandar o robô até um ponto por uma ação do Nav2 e, no 4.4, salvar o mapa por um serviço. Reconhecer o padrão faz a documentação desses pacotes ficar legível.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Serviço</div><div class="text-xs text-neutral-400">pedido → resposta</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Ação</div><div class="text-xs text-neutral-400">objetivo, progresso, resultado</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Parâmetro</div><div class="text-xs text-neutral-400">ajuste sem recompilar</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">.srv / .action</div><div class="text-xs text-neutral-400">formatos de interface</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" id="topico-6" data-inema-topic="modulo-4-1#topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🐍 Seu primeiro nó em Python (rclpy) publicando e ouvindo</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-1-t6-p1">Agora você escreve os seus nós. Em Python a biblioteca é a <strong class="text-amber-400">rclpy</strong>. Todo nó segue o mesmo molde: inicia o rclpy, cria um objeto <span class="font-mono text-sm">Node</span>, registra publishers, subscribers e timers, e entrega o controle ao <span class="font-mono text-sm">spin</span>, que fica esperando eventos e chamando as suas funções. Você vai criar um pacote <span class="font-mono text-sm">meu_robo</span> com dois nós: <span class="font-mono text-sm">falante</span> publica uma frase duas vezes por segundo; <span class="font-mono text-sm">ouvinte</span> recebe e imprime.</p>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Fluxo do primeiro pacote: o timer do nó falante dispara a cada 0,5 segundo e publica uma String no tópico /conversa; o nó ouvinte assina /conversa e sua função de callback imprime a mensagem." class="w-full h-auto" viewBox="0 0 640 220">
+<defs>
+<pattern id="m41-grid6" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#f59e0b" opacity="0.1"/></pattern>
+<marker id="m41-ah6" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#fbbf24"/></marker>
+<filter id="m41-glow6" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="640" height="220" fill="url(#m41-grid6)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect x="20" y="40" width="190" height="120" rx="12" fill="#1f1604" stroke="#fbbf24" stroke-width="2"/>
+<text x="115" y="70" fill="#fbbf24" font-size="17" font-weight="600">falante</text><text x="115" y="98" fill="#fde68a" font-size="14">timer 0,5 s</text><text x="115" y="122" fill="#fde68a" font-size="14">publicar()</text><text x="115" y="146" fill="#fde68a" font-size="14">create_publisher</text>
+<g filter="url(#m41-glow6)"><rect x="250" y="76" width="140" height="48" rx="24" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/></g>
+<text x="320" y="106" fill="#7dd3fc" font-size="16">/conversa</text><text x="320" y="150" fill="#a8a8b3" font-size="14">std_msgs/String</text>
+<rect x="430" y="40" width="190" height="120" rx="12" fill="#1f1604" stroke="#fbbf24" stroke-width="2"/>
+<text x="525" y="70" fill="#fbbf24" font-size="17" font-weight="600">ouvinte</text><text x="525" y="98" fill="#fde68a" font-size="14">create_subscription</text><text x="525" y="122" fill="#fde68a" font-size="14">ao_receber(msg)</text><text x="525" y="146" fill="#fde68a" font-size="14">imprime no log</text>
+<text x="320" y="200" fill="#a8a8b3" font-size="14">spin() mantém os dois nós vivos esperando eventos</text>
+</g>
+<g fill="none" stroke="#fbbf24" stroke-width="1.8" opacity="0.7"><path d="M210,100 L242,100" marker-end="url(#m41-ah6)"/><path d="M390,100 L422,100" marker-end="url(#m41-ah6)"/></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-amber-400">Como ler:</strong> o relógio (timer) do falante chama <span class="font-mono">publicar()</span>, que joga uma String no tópico. O ouvinte não pergunta nada: o ROS chama <span class="font-mono">ao_receber()</span> toda vez que chega mensagem. Esse "você não chama, você é chamado" é o callback.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-1-t6-p2"><strong class="text-neutral-100">Objetivo:</strong> criar o workspace e o pacote. O <span class="font-mono text-xs">ros2 pkg create</span> gera a estrutura; depois você só substitui os arquivos pelos blocos abaixo.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal</span></div>
+<pre><code>mkdir -p ~/ros2_ws/src &amp;&amp; cd ~/ros2_ws/src
+ros2 pkg create --build-type ament_python --license MIT meu_robo --dependencies rclpy std_msgs
+<span class="c"># crie os dois nós dentro da pasta de código do pacote</span>
+touch meu_robo/meu_robo/falante.py meu_robo/meu_robo/ouvinte.py</code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">meu_robo/meu_robo/falante.py</span></div>
+<pre><code><span class="c"># Nó que publica uma frase no tópico /conversa duas vezes por segundo</span>
+<span class="k">import</span> rclpy
+<span class="k">from</span> rclpy.node <span class="k">import</span> Node
+<span class="k">from</span> rclpy.executors <span class="k">import</span> ExternalShutdownException
+<span class="k">from</span> std_msgs.msg <span class="k">import</span> String
+
+<span class="k">class</span> Falante(Node):
+    <span class="k">def</span> __init__(self):
+        super().__init__(<span class="s">'falante'</span>)
+        self.pub = self.create_publisher(String, <span class="s">'conversa'</span>, 10)  <span class="c"># fila de 10 mensagens</span>
+        self.contador = 0
+        self.timer = self.create_timer(0.5, self.publicar)        <span class="c"># chama publicar() a cada 0,5 s</span>
+
+    <span class="k">def</span> publicar(self):
+        msg = String()
+        msg.data = f<span class="s">'Ola do robo #{self.contador}'</span>
+        self.pub.publish(msg)
+        self.get_logger().info(f<span class="s">'Publicado: {msg.data}'</span>)
+        self.contador += 1
+
+<span class="k">def</span> main(args=None):
+    rclpy.init(args=args)
+    no = Falante()
+    <span class="k">try</span>:
+        rclpy.spin(no)
+    <span class="k">except</span> (KeyboardInterrupt, ExternalShutdownException):
+        <span class="k">pass</span>
+    <span class="k">finally</span>:
+        no.destroy_node()
+        rclpy.try_shutdown()
+
+<span class="k">if</span> __name__ == <span class="s">'__main__'</span>:
+    main()</code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">meu_robo/meu_robo/ouvinte.py</span></div>
+<pre><code><span class="c"># Nó que assina /conversa e imprime cada mensagem recebida</span>
+<span class="k">import</span> rclpy
+<span class="k">from</span> rclpy.node <span class="k">import</span> Node
+<span class="k">from</span> rclpy.executors <span class="k">import</span> ExternalShutdownException
+<span class="k">from</span> std_msgs.msg <span class="k">import</span> String
+
+<span class="k">class</span> Ouvinte(Node):
+    <span class="k">def</span> __init__(self):
+        super().__init__(<span class="s">'ouvinte'</span>)
+        self.sub = self.create_subscription(String, <span class="s">'conversa'</span>, self.ao_receber, 10)
+
+    <span class="k">def</span> ao_receber(self, msg):
+        self.get_logger().info(f<span class="s">'Ouvi: {msg.data}'</span>)
+
+<span class="k">def</span> main(args=None):
+    rclpy.init(args=args)
+    no = Ouvinte()
+    <span class="k">try</span>:
+        rclpy.spin(no)
+    <span class="k">except</span> (KeyboardInterrupt, ExternalShutdownException):
+        <span class="k">pass</span>
+    <span class="k">finally</span>:
+        no.destroy_node()
+        rclpy.try_shutdown()
+
+<span class="k">if</span> __name__ == <span class="s">'__main__'</span>:
+    main()</code></pre>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m4-1-t6-p3">O <span class="font-mono text-xs">setup.py</span> diz ao ROS quais comandos o pacote oferece (os <span class="font-mono text-xs">entry_points</span>), e o <span class="font-mono text-xs">package.xml</span> lista as dependências. Substitua os dois gerados pelos mínimos abaixo.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">meu_robo/setup.py</span></div>
+<pre><code><span class="k">from</span> setuptools <span class="k">import</span> find_packages, setup
+
+package_name = <span class="s">'meu_robo'</span>
+
+setup(
+    name=package_name,
+    version=<span class="s">'0.1.0'</span>,
+    packages=find_packages(exclude=[<span class="s">'test'</span>]),
+    data_files=[
+        (<span class="s">'share/ament_index/resource_index/packages'</span>, [<span class="s">'resource/'</span> + package_name]),
+        (<span class="s">'share/'</span> + package_name, [<span class="s">'package.xml'</span>]),
+    ],
+    install_requires=[<span class="s">'setuptools'</span>],
+    zip_safe=True,
+    maintainer=<span class="s">'voce'</span>,
+    maintainer_email=<span class="s">'voce@exemplo.com'</span>,
+    description=<span class="s">'Primeiros nos do curso de robotica'</span>,
+    license=<span class="s">'MIT'</span>,
+    entry_points={
+        <span class="s">'console_scripts'</span>: [
+            <span class="s">'falante = meu_robo.falante:main'</span>,
+            <span class="s">'ouvinte = meu_robo.ouvinte:main'</span>,
+        ],
+    },
+)</code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">meu_robo/package.xml</span></div>
+<pre><code>&lt;?xml version=<span class="s">"1.0"</span>?&gt;
+&lt;package format=<span class="s">"3"</span>&gt;
+  &lt;name&gt;meu_robo&lt;/name&gt;
+  &lt;version&gt;0.1.0&lt;/version&gt;
+  &lt;description&gt;Primeiros nos do curso de robotica&lt;/description&gt;
+  &lt;maintainer email=<span class="s">"voce@exemplo.com"</span>&gt;voce&lt;/maintainer&gt;
+  &lt;license&gt;MIT&lt;/license&gt;
+  &lt;exec_depend&gt;rclpy&lt;/exec_depend&gt;
+  &lt;exec_depend&gt;std_msgs&lt;/exec_depend&gt;
+  &lt;export&gt;
+    &lt;build_type&gt;ament_python&lt;/build_type&gt;
+  &lt;/export&gt;
+&lt;/package&gt;</code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal</span></div>
+<pre><code>cd ~/ros2_ws
+colcon build --symlink-install
+source install/setup.bash
+ros2 run meu_robo falante        <span class="c"># terminal 1</span>
+ros2 run meu_robo ouvinte        <span class="c"># terminal 2 (faça o source de novo nele)</span></code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>O colcon termina com "Summary: 1 package finished".</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Terminal 1: "[falante]: Publicado: Ola do robo #0", "#1"... Terminal 2: "[ouvinte]: Ouvi: Ola do robo #3".</span></li>
+<li class="flex items-start gap-2"><span class="text-amber-400">✓</span><span>Num terceiro terminal, <span class="font-mono text-xs">ros2 topic hz /conversa</span> mostra cerca de 2 Hz.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"Package 'meu_robo' not found"? Faltou <span class="font-mono text-xs">source install/setup.bash</span> naquele terminal.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Desafio</h3>
+<p class="text-neutral-300 text-sm">Troque o falante para publicar <span class="font-mono text-xs">geometry_msgs/msg/Twist</span> em <span class="font-mono text-xs">/turtle1/cmd_vel</span> (adicione <span class="font-mono text-xs">geometry_msgs</span> ao package.xml) e faça a tartaruga desenhar um quadrado: anda 2 s, gira 90 graus, repete. É exatamente o que um nó de navegação faz com o seu robô.</p>
+</div>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m4-1-t6-p4">Este molde (classe Node, publisher, subscriber, timer, spin) é a base de todo nó da trilha: o que calcula a odometria no 4.3, o que manda o robô até um ponto no 4.5. Mudam os tipos de mensagem e a lógica do callback; a estrutura é a mesma.</p>
+<h3 class="text-lg font-semibold text-amber-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">rclpy</div><div class="text-xs text-neutral-400">ROS 2 em Python</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">Callback</div><div class="text-xs text-neutral-400">o ROS chama você</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">entry_points</div><div class="text-xs text-neutral-400">nome do ros2 run</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-amber-400 font-semibold text-sm">colcon build</div><div class="text-xs text-neutral-400">compila e instala</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-amber-900/30 via-dark-800 to-dark-800 rounded-xl border border-amber-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Resumo do módulo</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">ROS 2 é um grafo de programas pequenos</strong><span class="text-neutral-400"> que trocam dados por nome, via DDS, em um ou vários computadores.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Lyrical para começar do zero, Jazzy se o seu material pede</strong><span class="text-neutral-400">; Humble não, porque acaba em maio/2027.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Instalação</strong><span class="text-neutral-400">: repositório pela página oficial, <span class="font-mono">ros-&lt;distro&gt;-desktop</span>, ou Docker <span class="font-mono">osrf/ros:&lt;distro&gt;-desktop</span>.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Tópico para fluxo, serviço para pergunta, ação para tarefa longa</strong><span class="text-neutral-400">, parâmetro para ajuste.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Nó em rclpy</strong><span class="text-neutral-400">: Node + publisher/subscriber + timer + spin, empacotado com setup.py e compilado com colcon.</span></div></div>
+</div>
+<h3 class="font-semibold text-amber-400 mb-3">Para ir além</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.ros.org/en/lyrical/" rel="noopener" target="_blank">Documentação do ROS 2 Lyrical</a> <span class="text-neutral-500">— instalação e tutoriais oficiais</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.ros.org/en/jazzy/" rel="noopener" target="_blank">Documentação do ROS 2 Jazzy</a> <span class="text-neutral-500">— a mesma estrutura, para a LTS anterior</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.ros.org/en/jazzy/Tutorials/Beginner-CLI-Tools.html" rel="noopener" target="_blank">Tutoriais de linha de comando</a> <span class="text-neutral-500">— nós, tópicos, serviços, ações e parâmetros com o turtlesim</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://hub.docker.com/r/osrf/ros" rel="noopener" target="_blank">Imagens osrf/ros no Docker Hub</a> <span class="text-neutral-500">— confira as tags de cada distro</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-amber-400 mb-1">Próximo módulo</h3>
+<p class="text-neutral-300">4.2 · Descrever e simular o robô: URDF, quadros TF, RViz2 e o robô andando no Gazebo.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">← Anterior: índice da Trilha 4</a>
+<a class="inline-flex items-center px-5 py-3 bg-amber-700 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors" href="modulo-4-2.html">Próximo: 4.2 Descrever e simular →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica do Zero ao Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licença MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

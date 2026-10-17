@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="inema-course" content="robot">
+<title>Módulo 3.2 · Câmera e OpenCV | Robótica do Zero ao Expert</title>
+<meta name="description" content="Visão no Raspberry Pi 5: pixels e canais, Camera Module 3 com picamera2, OpenCV com HSV e máscaras, contorno e centro do objeto, medir FPS e transmitir o vídeo para o navegador.">
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script type="application/json" data-inema-manifest>
+{
+  "course": "robot",
+  "tracks": [
+    { "n": "1", "title": "Primeiros passos", "modules": [
+      { "id": "1-1", "title": "O que é um robô e o seu kit", "topics": 6, "href": "curso/trilha1/modulo-1-1.html" },
+      { "id": "1-2", "title": "Eletrônica essencial", "topics": 6, "href": "curso/trilha1/modulo-1-2.html" },
+      { "id": "1-3", "title": "ESP32: o primeiro programa", "topics": 6, "href": "curso/trilha1/modulo-1-3.html" },
+      { "id": "1-4", "title": "Sensores: o robô percebe", "topics": 6, "href": "curso/trilha1/modulo-1-4.html" },
+      { "id": "1-5", "title": "Motores e energia", "topics": 6, "href": "curso/trilha1/modulo-1-5.html" },
+      { "id": "1-6", "title": "Projeto: rover que desvia de obstáculos", "topics": 6, "href": "curso/trilha1/modulo-1-6.html" }
+    ]},
+    { "n": "2", "title": "Robô autônomo", "modules": [
+      { "id": "2-1", "title": "Controle pelo celular: Wi-Fi e BLE", "topics": 6, "href": "curso/trilha2/modulo-2-1.html" },
+      { "id": "2-2", "title": "IMU e encoders: saber onde está", "topics": 6, "href": "curso/trilha2/modulo-2-2.html" },
+      { "id": "2-3", "title": "Controle PID na prática", "topics": 6, "href": "curso/trilha2/modulo-2-3.html" },
+      { "id": "2-4", "title": "Várias tarefas ao mesmo tempo", "topics": 6, "href": "curso/trilha2/modulo-2-4.html" },
+      { "id": "2-5", "title": "Telemetria e registro de dados", "topics": 6, "href": "curso/trilha2/modulo-2-5.html" },
+      { "id": "2-6", "title": "Projeto: seguidor de linha com PID", "topics": 6, "href": "curso/trilha2/modulo-2-6.html" }
+    ]},
+    { "n": "3", "title": "Visão e IA embarcada", "modules": [
+      { "id": "3-1", "title": "Raspberry Pi 5 e Linux", "topics": 6, "href": "curso/trilha3/modulo-3-1.html" },
+      { "id": "3-2", "title": "Câmera e OpenCV", "topics": 6, "href": "curso/trilha3/modulo-3-2.html" },
+      { "id": "3-3", "title": "Detectar objetos com YOLO26", "topics": 6, "href": "curso/trilha3/modulo-3-3.html" },
+      { "id": "3-4", "title": "IA dentro do microcontrolador", "topics": 6, "href": "curso/trilha3/modulo-3-4.html" },
+      { "id": "3-5", "title": "Raspberry Pi conversa com o ESP32", "topics": 6, "href": "curso/trilha3/modulo-3-5.html" },
+      { "id": "3-6", "title": "Projeto: robô que segue um objeto", "topics": 6, "href": "curso/trilha3/modulo-3-6.html" }
+    ]},
+    { "n": "4", "title": "ROS 2 e navegação", "modules": [
+      { "id": "4-1", "title": "ROS 2 sem medo", "topics": 6, "href": "curso/trilha4/modulo-4-1.html" },
+      { "id": "4-2", "title": "Descrever e simular o robô", "topics": 6, "href": "curso/trilha4/modulo-4-2.html" },
+      { "id": "4-3", "title": "micro-ROS no ESP32", "topics": 6, "href": "curso/trilha4/modulo-4-3.html" },
+      { "id": "4-4", "title": "LiDAR e mapas (SLAM)", "topics": 6, "href": "curso/trilha4/modulo-4-4.html" },
+      { "id": "4-5", "title": "Navegação com Nav2", "topics": 6, "href": "curso/trilha4/modulo-4-5.html" },
+      { "id": "4-6", "title": "Projeto: robô que mapeia e navega", "topics": 6, "href": "curso/trilha4/modulo-4-6.html" }
+    ]},
+    { "n": "5", "title": "IA moderna e braço robótico", "modules": [
+      { "id": "5-1", "title": "Modelo de linguagem como cérebro", "topics": 6, "href": "curso/trilha5/modulo-5-1.html" },
+      { "id": "5-2", "title": "Voz local: ouvir e falar", "topics": 6, "href": "curso/trilha5/modulo-5-2.html" },
+      { "id": "5-3", "title": "Braço SO-101 e LeRobot", "topics": 6, "href": "curso/trilha5/modulo-5-3.html" },
+      { "id": "5-4", "title": "Aprender por demonstração", "topics": 6, "href": "curso/trilha5/modulo-5-4.html" },
+      { "id": "5-5", "title": "Simular antes do real", "topics": 6, "href": "curso/trilha5/modulo-5-5.html" },
+      { "id": "5-6", "title": "Projeto final: robô assistente", "topics": 6, "href": "curso/trilha5/modulo-5-6.html" }
+    ]},
+    { "n": "6", "title": "Para o professor", "modules": [
+      { "id": "6-1", "title": "Como ministrar este curso", "topics": 8, "href": "curso/trilha6/modulo-6-1.html" }
+    ]}
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link rel="stylesheet" href="../../assets/learn.css">
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T3 ativa -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600" aria-label="Navegação principal">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html" aria-label="Robótica do Zero ao Expert — início">
+<span class="text-xl sm:text-2xl" aria-hidden="true">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeiros passos</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autônomo</span></a>
+<a class="nav-trail text-purple-400 bg-purple-500/10" aria-current="page" href="index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visão e IA</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Professor</span></a>
+<span class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block" aria-hidden="true"></span>
+<button class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button" aria-label="Minha jornada">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Minha jornada</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Aparência" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Aparência</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Escuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sépia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Foco</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fonte</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Leitura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamanho</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Largura</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estreito</button><button data-inema-set-linewidth="68" type="button">Médio</button><button data-inema-set-linewidth="75" type="button">Largo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Entrelinha</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Confortável</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento roxo" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento âmbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/escuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewBox="0 0 20 20" aria-hidden="true"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main id="conteudo" data-inema-module="3-2" data-inema-track="3">
+<!-- BREADCRUMB -->
+<nav aria-label="Trilha de navegação" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400"><a class="hover:text-purple-400" href="../../index.html">Início</a><span aria-hidden="true">/</span><a class="hover:text-purple-400" href="index.html">Trilha 3</a><span aria-hidden="true">/</span><span class="text-purple-400">Módulo 3.2</span></div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MÓDULO 3.2 · PRÁTICA</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">📷 Câmera e OpenCV</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">O robô ganha olhos. Você entende o que é uma imagem para o computador, liga a <strong class="text-neutral-100">Camera Module 3</strong> com a picamera2, separa um objeto pela cor com o <strong class="text-purple-400">OpenCV</strong>, encontra o centro dele, mede quantas imagens por segundo o Pi aguenta e assiste ao vídeo do robô no navegador do celular.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">6</div><div class="text-xs text-neutral-400">Tópicos</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Intermediário</div><div class="text-xs text-neutral-400">Nível</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Prática</div><div class="text-xs text-neutral-400">Tipo</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Pi 5 + câmera</div><div class="text-xs text-neutral-400">Hardware</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progresso do módulo 3.2" class="inema-ring" data-inema-meter="modulo:3-2"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:3-2"><strong data-inema-meter-frac="">0 de 0</strong> tópicos lidos · <span data-inema-section-counter="">Seção 1 de 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Índice da página" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">Neste módulo</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-1">1. Pixels e canais</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-2">2. Câmera com picamera2</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-3">3. Cores, HSV e máscaras</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-4">4. Contornos e centro</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-5">5. FPS e resolução</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-6">6. Vídeo no navegador</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Conteúdo detalhado</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" id="topico-1" data-inema-topic="modulo-3-2#topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🖼️ Como o computador vê uma imagem</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t1-p1">Para o programa, uma foto não é uma cena: é uma <strong class="text-purple-400">tabela de números</strong>. Cada quadradinho, o pixel, guarda três valores de 0 a 255, um para cada cor básica. Uma imagem de 640 × 480 é uma tabela com 480 linhas, 640 colunas e 3 camadas. Em Python ela vira um array do NumPy com formato <span class="font-mono text-xs">(480, 640, 3)</span>. Achar "a bola vermelha" é, no fundo, procurar uma região da tabela onde os números têm um certo padrão.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-2-t1-p2">Um <strong>canal</strong> é uma das camadas de cor da imagem. O OpenCV guarda as cores na ordem <strong>BGR</strong> (azul, verde, vermelho), ao contrário do RGB que você vê em editores. O <strong>NumPy</strong> é a biblioteca Python de tabelas de números; o <strong>OpenCV</strong> é a biblioteca de visão computacional que trabalha em cima dessas tabelas. A coordenada (0, 0) é o canto <strong>superior</strong> esquerdo: x cresce para a direita e y cresce para baixo.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Uma imagem ampliada até os pixels: cada pixel tem três números, azul, verde e vermelho; um pixel vermelho vale 30, 40, 220. Ao lado, os eixos: x cresce para a direita e y para baixo, a partir do canto superior esquerdo." class="w-full h-auto" viewBox="0 0 640 280">
+<defs><pattern id="m32-grid1" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.1"/></pattern><marker id="m32-ah1" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"/></marker><filter id="m32-glow1" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect width="640" height="280" fill="url(#m32-grid1)"/>
+<g stroke="#272730" stroke-width="2">
+<rect x="40" y="50" width="40" height="40" fill="#1e3a5f"/><rect x="80" y="50" width="40" height="40" fill="#1e3a5f"/><rect x="120" y="50" width="40" height="40" fill="#2b4c7e"/><rect x="160" y="50" width="40" height="40" fill="#1e3a5f"/>
+<rect x="40" y="90" width="40" height="40" fill="#1e3a5f"/><rect x="80" y="90" width="40" height="40" fill="#b91c1c"/><rect x="120" y="90" width="40" height="40" fill="#dc2626"/><rect x="160" y="90" width="40" height="40" fill="#2b4c7e"/>
+<rect x="40" y="130" width="40" height="40" fill="#2b4c7e"/><rect x="80" y="130" width="40" height="40" fill="#dc2626"/><rect x="120" y="130" width="40" height="40" fill="#b91c1c"/><rect x="160" y="130" width="40" height="40" fill="#1e3a5f"/>
+<rect x="40" y="170" width="40" height="40" fill="#1e3a5f"/><rect x="80" y="170" width="40" height="40" fill="#2b4c7e"/><rect x="120" y="170" width="40" height="40" fill="#1e3a5f"/><rect x="160" y="170" width="40" height="40" fill="#1e3a5f"/>
+</g>
+<rect x="120" y="90" width="40" height="40" fill="none" stroke="#c084fc" stroke-width="3" filter="url(#m32-glow1)"/>
+<path d="M162,110 L262,110" stroke="#c084fc" stroke-width="2" stroke-dasharray="5 4"/>
+<g font-family="Inter,sans-serif">
+<rect x="268" y="56" width="190" height="112" rx="12" fill="#22153a" stroke="#a855f7" stroke-width="2"/>
+<text x="363" y="84" fill="#c084fc" font-size="17" font-weight="600" text-anchor="middle">um pixel = 3 números</text>
+<text x="288" y="112" fill="#93c5fd" font-size="16">B (azul)       30</text>
+<text x="288" y="134" fill="#86efac" font-size="16">G (verde)     40</text>
+<text x="288" y="156" fill="#fca5a5" font-size="16">R (vermelho) 220</text>
+<text x="40" y="38" fill="#7dd3fc" font-size="14">(0, 0)</text>
+<text x="500" y="98" fill="#7dd3fc" font-size="15">x → direita</text>
+<text x="500" y="160" fill="#7dd3fc" font-size="15">y ↓ para baixo</text>
+<text x="40" y="244" fill="#ddd6fe" font-size="15">imagem 640 × 480 → array (480, 640, 3): linhas, colunas, canais</text>
+</g>
+<path d="M40,222 L210,222" stroke="#38bdf8" stroke-width="2" marker-end="url(#m32-ah1)"/>
+<path d="M24,50 L24,212" stroke="#38bdf8" stroke-width="2" marker-end="url(#m32-ah1)"/>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Como ler:</strong> à esquerda, um pedaço de imagem ampliado até aparecerem os quadradinhos. O pixel destacado em roxo é "vermelho" porque o número do canal R é alto e os outros são baixos. Repare na ordem B, G, R: é a do OpenCV. As setas ciano mostram que o y conta de cima para baixo.</p>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">⬛ Tons de cinza</div><p class="text-sm text-neutral-400">Um canal só, de 0 (preto) a 255 (branco). Três vezes menos dados; ótimo para bordas e formas.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🌈 BGR</div><p class="text-sm text-neutral-400">Três canais, como a câmera entrega. Bom para exibir e salvar, ruim para separar cor quando a luz muda.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🎨 HSV</div><p class="text-sm text-neutral-400">Matiz, saturação e brilho. Separa "qual cor" de "quanta luz": o formato certo para achar objeto colorido (tópico 3).</p></div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t1-p3">Quando a máscara não pega o objeto ou o centro aparece no lugar errado, o defeito quase sempre está aqui: cores trocadas (RGB tratado como BGR), eixo y invertido na cabeça ou imagem grande demais para o Pi processar a tempo.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Pixel</div><div class="text-xs text-neutral-400">menor ponto da imagem</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Canal</div><div class="text-xs text-neutral-400">uma camada de cor</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">BGR</div><div class="text-xs text-neutral-400">a ordem do OpenCV</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">shape</div><div class="text-xs text-neutral-400">(altura, largura, canais)</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" id="topico-2" data-inema-topic="modulo-3-2#topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">📷 Camera Module 3 com picamera2</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t2-p1">A <strong class="text-neutral-100">Camera Module 3</strong> liga no conector de câmera do Pi 5 por um cabo flat (fita). No terminal, as ferramentas <strong class="text-neutral-100">rpicam-apps</strong> (<span class="font-mono text-xs">rpicam-hello</span>, <span class="font-mono text-xs">rpicam-still</span>) testam a câmera em segundos. No seu código Python, quem entrega as imagens é a <strong class="text-purple-400">picamera2</strong>, que já vem no Raspberry Pi OS. Tutoriais antigos usam ferramentas de linha de comando que não existem mais no sistema atual; se o comando não começa com <span class="font-mono text-xs">rpicam-</span>, desconfie.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-2-t2-p2">O conector do Pi 5 é <strong>menor</strong> (22 vias) que o das câmeras (15 vias): use o cabo próprio para Pi 5, que tem uma ponta de cada tamanho. O lado com os contatos metálicos segue a orientação indicada no conector; abra a trava com a unha, encaixe reto e feche. Faça isso com o Pi <strong>desligado</strong>.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Caminho da imagem: o sensor da Camera Module 3 manda dados pelo cabo flat; o processador de imagem do Pi ajusta cor e exposição; a picamera2 entrega um array NumPy ao seu código; o OpenCV processa e salva." class="w-full h-auto" viewBox="0 0 640 230">
+<defs><pattern id="m32-grid2" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.1"/></pattern><marker id="m32-ah2" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"/></marker></defs>
+<rect width="640" height="230" fill="url(#m32-grid2)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<g class="rb-a"><rect x="12" y="50" width="135" height="90" rx="12" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/><text x="80" y="86" fill="#7dd3fc" font-size="17" font-weight="600">sensor</text><text x="80" y="112" fill="#bfe6ff" font-size="14">Camera Module 3</text></g>
+<g class="rb-a"><rect x="170" y="50" width="135" height="90" rx="12" fill="#1a1029" stroke="#a855f7" stroke-width="2"/><text x="237" y="86" fill="#c084fc" font-size="17" font-weight="600">ISP do Pi</text><text x="237" y="112" fill="#ede9fe" font-size="14">cor, exposição</text></g>
+<g class="rb-a"><rect x="328" y="50" width="135" height="90" rx="12" fill="#22153a" stroke="#a855f7" stroke-width="2.5"/><text x="395" y="86" fill="#c084fc" font-size="17" font-weight="600">picamera2</text><text x="395" y="112" fill="#ede9fe" font-size="14">array NumPy</text></g>
+<rect x="486" y="50" width="142" height="90" rx="12" fill="#1a1029" stroke="#c084fc" stroke-width="2"/><text x="557" y="86" fill="#c084fc" font-size="17" font-weight="600">OpenCV</text><text x="557" y="112" fill="#ede9fe" font-size="14">seu código</text>
+<text x="80" y="174" fill="#a8a8b3" font-size="14">cabo flat</text>
+<text x="395" y="174" fill="#a8a8b3" font-size="14">capture_array()</text>
+<text x="320" y="210" fill="#ddd6fe" font-size="15">"RGB888" na picamera2 já chega na ordem BGR que o OpenCV espera</text>
+</g>
+<g fill="none" stroke="#c084fc" stroke-width="2"><path d="M147,95 L162,95" marker-end="url(#m32-ah2)"/><path d="M305,95 L320,95" marker-end="url(#m32-ah2)"/><path d="M463,95 L478,95" marker-end="url(#m32-ah2)"/></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Como ler:</strong> da esquerda para a direita, a luz vira números. O ISP (processador de imagem) corrige cor e exposição antes de você receber o quadro; por isso a primeira imagem logo após ligar a câmera pode sair escura, e o código espera um segundo antes de capturar.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-2-t2-p3"><strong class="text-neutral-100">Objetivo:</strong> confirmar que a câmera foi detectada, tirar uma foto pelo terminal e depois capturar um quadro em Python. Instale o OpenCV do sistema uma vez (o venv do módulo 3.1 enxerga ele).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal do Pi</span></div>
+<pre><code>rpicam-hello --list-cameras          <span class="c"># deve listar a câmera (imx708 = Camera Module 3)</span>
+rpicam-still -o ~/robo/teste.jpg      <span class="c"># tira uma foto pelo terminal</span>
+sudo apt install -y python3-opencv    <span class="c"># OpenCV do sistema, visível no venv</span>
+source ~/robo-venv/bin/activate</code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">~/robo/captura.py</span></div>
+<pre><code><span class="c"># Captura um quadro da câmera e salva como JPEG</span>
+<span class="k">import</span> time, os
+<span class="k">import</span> cv2
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+
+picam2 = Picamera2()
+config = picam2.create_preview_configuration(main={<span class="s">"size"</span>: (640, 480), <span class="s">"format"</span>: <span class="s">"RGB888"</span>})
+picam2.configure(config)
+picam2.start()
+time.sleep(1)                         <span class="c"># deixa a exposição automática se ajustar</span>
+
+quadro = picam2.capture_array()       <span class="c"># array NumPy na ordem BGR</span>
+print(<span class="s">"formato:"</span>, quadro.shape, quadro.dtype)
+print(<span class="s">"pixel do centro (B, G, R):"</span>, quadro[240, 320])
+cv2.imwrite(os.path.expanduser(<span class="s">"~/robo/quadro.jpg"</span>), quadro)
+picam2.stop()
+print(<span class="s">"salvo em ~/robo/quadro.jpg"</span>)</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>O terminal mostra <span class="font-mono text-xs">formato: (480, 640, 3) uint8</span> e três números do pixel central.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Copie a foto para o seu computador (<span class="font-mono text-xs">scp &lt;seu_usuario&gt;@robo.local:~/robo/quadro.jpg .</span>) e abra: as cores devem estar naturais.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"no cameras available"? Desligue, confira o cabo (lado e trava) dos dois lados e ligue de novo.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t2-p4">Esse bloco de configuração (tamanho, formato, start, capture_array) é a porta de entrada de tudo o que vem depois: máscara de cor, YOLO26 e o projeto da trilha. Testar primeiro pelo <span class="font-mono text-xs">rpicam-hello</span> separa problema de hardware de problema de código.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">rpicam-apps</div><div class="text-xs text-neutral-400">teste no terminal</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">picamera2</div><div class="text-xs text-neutral-400">câmera em Python</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">capture_array</div><div class="text-xs text-neutral-400">quadro como NumPy</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Cabo 22 → 15</div><div class="text-xs text-neutral-400">o certo para o Pi 5</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" id="topico-3" data-inema-topic="modulo-3-2#topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🎨 OpenCV: cores, HSV e máscaras</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t3-p1">Uma bola vermelha na sombra e a mesma bola ao sol têm números BGR bem diferentes. No espaço <strong class="text-purple-400">HSV</strong> a diferença cai quase toda no V (brilho), e o H (matiz, "qual cor") continua parecido. Por isso o caminho padrão é: converter o quadro para HSV, escolher uma faixa de H, S e V e criar uma <strong class="text-neutral-100">máscara</strong>, uma imagem preto e branco em que só os pixels dentro da faixa ficam brancos.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-2-t3-p2"><strong>Matiz (H)</strong> é a cor no círculo das cores; no OpenCV vai de 0 a 179. <strong>Saturação (S)</strong> é o quanto a cor é viva (0 = cinza). <strong>Brilho (V)</strong> é o quanto há de luz (0 = preto). Uma <strong>máscara</strong> é um filtro: branco onde a condição vale, preto no resto. O vermelho fica nas duas pontas do círculo (perto de 0 e perto de 179), por isso precisa de duas faixas somadas.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Faixa de matiz do OpenCV de 0 a 179: vermelho no começo e no fim, depois laranja, amarelo, verde, ciano, azul e roxo. Duas janelas marcam o vermelho, de 0 a 10 e de 170 a 179; uma janela marca o verde, de 40 a 80." class="w-full h-auto" viewBox="0 0 640 220">
+<defs><linearGradient id="m32-hue" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#ff0000"/><stop offset="0.083" stop-color="#ff8000"/><stop offset="0.167" stop-color="#ffff00"/><stop offset="0.333" stop-color="#00ff00"/><stop offset="0.5" stop-color="#00ffff"/><stop offset="0.667" stop-color="#0000ff"/><stop offset="0.833" stop-color="#ff00ff"/><stop offset="1" stop-color="#ff0000"/></linearGradient><pattern id="m32-grid3" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.1"/></pattern></defs>
+<rect width="640" height="220" fill="url(#m32-grid3)"/>
+<rect x="40" y="70" width="560" height="44" rx="6" fill="url(#m32-hue)" opacity="0.85"/>
+<g fill="none" stroke-width="3"><rect x="38" y="62" width="34" height="60" rx="4" stroke="#c084fc"/><rect x="567" y="62" width="35" height="60" rx="4" stroke="#c084fc"/><rect x="164" y="62" width="126" height="60" rx="4" stroke="#38bdf8"/></g>
+<g font-family="Inter,sans-serif" font-size="15" text-anchor="middle">
+<text x="40" y="146" fill="#a8a8b3">0</text><text x="320" y="146" fill="#a8a8b3">90</text><text x="600" y="146" fill="#a8a8b3">179</text>
+<text x="56" y="48" fill="#c084fc" font-weight="600">0–10</text><text x="584" y="48" fill="#c084fc" font-weight="600">170–179</text>
+<text x="227" y="48" fill="#7dd3fc" font-weight="600">verde 40–80</text>
+<text x="320" y="182" fill="#ddd6fe">vermelho = duas faixas somadas · S e V mínimos cortam cinza e sombra</text>
+<text x="320" y="206" fill="#a8a8b3" font-size="14">valores iniciais: ajuste com o seu objeto e a sua luz</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Como ler:</strong> a faixa é o círculo das cores aberto em linha reta, na escala 0–179 do OpenCV. As molduras roxas mostram por que o vermelho dá trabalho: ele começa e termina a régua. A moldura ciano mostra uma cor "comportada", que cabe numa janela só.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-2-t3-p3"><strong class="text-neutral-100">Objetivo:</strong> gerar a máscara de um objeto vermelho e salvar lado a lado o quadro e a máscara, para você ajustar a faixa olhando o resultado.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">~/robo/mascara.py</span></div>
+<pre><code><span class="c"># Máscara de cor em HSV (vermelho = duas faixas)</span>
+<span class="k">import</span> time, os
+<span class="k">import</span> cv2, numpy <span class="k">as</span> np
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+
+picam2 = Picamera2()
+picam2.configure(picam2.create_preview_configuration(main={<span class="s">"size"</span>: (640, 480), <span class="s">"format"</span>: <span class="s">"RGB888"</span>}))
+picam2.start(); time.sleep(1)
+quadro = picam2.capture_array()
+picam2.stop()
+
+hsv = cv2.cvtColor(quadro, cv2.COLOR_BGR2HSV)
+baixo1, alto1 = np.array([0, 120, 70]),   np.array([10, 255, 255])   <span class="c"># vermelho, começo da régua</span>
+baixo2, alto2 = np.array([170, 120, 70]), np.array([179, 255, 255])  <span class="c"># vermelho, fim da régua</span>
+mascara = cv2.inRange(hsv, baixo1, alto1) | cv2.inRange(hsv, baixo2, alto2)
+
+<span class="c"># Limpeza: tira pontinhos soltos e fecha buracos</span>
+nucleo = np.ones((5, 5), np.uint8)
+mascara = cv2.morphologyEx(mascara, cv2.MORPH_OPEN, nucleo)
+mascara = cv2.morphologyEx(mascara, cv2.MORPH_CLOSE, nucleo)
+
+brancos = cv2.countNonZero(mascara)
+print(f<span class="s">"pixels na máscara: {brancos} ({100 * brancos / mascara.size:.1f}% da imagem)"</span>)
+lado_a_lado = np.hstack([quadro, cv2.cvtColor(mascara, cv2.COLOR_GRAY2BGR)])
+cv2.imwrite(os.path.expanduser(<span class="s">"~/robo/mascara.jpg"</span>), lado_a_lado)
+print(<span class="s">"salvo em ~/robo/mascara.jpg"</span>)</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Com um objeto vermelho na frente, a metade direita de <span class="font-mono text-xs">mascara.jpg</span> mostra uma mancha branca no formato dele.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Sem o objeto, a porcentagem cai para perto de 0%.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Pele e madeira aparecendo? Suba o S mínimo (120 → 150). Objeto sumindo na sombra? Baixe o V mínimo.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Ajuda a cor funcionar</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Objeto de cor viva e fosca (bola, cartolina, fita).</span></li><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Fundo de cor bem diferente da do objeto.</span></li><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Ajustar a faixa no lugar onde o robô vai rodar.</span></li></ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Atrapalha</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Objeto brilhante que reflete a lâmpada (vira branco).</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Luz amarelada ou piscando, que muda o matiz.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Calibrar de dia e testar à noite.</span></li></ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t3-p4">Máscara de cor é a forma mais leve de visão: roda a dezenas de quadros por segundo no Pi, sem IA, e basta para um robô seguir uma bola ou uma faixa colorida. É a primeira versão do projeto 3.6, antes de entrar o YOLO26.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">HSV</div><div class="text-xs text-neutral-400">cor separada da luz</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">inRange</div><div class="text-xs text-neutral-400">faixa → máscara</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Morfologia</div><div class="text-xs text-neutral-400">abre e fecha a máscara</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Vermelho duplo</div><div class="text-xs text-neutral-400">0–10 + 170–179</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" id="topico-4" data-inema-topic="modulo-3-2#topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🎯 Contornos e centro do objeto</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t4-p1">A máscara diz "aqui tem vermelho", mas o robô precisa de dois números: <strong class="text-neutral-100">onde</strong> está o objeto e <strong class="text-neutral-100">quão perto</strong>. O OpenCV encontra os <strong class="text-purple-400">contornos</strong> (as bordas de cada mancha branca), você fica com o maior, calcula o centro dele e a área. O centro vira o <strong class="text-neutral-100">erro</strong> horizontal (quanto o objeto está à esquerda ou à direita do meio da imagem) e a área indica a distância: quanto maior, mais perto.</p>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Do quadro ao comando: a máscara mostra duas manchas; o maior contorno é escolhido; o centro cx fica à direita do meio da imagem; o erro é cx menos 320, positivo, então o robô deve virar à direita." class="w-full h-auto" viewBox="0 0 640 280">
+<defs><pattern id="m32-grid4" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.1"/></pattern><filter id="m32-glow4" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><marker id="m32-ah4" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"/></marker></defs>
+<rect width="640" height="280" fill="url(#m32-grid4)"/>
+<rect x="40" y="30" width="400" height="210" rx="8" fill="#0b0b10" stroke="#3a3a46" stroke-width="2"/>
+<path d="M240,30 L240,240" stroke="#a8a8b3" stroke-width="1.5" stroke-dasharray="6 5"/>
+<circle cx="90" cy="200" r="12" fill="#e6e6e6" opacity="0.5"/>
+<g filter="url(#m32-glow4)"><ellipse cx="340" cy="120" rx="52" ry="46" fill="#e6e6e6" opacity="0.9" stroke="#c084fc" stroke-width="3"/></g>
+<circle cx="340" cy="120" r="6" fill="#a855f7"/>
+<path d="M240,120 L330,120" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#m32-ah4)"/>
+<g font-family="Inter,sans-serif" font-size="15">
+<text x="246" y="52" fill="#a8a8b3">meio: x = 320</text>
+<text x="352" y="196" fill="#ddd6fe">maior contorno</text>
+<text x="60" y="230" fill="#a8a8b3" font-size="14">mancha pequena: ignorada</text>
+<text x="250" y="110" fill="#7dd3fc">erro</text>
+<text x="462" y="70" fill="#c084fc" font-weight="600">cx = 440</text>
+<text x="462" y="98" fill="#7dd3fc">erro = 440 − 320</text>
+<text x="462" y="122" fill="#7dd3fc">= +120</text>
+<text x="462" y="160" fill="#ddd6fe">positivo → virar</text>
+<text x="462" y="182" fill="#ddd6fe">à direita</text>
+<text x="40" y="268" fill="#a8a8b3" font-size="14">quadro 640 × 480 desenhado em escala</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Como ler:</strong> o retângulo é a máscara; a linha tracejada é o meio da imagem. Das duas manchas, só a maior conta (a pequena é ruído). A seta ciano é o erro: positivo quando o objeto está à direita, negativo à esquerda, zero quando está centralizado. É esse número que o PID do projeto 3.6 vai zerar.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-2-t4-p2"><strong class="text-neutral-100">Objetivo:</strong> rodar em laço contínuo, imprimir centro, erro e área do maior objeto vermelho e dizer para que lado o robô deveria virar.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">~/robo/centro_cor.py</span></div>
+<pre><code><span class="c"># Acha o maior objeto vermelho e calcula centro, erro e área</span>
+<span class="k">import</span> time
+<span class="k">import</span> cv2, numpy <span class="k">as</span> np
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+
+LARGURA, ALTURA = 640, 480
+AREA_MIN = 800                      <span class="c"># menor que isso é ruído</span>
+FAIXAS = [((0, 120, 70), (10, 255, 255)), ((170, 120, 70), (179, 255, 255))]
+nucleo = np.ones((5, 5), np.uint8)
+
+<span class="k">def</span> achar_objeto(quadro):
+    hsv = cv2.cvtColor(quadro, cv2.COLOR_BGR2HSV)
+    mascara = np.zeros(hsv.shape[:2], np.uint8)
+    <span class="k">for</span> baixo, alto <span class="k">in</span> FAIXAS:                <span class="c"># junta as faixas (OU)</span>
+        mascara |= cv2.inRange(hsv, np.array(baixo), np.array(alto))
+    mascara = cv2.morphologyEx(mascara, cv2.MORPH_OPEN, nucleo)
+    contornos, _ = cv2.findContours(mascara, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    <span class="k">if not</span> contornos:
+        <span class="k">return None</span>
+    maior = max(contornos, key=cv2.contourArea)
+    area = cv2.contourArea(maior)
+    <span class="k">if</span> area &lt; AREA_MIN:
+        <span class="k">return None</span>
+    m = cv2.moments(maior)
+    cx, cy = int(m[<span class="s">"m10"</span>] / m[<span class="s">"m00"</span>]), int(m[<span class="s">"m01"</span>] / m[<span class="s">"m00"</span>])
+    <span class="k">return</span> cx, cy, area
+
+picam2 = Picamera2()
+picam2.configure(picam2.create_preview_configuration(main={<span class="s">"size"</span>: (LARGURA, ALTURA), <span class="s">"format"</span>: <span class="s">"RGB888"</span>}))
+picam2.start(); time.sleep(1)
+print(<span class="s">"Mostre um objeto vermelho. Ctrl+C para sair."</span>)
+<span class="k">try</span>:
+    <span class="k">while True</span>:
+        achado = achar_objeto(picam2.capture_array())
+        <span class="k">if</span> achado <span class="k">is None</span>:
+            print(<span class="s">"nenhum objeto → parar e procurar"</span>)
+        <span class="k">else</span>:
+            cx, cy, area = achado
+            erro = cx - LARGURA // 2
+            lado = <span class="s">"centro"</span> <span class="k">if</span> abs(erro) &lt; 40 <span class="k">else</span> (<span class="s">"direita"</span> <span class="k">if</span> erro &gt; 0 <span class="k">else</span> <span class="s">"esquerda"</span>)
+            print(f<span class="s">"cx={cx:3d} cy={cy:3d} erro={erro:+4d} area={area:7.0f} → {lado}"</span>)
+        time.sleep(0.1)
+<span class="k">except</span> KeyboardInterrupt:
+    picam2.stop()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Movendo o objeto para a direita da câmera, o erro fica positivo e aparece "→ direita".</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Aproximando o objeto, a área cresce bastante; afastando, diminui.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Direita e esquerda trocadas? A câmera está de cabeça para baixo ou espelhada: inverta o sinal do erro ou gire a câmera.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Área não é distância em metros</h3>
+<p class="text-neutral-300 text-sm">A área serve para comparar ("mais perto", "longe demais"), não para medir. Anote a área com o objeto a 30 cm e a 1 m: esses dois números viram os limites de "chegou" e "aproxime" no projeto.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t4-p3">Centro e área são a ponte entre visão e movimento. O YOLO26 do próximo módulo entrega uma caixa em vez de um contorno, mas você vai calcular exatamente o mesmo erro e o mesmo "tamanho" a partir dela.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Contorno</div><div class="text-xs text-neutral-400">borda da mancha</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Momentos</div><div class="text-xs text-neutral-400">dão o centro (cx, cy)</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Erro</div><div class="text-xs text-neutral-400">cx − meio da imagem</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Área mínima</div><div class="text-xs text-neutral-400">filtra ruído</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" id="topico-5" data-inema-topic="modulo-3-2#topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">⏱️ Medir FPS e reduzir resolução</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t5-p1">Um robô que vê a 3 quadros por segundo reage tarde: andando a meio metro por segundo, ele percorre mais de 15 cm entre uma imagem e outra. O número que importa é o <strong class="text-purple-400">FPS</strong> do laço inteiro (capturar + processar + decidir), não o da câmera. A alavanca mais forte é a <strong class="text-neutral-100">resolução</strong>: metade da largura e da altura é um quarto dos pixels, e quase todo o processamento cai junto.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-2-t5-p2"><strong>FPS</strong> (quadros por segundo) conta quantas voltas completas o seu laço dá em um segundo. <strong>Latência</strong> é o atraso entre algo acontecer na frente da câmera e o robô reagir. Os dois andam juntos: FPS baixo quase sempre significa reação atrasada.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Barras com a quantidade de pixels por quadro: 1920 por 1080 tem cerca de 2,1 milhões; 1280 por 720, 0,9 milhão; 640 por 480, 0,3 milhão; 320 por 240, 0,08 milhão. Menos pixels, mais quadros por segundo." class="w-full h-auto" viewBox="0 0 640 260">
+<defs><pattern id="m32-grid5" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.1"/></pattern><linearGradient id="m32-bar5" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#a855f7"/><stop offset="1" stop-color="#38bdf8"/></linearGradient></defs>
+<rect width="640" height="260" fill="url(#m32-grid5)"/>
+<g font-family="Inter,sans-serif" font-size="15">
+<text x="20" y="52" fill="#ede9fe">1920 × 1080</text><rect x="140" y="36" width="420" height="22" rx="4" fill="url(#m32-bar5)" opacity="0.55"/><text x="566" y="52" fill="#a8a8b3">2,1 M</text>
+<text x="20" y="102" fill="#ede9fe">1280 × 720</text><rect x="140" y="86" width="184" height="22" rx="4" fill="url(#m32-bar5)" opacity="0.7"/><text x="332" y="102" fill="#a8a8b3">0,9 M</text>
+<text x="20" y="152" fill="#c084fc" font-weight="600">640 × 480</text><rect x="140" y="136" width="61" height="22" rx="4" fill="url(#m32-bar5)"/><text x="210" y="152" fill="#c084fc" font-weight="600">0,3 M · bom ponto de partida</text>
+<text x="20" y="202" fill="#7dd3fc">320 × 240</text><rect x="140" y="186" width="16" height="22" rx="4" fill="#38bdf8"/><text x="166" y="202" fill="#7dd3fc">0,08 M · cor simples, bem rápido</text>
+<text x="20" y="244" fill="#a8a8b3" font-size="14">pixels por quadro (milhões): o tempo de processar cresce junto</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Como ler:</strong> cada barra é o trabalho de um quadro. Ir de Full HD para 640 × 480 corta o trabalho em quase sete vezes. Para seguir uma bola colorida, até 320 × 240 resolve; para o YOLO26, 640 × 480 é o tamanho natural.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-2-t5-p3"><strong class="text-neutral-100">Objetivo:</strong> medir o FPS real do laço "capturar + HSV + máscara" em três resoluções e escolher a sua com números.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">~/robo/fps.py</span></div>
+<pre><code><span class="c"># Mede o FPS do laço completo em três resoluções (5 s cada)</span>
+<span class="k">import</span> time
+<span class="k">import</span> cv2
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+
+picam2 = Picamera2()
+<span class="k">for</span> largura, altura <span class="k">in</span> [(1280, 720), (640, 480), (320, 240)]:
+    cfg = picam2.create_video_configuration(main={<span class="s">"size"</span>: (largura, altura), <span class="s">"format"</span>: <span class="s">"RGB888"</span>})
+    picam2.configure(cfg)
+    picam2.start(); time.sleep(1)
+    n, t0 = 0, time.perf_counter()
+    <span class="k">while</span> time.perf_counter() - t0 &lt; 5:
+        quadro = picam2.capture_array()
+        hsv = cv2.cvtColor(quadro, cv2.COLOR_BGR2HSV)          <span class="c"># trabalho típico</span>
+        mascara = cv2.inRange(hsv, (0, 120, 70), (10, 255, 255))
+        n += 1
+    fps = n / (time.perf_counter() - t0)
+    print(f<span class="s">"{largura}x{altura}: {fps:5.1f} FPS  ({1000 / fps:5.1f} ms por volta)"</span>)
+    picam2.stop()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Aparecem três linhas, e o FPS sobe conforme a resolução cai (o teto é a taxa da própria câmera).</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Anote os números: eles são a sua referência para comparar com o YOLO26 no 3.3.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>FPS caindo com o tempo? Rode o <span class="font-mono text-xs">saude.py</span> do 3.1: provavelmente é calor.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Ganha FPS</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Pedir à câmera a resolução final (sem redimensionar depois).</span></li><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Processar só a faixa da imagem que interessa (por exemplo, a metade de baixo).</span></li><li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Imprimir menos: <span class="font-mono text-xs">print</span> a cada quadro também custa.</span></li></ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Perde FPS</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Salvar JPEG em todo quadro no cartão.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Abrir área de trabalho com janela de vídeo enquanto o robô roda.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Pi sem cooler: começa rápido e fica lento.</span></li></ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t5-p4">Sem medir, toda otimização é chute. Com o FPS na mão você decide com dados entre "cor rápida" e "IA mais lenta", e sabe quanto o robô pode andar entre duas decisões sem perder o objeto.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">FPS do laço</div><div class="text-xs text-neutral-400">capturar + processar</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Latência</div><div class="text-xs text-neutral-400">atraso até reagir</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Resolução</div><div class="text-xs text-neutral-400">metade = ¼ do trabalho</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">perf_counter</div><div class="text-xs text-neutral-400">relógio para medir</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" id="topico-6" data-inema-topic="modulo-3-2#topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🌐 Transmitir o vídeo para o navegador</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t6-p1">O Pi no robô não tem tela, e janelas de vídeo pelo SSH não funcionam. A solução é o Pi virar um pequeno <strong class="text-purple-400">servidor web</strong>: ele comprime cada quadro em JPEG e manda a sequência pela rede no formato <strong class="text-neutral-100">MJPEG</strong>, que qualquer navegador mostra como vídeo. Assim você vê, no celular ou no notebook, exatamente o que o robô vê, já com as marcações do seu código.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-2-t6-p2"><strong>MJPEG</strong> é "JPEG em movimento": uma foto atrás da outra, numa conexão que fica aberta. É simples e tem pouco atraso, mas gasta mais rede que vídeo comprimido de verdade. A <strong>porta</strong> (aqui, 8000) é o número que diferencia os serviços dentro do mesmo computador; por isso o endereço termina em <span class="font-mono text-xs">:8000</span>.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Transmissão: no Pi, uma tarefa captura e desenha marcações em cada quadro e guarda o último JPEG; o servidor web na porta 8000 envia esse JPEG em sequência; o celular ou notebook na mesma rede Wi-Fi abre o endereço e vê o vídeo." class="w-full h-auto" viewBox="0 0 640 240">
+<defs><pattern id="m32-grid6" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.1"/></pattern><marker id="m32-ah6" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"/></marker><filter id="m32-glow6" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect width="640" height="240" fill="url(#m32-grid6)"/>
+<rect x="14" y="30" width="380" height="140" rx="14" fill="#140e1f" stroke="#6b5a86" stroke-width="2" stroke-dasharray="6 5"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<text x="204" y="54" fill="#a8a8b3" font-size="14">Raspberry Pi 5</text>
+<rect x="30" y="70" width="160" height="84" rx="12" fill="#1a1029" stroke="#a855f7" stroke-width="2"/><text x="110" y="102" fill="#c084fc" font-size="16" font-weight="600">captura</text><text x="110" y="126" fill="#ede9fe" font-size="14">desenha, codifica</text>
+<g filter="url(#m32-glow6)"><rect x="216" y="70" width="160" height="84" rx="12" fill="#22153a" stroke="#a855f7" stroke-width="2.5"/></g><text x="296" y="102" fill="#c084fc" font-size="16" font-weight="600">servidor</text><text x="296" y="126" fill="#ede9fe" font-size="14">porta 8000</text>
+<rect x="460" y="56" width="160" height="112" rx="16" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/><text x="540" y="96" fill="#7dd3fc" font-size="16" font-weight="600">navegador</text><text x="540" y="122" fill="#bfe6ff" font-size="14">celular ou</text><text x="540" y="142" fill="#bfe6ff" font-size="14">notebook</text>
+<text x="420" y="94" fill="#7dd3fc" font-size="14">JPEG,</text><text x="420" y="112" fill="#7dd3fc" font-size="14">JPEG…</text>
+<text x="320" y="206" fill="#ddd6fe" font-size="15">http://robo.local:8000 · só na rede local</text>
+</g>
+<path d="M190,112 L208,112" stroke="#c084fc" stroke-width="2" marker-end="url(#m32-ah6)"/>
+<path d="M376,130 L452,130" stroke="#38bdf8" stroke-width="2.2" marker-end="url(#m32-ah6)"/>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Como ler:</strong> dentro do Pi (tracejado), duas tarefas rodam juntas: uma só captura e prepara o JPEG mais recente; a outra só entrega. Separar as duas impede que um navegador lento atrase a visão do robô.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-2-t6-p3"><strong class="text-neutral-100">Objetivo:</strong> ver o vídeo do robô no navegador, com o centro do objeto vermelho marcado. Usa só a biblioteca padrão do Python, sem instalar nada.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">~/robo/stream.py</span></div>
+<pre><code><span class="c"># Vídeo da câmera no navegador (MJPEG) com o centro do objeto marcado</span>
+<span class="k">import</span> threading, time
+<span class="k">from</span> http.server <span class="k">import</span> BaseHTTPRequestHandler, ThreadingHTTPServer
+<span class="k">import</span> cv2, numpy <span class="k">as</span> np
+<span class="k">from</span> picamera2 <span class="k">import</span> Picamera2
+
+picam2 = Picamera2()
+picam2.configure(picam2.create_video_configuration(main={<span class="s">"size"</span>: (640, 480), <span class="s">"format"</span>: <span class="s">"RGB888"</span>}))
+picam2.start()
+ultimo_jpeg, trava = <span class="k">None</span>, threading.Lock()
+
+<span class="k">def</span> capturar():
+    <span class="k">global</span> ultimo_jpeg
+    <span class="k">while True</span>:
+        quadro = picam2.capture_array()
+        hsv = cv2.cvtColor(quadro, cv2.COLOR_BGR2HSV)
+        mascara = cv2.inRange(hsv, (0, 120, 70), (10, 255, 255)) | cv2.inRange(hsv, (170, 120, 70), (179, 255, 255))
+        contornos, _ = cv2.findContours(mascara, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        <span class="k">if</span> contornos:
+            maior = max(contornos, key=cv2.contourArea)
+            m = cv2.moments(maior)
+            <span class="k">if</span> m[<span class="s">"m00"</span>] &gt; 800:
+                cx, cy = int(m[<span class="s">"m10"</span>] / m[<span class="s">"m00"</span>]), int(m[<span class="s">"m01"</span>] / m[<span class="s">"m00"</span>])
+                cv2.drawContours(quadro, [maior], -1, (255, 0, 255), 2)
+                cv2.circle(quadro, (cx, cy), 6, (255, 255, 0), -1)
+        cv2.line(quadro, (320, 0), (320, 480), (200, 200, 200), 1)   <span class="c"># meio da imagem</span>
+        ok, buf = cv2.imencode(<span class="s">".jpg"</span>, quadro, [cv2.IMWRITE_JPEG_QUALITY, 70])
+        <span class="k">if</span> ok:
+            <span class="k">with</span> trava:
+                ultimo_jpeg = buf.tobytes()
+
+PAGINA = b<span class="s">'&lt;html&gt;&lt;body style="margin:0;background:#111"&gt;&lt;img src="/video" style="width:100%"&gt;&lt;/body&gt;&lt;/html&gt;'</span>
+
+<span class="k">class</span> Servidor(BaseHTTPRequestHandler):
+    <span class="k">def</span> do_GET(self):
+        <span class="k">if</span> self.path == <span class="s">"/"</span>:
+            self.send_response(200); self.send_header(<span class="s">"Content-Type"</span>, <span class="s">"text/html"</span>); self.end_headers()
+            self.wfile.write(PAGINA)
+        <span class="k">elif</span> self.path == <span class="s">"/video"</span>:
+            self.send_response(200)
+            self.send_header(<span class="s">"Content-Type"</span>, <span class="s">"multipart/x-mixed-replace; boundary=QUADRO"</span>)
+            self.end_headers()
+            <span class="k">try</span>:
+                <span class="k">while True</span>:
+                    <span class="k">with</span> trava:
+                        jpg = ultimo_jpeg
+                    <span class="k">if</span> jpg:
+                        self.wfile.write(b<span class="s">"--QUADRO\r\nContent-Type: image/jpeg\r\n\r\n"</span> + jpg + b<span class="s">"\r\n"</span>)
+                    time.sleep(0.05)                 <span class="c"># até ~20 quadros por segundo</span>
+            <span class="k">except</span> (BrokenPipeError, ConnectionResetError):
+                <span class="k">pass</span>                                 <span class="c"># o navegador fechou a aba</span>
+        <span class="k">else</span>:
+            self.send_error(404)
+    <span class="k">def</span> log_message(self, *args):
+        <span class="k">pass</span>                                         <span class="c"># silencia o log de cada pedido</span>
+
+threading.Thread(target=capturar, daemon=<span class="k">True</span>).start()
+print(<span class="s">"Abra http://robo.local:8000 no navegador. Ctrl+C para sair."</span>)
+ThreadingHTTPServer((<span class="s">"0.0.0.0"</span>, 8000), Servidor).serve_forever()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>No celular (mesmo Wi-Fi), <span class="font-mono text-xs">http://robo.local:8000</span> mostra o vídeo com uma linha vertical no meio.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Um objeto vermelho ganha contorno magenta e um ponto ciano no centro.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>O celular não abre robo.local? Use o IP do Pi (<span class="font-mono text-xs">hostname -I</span>) no lugar do nome.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Rede local apenas</h3>
+<p class="text-neutral-300 text-sm">Esse servidor não tem senha: qualquer pessoa na mesma rede vê a câmera. Use em casa ou no laboratório, nunca exposto à internet. Em rede de escola, combine com o professor antes de ligar.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-2-t6-p4">Ver o que o robô vê é a ferramenta de depuração mais poderosa da trilha. Quando ele girar para o lado errado no projeto 3.6, você vai olhar o vídeo e saber em segundos se o problema é a visão (marcou o objeto errado) ou o controle (marcou certo e virou errado).</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">MJPEG</div><div class="text-xs text-neutral-400">JPEG em sequência</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Porta 8000</div><div class="text-xs text-neutral-400">endereço do serviço</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Thread</div><div class="text-xs text-neutral-400">capturar e servir juntos</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Overlay</div><div class="text-xs text-neutral-400">marcações no quadro</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Resumo do módulo</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Imagem = tabela de números</strong><span class="text-neutral-400">: (altura, largura, 3), na ordem BGR, com y crescendo para baixo.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Câmera testada em duas camadas</strong><span class="text-neutral-400">: rpicam-hello no terminal, picamera2 no código.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Cor por HSV</strong><span class="text-neutral-400">: faixa → máscara → limpeza; o vermelho pede duas faixas.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Centro e área viram erro e distância</strong><span class="text-neutral-400">: os dois números que o robô usa para virar e se aproximar.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Medir e ver</strong><span class="text-neutral-400">: FPS do laço inteiro e vídeo MJPEG no navegador para depurar.</span></div></div>
+</div>
+<h3 class="font-semibold text-purple-400 mb-3">Para ir além</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.raspberrypi.com/documentation/computers/camera_software.html" rel="noopener" target="_blank">Software de câmera do Raspberry Pi</a> <span class="text-neutral-500">— rpicam-apps e picamera2</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.raspberrypi.com/documentation/accessories/camera.html" rel="noopener" target="_blank">Câmeras do Raspberry Pi</a> <span class="text-neutral-500">— modelos, cabos e instalação</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.opencv.org/4.x/df/d9d/tutorial_py_colorspaces.html" rel="noopener" target="_blank">OpenCV: espaços de cor</a> <span class="text-neutral-500">— HSV e inRange passo a passo</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.opencv.org/4.x/d3/d05/tutorial_py_table_of_contents_contours.html" rel="noopener" target="_blank">OpenCV: contornos</a> <span class="text-neutral-500">— momentos, área e caixas</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.opencv.org/4.x/" rel="noopener" target="_blank">Documentação do OpenCV</a> <span class="text-neutral-500">— referência completa</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-purple-400 mb-1">Próximo módulo</h3>
+<p class="text-neutral-300">3.3 · Detectar objetos com YOLO26: do "ache o vermelho" para "ache a pessoa, o gato ou a garrafa", rodando no Pi 5.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-3-1.html">← Anterior: 3.1 Raspberry Pi 5 e Linux</a>
+<a class="inline-flex items-center px-5 py-3 bg-purple-700 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors" href="modulo-3-3.html">Próximo: 3.3 YOLO26 →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica do Zero ao Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licença MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="inema-course" content="robot">
+<title>Módulo 3.1 · Raspberry Pi 5 e Linux | Robótica do Zero ao Expert</title>
+<meta name="description" content="Raspberry Pi 5 no robô: Raspberry Pi OS 64-bit (Trixie) sem monitor, SSH, terminal Linux, Python com venv, GPIO com gpiozero e cuidados com 3,3 V, energia e calor.">
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script type="application/json" data-inema-manifest>
+{
+  "course": "robot",
+  "tracks": [
+    { "n": "1", "title": "Primeiros passos", "modules": [
+      { "id": "1-1", "title": "O que é um robô e o seu kit", "topics": 6, "href": "curso/trilha1/modulo-1-1.html" },
+      { "id": "1-2", "title": "Eletrônica essencial", "topics": 6, "href": "curso/trilha1/modulo-1-2.html" },
+      { "id": "1-3", "title": "ESP32: o primeiro programa", "topics": 6, "href": "curso/trilha1/modulo-1-3.html" },
+      { "id": "1-4", "title": "Sensores: o robô percebe", "topics": 6, "href": "curso/trilha1/modulo-1-4.html" },
+      { "id": "1-5", "title": "Motores e energia", "topics": 6, "href": "curso/trilha1/modulo-1-5.html" },
+      { "id": "1-6", "title": "Projeto: rover que desvia de obstáculos", "topics": 6, "href": "curso/trilha1/modulo-1-6.html" }
+    ]},
+    { "n": "2", "title": "Robô autônomo", "modules": [
+      { "id": "2-1", "title": "Controle pelo celular: Wi-Fi e BLE", "topics": 6, "href": "curso/trilha2/modulo-2-1.html" },
+      { "id": "2-2", "title": "IMU e encoders: saber onde está", "topics": 6, "href": "curso/trilha2/modulo-2-2.html" },
+      { "id": "2-3", "title": "Controle PID na prática", "topics": 6, "href": "curso/trilha2/modulo-2-3.html" },
+      { "id": "2-4", "title": "Várias tarefas ao mesmo tempo", "topics": 6, "href": "curso/trilha2/modulo-2-4.html" },
+      { "id": "2-5", "title": "Telemetria e registro de dados", "topics": 6, "href": "curso/trilha2/modulo-2-5.html" },
+      { "id": "2-6", "title": "Projeto: seguidor de linha com PID", "topics": 6, "href": "curso/trilha2/modulo-2-6.html" }
+    ]},
+    { "n": "3", "title": "Visão e IA embarcada", "modules": [
+      { "id": "3-1", "title": "Raspberry Pi 5 e Linux", "topics": 6, "href": "curso/trilha3/modulo-3-1.html" },
+      { "id": "3-2", "title": "Câmera e OpenCV", "topics": 6, "href": "curso/trilha3/modulo-3-2.html" },
+      { "id": "3-3", "title": "Detectar objetos com YOLO26", "topics": 6, "href": "curso/trilha3/modulo-3-3.html" },
+      { "id": "3-4", "title": "IA dentro do microcontrolador", "topics": 6, "href": "curso/trilha3/modulo-3-4.html" },
+      { "id": "3-5", "title": "Raspberry Pi conversa com o ESP32", "topics": 6, "href": "curso/trilha3/modulo-3-5.html" },
+      { "id": "3-6", "title": "Projeto: robô que segue um objeto", "topics": 6, "href": "curso/trilha3/modulo-3-6.html" }
+    ]},
+    { "n": "4", "title": "ROS 2 e navegação", "modules": [
+      { "id": "4-1", "title": "ROS 2 sem medo", "topics": 6, "href": "curso/trilha4/modulo-4-1.html" },
+      { "id": "4-2", "title": "Descrever e simular o robô", "topics": 6, "href": "curso/trilha4/modulo-4-2.html" },
+      { "id": "4-3", "title": "micro-ROS no ESP32", "topics": 6, "href": "curso/trilha4/modulo-4-3.html" },
+      { "id": "4-4", "title": "LiDAR e mapas (SLAM)", "topics": 6, "href": "curso/trilha4/modulo-4-4.html" },
+      { "id": "4-5", "title": "Navegação com Nav2", "topics": 6, "href": "curso/trilha4/modulo-4-5.html" },
+      { "id": "4-6", "title": "Projeto: robô que mapeia e navega", "topics": 6, "href": "curso/trilha4/modulo-4-6.html" }
+    ]},
+    { "n": "5", "title": "IA moderna e braço robótico", "modules": [
+      { "id": "5-1", "title": "Modelo de linguagem como cérebro", "topics": 6, "href": "curso/trilha5/modulo-5-1.html" },
+      { "id": "5-2", "title": "Voz local: ouvir e falar", "topics": 6, "href": "curso/trilha5/modulo-5-2.html" },
+      { "id": "5-3", "title": "Braço SO-101 e LeRobot", "topics": 6, "href": "curso/trilha5/modulo-5-3.html" },
+      { "id": "5-4", "title": "Aprender por demonstração", "topics": 6, "href": "curso/trilha5/modulo-5-4.html" },
+      { "id": "5-5", "title": "Simular antes do real", "topics": 6, "href": "curso/trilha5/modulo-5-5.html" },
+      { "id": "5-6", "title": "Projeto final: robô assistente", "topics": 6, "href": "curso/trilha5/modulo-5-6.html" }
+    ]},
+    { "n": "6", "title": "Para o professor", "modules": [
+      { "id": "6-1", "title": "Como ministrar este curso", "topics": 8, "href": "curso/trilha6/modulo-6-1.html" }
+    ]}
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link rel="stylesheet" href="../../assets/learn.css">
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T3 ativa -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600" aria-label="Navegação principal">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html" aria-label="Robótica do Zero ao Expert — início">
+<span class="text-xl sm:text-2xl" aria-hidden="true">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeiros passos</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autônomo</span></a>
+<a class="nav-trail text-purple-400 bg-purple-500/10" aria-current="page" href="index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visão e IA</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Professor</span></a>
+<span class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block" aria-hidden="true"></span>
+<button class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button" aria-label="Minha jornada">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Minha jornada</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Aparência" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Aparência</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Escuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sépia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Foco</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fonte</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Leitura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamanho</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Largura</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estreito</button><button data-inema-set-linewidth="68" type="button">Médio</button><button data-inema-set-linewidth="75" type="button">Largo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Entrelinha</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Confortável</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento roxo" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento âmbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/escuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewBox="0 0 20 20" aria-hidden="true"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main id="conteudo" data-inema-module="3-1" data-inema-track="3">
+<!-- BREADCRUMB -->
+<nav aria-label="Trilha de navegação" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-purple-400" href="../../index.html">Início</a><span aria-hidden="true">/</span>
+<a class="hover:text-purple-400" href="index.html">Trilha 3</a><span aria-hidden="true">/</span>
+<span class="text-purple-400">Módulo 3.1</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-full mb-4">MÓDULO 3.1 · FUNDAMENTO</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🍓 Raspberry Pi 5 e Linux</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">O ESP32 controla motores muito bem, mas não processa câmera. Neste módulo você coloca um <strong class="text-neutral-100">computador Linux de verdade</strong> no robô: prepara o Raspberry Pi 5 sem monitor, usa o terminal, cria um ambiente Python, acende um LED pelo GPIO e cuida da <strong class="text-purple-400">energia e do calor</strong>, os dois motivos mais comuns de um Pi travar dentro do robô.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">6</div><div class="text-xs text-neutral-400">Tópicos</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Intermediário</div><div class="text-xs text-neutral-400">Nível</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Fundamento</div><div class="text-xs text-neutral-400">Tipo</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-purple-400">Pi 5</div><div class="text-xs text-neutral-400">Hardware</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progresso do módulo 3.1" class="inema-ring" data-inema-meter="modulo:3-1"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:3-1"><strong data-inema-meter-frac="">0 de 0</strong> tópicos lidos · <span data-inema-section-counter="">Seção 1 de 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Índice da página" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">Neste módulo</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-1">1. Por que um computador</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-2">2. Preparar o Pi 5</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-3">3. Terminal essencial</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-4">4. Python com venv</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-5">5. GPIO e 3,3 V</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-purple-400" href="#topico-6">6. Energia e calor</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Conteúdo detalhado</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" id="topico-1" data-inema-topic="modulo-3-1#topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🧠 Por que um computador no robô</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-1-t1-p1">Uma imagem de câmera em 640 × 480 tem mais de <strong class="text-neutral-100">900 mil números</strong> (três cores por pixel), e chegam dezenas delas por segundo. O ESP32 tem memória para guardar só algumas dessas imagens e não roda as bibliotecas de visão que você vai usar. O <strong class="text-purple-400">Raspberry Pi 5</strong> é um computador inteiro do tamanho de um cartão de crédito: processador de quatro núcleos, gigabytes de memória, sistema Linux, Python e OpenCV. Ele cuida de ver e decidir; o ESP32 continua cuidando dos motores.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-1-t1-p2">Um <strong>sistema operacional</strong> é o programa que gerencia o computador e roda os outros programas (Windows, macOS e Linux são exemplos). O <strong>Linux</strong> é um sistema aberto e gratuito; o <strong>Raspberry Pi OS</strong> é a versão de Linux feita para o Pi. <strong>Tempo real</strong> quer dizer responder sempre dentro de um prazo fixo, como "corrigir o motor a cada 10 ms": o microcontrolador garante isso, o Linux não, porque divide o processador entre muitos programas.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Divisão de trabalho no robô: a câmera manda imagens ao Raspberry Pi 5, que roda Linux, Python e OpenCV e decide; o Pi manda comandos curtos ao ESP32, que controla motores e sensores em tempo real." class="w-full h-auto" viewBox="0 0 640 290">
+<defs><filter id="m31-glow1" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><pattern id="m31-grid1" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.12"/></pattern><marker id="m31-ah1" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"/></marker><marker id="m31-ah1c" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"/></marker></defs>
+<rect width="640" height="290" fill="url(#m31-grid1)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect x="18" y="80" width="130" height="90" rx="14" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/>
+<text x="83" y="118" fill="#7dd3fc" font-size="19" font-weight="600">câmera</text>
+<text x="83" y="144" fill="#bfe6ff" font-size="15">30 imagens/s</text>
+<g filter="url(#m31-glow1)"><rect x="200" y="50" width="200" height="150" rx="14" fill="#22153a" stroke="#a855f7" stroke-width="2.5"/></g>
+<text x="300" y="88" fill="#c084fc" font-size="21" font-weight="600">Raspberry Pi 5</text>
+<text x="300" y="116" fill="#ede9fe" font-size="15">Linux + Python</text>
+<text x="300" y="140" fill="#ede9fe" font-size="15">OpenCV, YOLO26</text>
+<text x="300" y="168" fill="#ddd6fe" font-size="15">VÊ e DECIDE</text>
+<rect x="452" y="70" width="170" height="110" rx="14" fill="#1a1029" stroke="#c084fc" stroke-width="2"/>
+<text x="537" y="106" fill="#c084fc" font-size="21" font-weight="600">ESP32</text>
+<text x="537" y="132" fill="#ede9fe" font-size="15">motores, sensores</text>
+<text x="537" y="156" fill="#ddd6fe" font-size="15">AGE em tempo real</text>
+<text x="426" y="236" fill="#a8a8b3" font-size="14">"vire 20° à esquerda"</text>
+<text x="320" y="272" fill="#7dd3fc" font-size="15">imagem pesada fica no Pi; ao ESP32 só vai o comando curto</text>
+</g>
+<g fill="none" stroke-width="2.2">
+<path d="M148,125 L192,125" stroke="#38bdf8" marker-end="url(#m31-ah1c)"/>
+<path d="M400,125 L444,125" stroke="#c084fc" marker-end="url(#m31-ah1)"/>
+<path d="M426,180 L426,218" stroke="#a8a8b3" stroke-dasharray="4 4"/>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Como ler:</strong> a seta ciano é larga em dados (a imagem inteira); a seta roxa leva só uma frase curta. Essa assimetria é o desenho de quase todo robô com visão: o computador digere a imagem e o microcontrolador recebe apenas a ordem. Você monta essa ligação no módulo 3.5.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ O Pi faz bem</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Processar câmera com OpenCV e rodar detectores como o YOLO26.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Guardar logs, servir uma página web, conectar ao Wi-Fi e ao ROS 2.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Rodar Python com bibliotecas grandes, instaladas por linha de comando.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ O Pi faz mal</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Gerar pulsos de motor com tempo exato: o Linux pode atrasar alguns milissegundos.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Ler sinais de 5 V: os pinos do Pi são de 3,3 V e queimam.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Ser desligado puxando o cabo: o cartão pode corromper.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-1-t1-p3">Saber o que cada placa faz bem evita os dois erros clássicos desta etapa: tentar fazer visão no microcontrolador (não cabe) e ligar motor direto no Pi (treme, atrasa e às vezes queima um pino). O Pi 4 ainda serve para o básico deste módulo; para câmera com detector de objetos, o Pi 5 é a escolha.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Computador de placa única</div><div class="text-xs text-neutral-400">PC inteiro numa placa</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Linux</div><div class="text-xs text-neutral-400">sistema aberto do Pi</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Tempo real</div><div class="text-xs text-neutral-400">prazo garantido: ESP32</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Divisão de trabalho</div><div class="text-xs text-neutral-400">Pi pensa, ESP32 age</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" id="topico-2" data-inema-topic="modulo-3-1#topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">💾 Preparar o Pi 5 sem monitor</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-1-t2-p1">Dentro do robô o Pi não terá tela nem teclado. Por isso você o prepara no modo <strong class="text-neutral-100">"headless"</strong> (sem cabeça): grava o sistema no cartão pelo <strong class="text-purple-400">Raspberry Pi Imager</strong>, já deixando nome, usuário, Wi-Fi e SSH configurados, e depois acessa tudo pela rede, do seu computador. O sistema é o <strong class="text-neutral-100">Raspberry Pi OS 64-bit</strong>, hoje baseado no Debian "Trixie". Para robô, a versão <strong class="text-neutral-100">Lite</strong> (sem área de trabalho) é mais leve; se preferir ver uma área de trabalho no começo, use a versão completa.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-1-t2-p2"><strong>SSH</strong> é um jeito seguro de abrir o terminal de outro computador pela rede: você digita no seu notebook e os comandos rodam no Pi. O <strong>hostname</strong> é o nome do Pi na rede (por exemplo <span class="font-mono text-xs">robo</span>); com ele você o encontra como <span class="font-mono text-xs">robo.local</span> sem precisar saber o endereço IP.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Fluxo de preparo: no computador, o Raspberry Pi Imager grava o sistema no cartão com Wi-Fi e SSH; o cartão vai ao Pi 5, que liga e entra na rede; o computador acessa o Pi por SSH." class="w-full h-auto" viewBox="0 0 640 250">
+<defs><pattern id="m31-grid2" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.12"/></pattern><marker id="m31-ah2" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#c084fc"/></marker><marker id="m31-ah2c" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"/></marker></defs>
+<rect width="640" height="250" fill="url(#m31-grid2)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<g class="rb-a"><rect x="14" y="50" width="140" height="96" rx="12" fill="#1a1029" stroke="#a855f7" stroke-width="2"/><text x="84" y="84" fill="#c084fc" font-size="18" font-weight="600">1 Imager</text><text x="84" y="108" fill="#ede9fe" font-size="14">nome, usuário</text><text x="84" y="128" fill="#ede9fe" font-size="14">Wi-Fi, SSH</text></g>
+<g class="rb-a"><rect x="174" y="50" width="140" height="96" rx="12" fill="#1a1029" stroke="#a855f7" stroke-width="2"/><text x="244" y="84" fill="#c084fc" font-size="18" font-weight="600">2 Cartão</text><text x="244" y="108" fill="#ede9fe" font-size="14">microSD</text><text x="244" y="128" fill="#ede9fe" font-size="14">32 GB ou mais</text></g>
+<g class="rb-a"><rect x="334" y="50" width="140" height="96" rx="12" fill="#1a1029" stroke="#a855f7" stroke-width="2"/><text x="404" y="84" fill="#c084fc" font-size="18" font-weight="600">3 Pi 5 liga</text><text x="404" y="108" fill="#ede9fe" font-size="14">fonte 27 W</text><text x="404" y="128" fill="#ede9fe" font-size="14">entra no Wi-Fi</text></g>
+<rect x="494" y="50" width="132" height="96" rx="12" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/><text x="560" y="84" fill="#7dd3fc" font-size="18" font-weight="600">4 SSH</text><text x="560" y="108" fill="#bfe6ff" font-size="14">ssh você@</text><text x="560" y="128" fill="#bfe6ff" font-size="14">robo.local</text>
+<text x="320" y="196" fill="#ddd6fe" font-size="15">tudo configurado ANTES do primeiro boot: nenhum monitor necessário</text>
+<text x="320" y="224" fill="#a8a8b3" font-size="14">o primeiro boot demora um pouco mais: o sistema expande o cartão</text>
+</g>
+<g fill="none" stroke-width="2"><path d="M154,98 L168,98" stroke="#c084fc" marker-end="url(#m31-ah2)"/><path d="M314,98 L328,98" stroke="#c084fc" marker-end="url(#m31-ah2)"/><path d="M474,98 L488,98" stroke="#38bdf8" marker-end="url(#m31-ah2c)"/></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Como ler:</strong> os três quadros roxos acontecem com o cartão e a placa; o ciano é o seu computador falando com o Pi. Se o passo 4 falhar, quase sempre o erro está no passo 1 (senha do Wi-Fi digitada errada ou SSH desligado).</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-4">Passo a passo</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Instale o Imager</h4><p class="text-neutral-300 text-sm">Baixe o Raspberry Pi Imager em raspberrypi.com/software (Windows, macOS ou Linux) e coloque o cartão microSD no leitor do computador.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Escolha placa, sistema e cartão</h4><p class="text-neutral-300 text-sm">Dispositivo: Raspberry Pi 5. Sistema: Raspberry Pi OS (64-bit), ou a versão Lite em "Raspberry Pi OS (other)". Armazenamento: o seu cartão. Confira duas vezes para não apagar o disco errado.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Personalize antes de gravar</h4><p class="text-neutral-300 text-sm">Na tela de personalização, defina hostname <span class="font-mono text-xs">robo</span>, um usuário e senha seus, o Wi-Fi (nome e senha, país BR) e ative o SSH. Grave e espere a verificação terminar.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center"><span class="text-purple-400 font-bold">4</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Ligue e conecte</h4><p class="text-neutral-300 text-sm">Coloque o cartão no Pi, ligue a fonte oficial de 27 W e aguarde o LED verde parar de piscar muito. No terminal do seu computador (no Windows, o PowerShell já tem SSH), rode o bloco abaixo.</p></div></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-1-t2-p3"><strong class="text-neutral-100">Objetivo:</strong> entrar no Pi pela rede e deixar o sistema atualizado. Troque <span class="font-mono text-xs">&lt;seu_usuario&gt;</span> pelo usuário criado no Imager.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">no seu computador → depois no Pi</span></div>
+<pre><code><span class="c"># 1) No SEU computador: entrar no Pi (na primeira vez, responda "yes")</span>
+ssh &lt;seu_usuario&gt;@robo.local
+
+<span class="c"># 2) Já dentro do Pi: atualizar a lista de pacotes e o sistema</span>
+sudo apt update
+sudo apt full-upgrade -y
+
+<span class="c"># 3) Conferir o que está rodando</span>
+cat /etc/os-release | grep PRETTY_NAME   <span class="c"># deve citar Debian e "trixie"</span>
+uname -m                                <span class="c"># aarch64 = sistema 64-bit</span>
+hostname -I                             <span class="c"># endereço IP do Pi na rede</span>
+
+<span class="c"># 4) Reiniciar para aplicar atualizações do núcleo</span>
+sudo reboot</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>O prompt muda para algo como <span class="font-mono text-xs">&lt;seu_usuario&gt;@robo:~ $</span>: você está dentro do Pi.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span><span class="font-mono text-xs">uname -m</span> responde <span class="font-mono text-xs">aarch64</span> e o PRETTY_NAME cita trixie.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"Could not resolve hostname"? Use o IP no lugar de robo.local (o roteador mostra os aparelhos conectados) ou confira se o computador está na mesma rede.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-1-t2-p4">Um Pi preparado do jeito certo liga no robô e aparece na rede sozinho. Configurar tudo no Imager poupa o monitor, o teclado e as tentativas de editar arquivos de configuração à mão, que é onde muita gente trava no começo.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Headless</div><div class="text-xs text-neutral-400">sem tela, pela rede</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Pi Imager</div><div class="text-xs text-neutral-400">grava e personaliza</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">SSH</div><div class="text-xs text-neutral-400">terminal remoto seguro</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">apt</div><div class="text-xs text-neutral-400">instala e atualiza</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" id="topico-3" data-inema-topic="modulo-3-1#topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">⌨️ Terminal Linux essencial</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-1-t3-p1">No robô você vai conversar com o Pi quase só pelo <strong class="text-purple-400">terminal</strong>: uma linha de texto onde cada comando é uma palavra curta seguida de opções. Não precisa decorar dezenas deles. Com uns quinze você navega pelas pastas, edita o código, instala pacotes e descobre por que algo parou.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-1-t3-p2">No Linux tudo fica numa árvore de <strong>pastas</strong> que começa em <span class="font-mono text-xs">/</span> (a raiz). A sua pasta pessoal é <span class="font-mono text-xs">/home/&lt;seu_usuario&gt;</span>, abreviada como <span class="font-mono text-xs">~</span>. <strong>sudo</strong> ("faça como administrador") é necessário para mexer no sistema, como instalar programas. Use-o só quando o comando pedir.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Árvore de pastas do Linux: a raiz contém home, etc e dev; dentro de home fica a sua pasta pessoal, com a pasta robo, que guarda o ambiente venv e os scripts do curso." class="w-full h-auto" viewBox="0 0 640 250">
+<defs><pattern id="m31-grid3" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.1"/></pattern></defs>
+<rect width="640" height="250" fill="url(#m31-grid3)"/>
+<g fill="none" stroke="#6b5a86" stroke-width="2">
+<path d="M80,62 L80,196 M80,92 L130,92 M80,144 L130,144 M80,196 L130,196"/>
+<path d="M250,92 L300,92 L300,62 L340,62 M300,92 L300,152 L340,152 M300,122 L340,122"/>
+</g>
+<g font-family="JetBrains Mono,monospace" font-size="16">
+<text x="62" y="50" fill="#c084fc" font-weight="600">/</text>
+<text x="138" y="97" fill="#ede9fe">home/</text><text x="210" y="97" fill="#a8a8b3" font-size="14">você</text>
+<text x="138" y="149" fill="#a8a8b3">etc/</text><text x="200" y="149" fill="#a8a8b3" font-size="14" font-family="Inter,sans-serif">configurações</text>
+<text x="138" y="201" fill="#a8a8b3">dev/</text><text x="200" y="201" fill="#a8a8b3" font-size="14" font-family="Inter,sans-serif">portas, câmera, serial</text>
+<text x="348" y="67" fill="#c084fc">~/robo/</text><text x="440" y="67" fill="#ddd6fe" font-size="14" font-family="Inter,sans-serif">seus projetos</text>
+<text x="348" y="127" fill="#7dd3fc">~/robo-venv/</text><text x="482" y="127" fill="#bfe6ff" font-size="14" font-family="Inter,sans-serif">Python isolado</text>
+<text x="348" y="157" fill="#7dd3fc">~/robo/led.py</text>
+</g>
+<text x="320" y="236" fill="#a8a8b3" font-family="Inter,sans-serif" font-size="14" text-anchor="middle">o til (~) é atalho para /home/&lt;seu_usuario&gt;</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Como ler:</strong> à esquerda, a raiz e três pastas do sistema; à direita, o que você mesmo vai criar dentro da sua pasta pessoal. Mantenha seus arquivos sempre em <span class="font-mono">~</span>: assim nada do sistema é tocado sem querer.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3 text-purple-400">Comando</th><th class="text-left p-3 text-purple-400">O que faz</th><th class="text-left p-3 text-purple-400">Exemplo</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3 font-mono text-xs">pwd · ls -l · cd</td><td class="p-3">onde estou · listar · entrar na pasta</td><td class="p-3 font-mono text-xs">cd ~/robo</td></tr>
+<tr><td class="p-3 font-mono text-xs">mkdir · cp · mv · rm</td><td class="p-3">criar pasta · copiar · mover/renomear · apagar</td><td class="p-3 font-mono text-xs">mkdir -p ~/robo</td></tr>
+<tr><td class="p-3 font-mono text-xs">nano arquivo</td><td class="p-3">editor de texto simples (Ctrl+O salva, Ctrl+X sai)</td><td class="p-3 font-mono text-xs">nano led.py</td></tr>
+<tr><td class="p-3 font-mono text-xs">cat · tail -f</td><td class="p-3">mostrar arquivo · acompanhar um log ao vivo</td><td class="p-3 font-mono text-xs">tail -f log.txt</td></tr>
+<tr><td class="p-3 font-mono text-xs">htop · df -h · free -h</td><td class="p-3">processos e CPU · espaço no cartão · memória</td><td class="p-3 font-mono text-xs">df -h</td></tr>
+<tr><td class="p-3 font-mono text-xs">Ctrl+C</td><td class="p-3">interromper o programa que está rodando</td><td class="p-3">parar o robô pelo terminal</td></tr>
+<tr><td class="p-3 font-mono text-xs">scp</td><td class="p-3">copiar arquivo entre o seu computador e o Pi</td><td class="p-3 font-mono text-xs">scp foto.jpg você@robo.local:~</td></tr>
+</tbody>
+</table>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-1-t3-p3"><strong class="text-neutral-100">Objetivo:</strong> criar a pasta do curso, escrever um arquivo, conferir o espaço livre e desligar o Pi do jeito seguro.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal do Pi</span></div>
+<pre><code>mkdir -p ~/robo && cd ~/robo        <span class="c"># cria a pasta (se não existir) e entra nela</span>
+pwd                                 <span class="c"># mostra /home/&lt;seu_usuario&gt;/robo</span>
+echo "robo pronto" &gt; notas.txt       <span class="c"># cria um arquivo com uma linha</span>
+cat notas.txt                       <span class="c"># mostra o conteúdo</span>
+ls -l                               <span class="c"># lista com tamanho e data</span>
+df -h /                             <span class="c"># espaço livre no cartão</span>
+free -h                             <span class="c"># memória total e em uso</span>
+
+<span class="c"># Desligar com segurança (espere o LED verde apagar antes de tirar a energia)</span>
+sudo shutdown -h now</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span><span class="font-mono text-xs">cat</span> mostra "robo pronto" e <span class="font-mono text-xs">ls -l</span> lista <span class="font-mono text-xs">notas.txt</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span><span class="font-mono text-xs">df -h</span> mostra vários GB livres (se estiver acima de 90% de uso, o cartão é pequeno demais).</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Depois do shutdown, a conexão SSH cai e o LED verde para de piscar.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Editar no seu computador</h3>
+<p class="text-neutral-300 text-sm">Se o <span class="font-mono">nano</span> incomodar, abra a pasta do Pi direto no seu editor: o VS Code com a extensão "Remote - SSH" edita os arquivos do Pi como se fossem locais. O terminal continua sendo o lugar de rodar e parar o robô.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-1-t3-p4">Todo o resto da trilha (câmera, YOLO26, comunicação com o ESP32) e a Trilha 4 inteira (ROS 2) acontecem no terminal. Quem domina esses comandos resolve sozinho "o cartão encheu", "o programa travou" e "onde salvei aquele arquivo".</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Pasta pessoal ~</div><div class="text-xs text-neutral-400">onde ficam seus arquivos</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">sudo</div><div class="text-xs text-neutral-400">só para mexer no sistema</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Ctrl+C</div><div class="text-xs text-neutral-400">para o programa</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">shutdown</div><div class="text-xs text-neutral-400">desligar sem corromper</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" id="topico-4" data-inema-topic="modulo-3-1#topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">🐍 Python com ambiente virtual</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-1-t4-p1">Se você tentar <span class="font-mono text-xs">pip install</span> direto no Raspberry Pi OS, vai ver o erro <span class="font-mono text-xs">externally-managed-environment</span>. Não é defeito: o sistema protege o Python que ele mesmo usa. A saída certa é criar um <strong class="text-purple-400">ambiente virtual</strong> (venv) para o robô. Um detalhe importante no Pi: crie o venv com <span class="font-mono text-xs">--system-site-packages</span>, para que ele enxergue as bibliotecas que vêm instaladas pelo sistema, como a <span class="font-mono text-xs">picamera2</span> (câmera) e a <span class="font-mono text-xs">gpiozero</span> (pinos).</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-1-t4-p2">Um <strong>pacote</strong> é uma biblioteca Python pronta (OpenCV, Ultralytics). O <strong>pip</strong> é o instalador de pacotes do Python; o <strong>apt</strong> é o instalador do sistema. Um <strong>ambiente virtual</strong> é uma pasta com um Python só seu: o que você instala ali não bagunça o sistema, e se der errado você apaga a pasta e cria de novo.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Camadas do Python no Pi: embaixo o Python do sistema com picamera2 e gpiozero instalados pelo apt; em cima o venv do robô, que enxerga essas bibliotecas por causa da opção system-site-packages e recebe opencv e ultralytics pelo pip." class="w-full h-auto" viewBox="0 0 640 260">
+<defs><pattern id="m31-grid4" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.1"/></pattern><filter id="m31-glow4" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><marker id="m31-ah4" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"/></marker></defs>
+<rect width="640" height="260" fill="url(#m31-grid4)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<g filter="url(#m31-glow4)"><rect x="60" y="24" width="520" height="92" rx="14" fill="#22153a" stroke="#a855f7" stroke-width="2.5"/></g>
+<text x="320" y="56" fill="#c084fc" font-size="19" font-weight="600">~/robo-venv (seu ambiente)</text>
+<text x="320" y="84" fill="#ede9fe" font-size="15">pip install: opencv, ultralytics, pyserial</text>
+<text x="320" y="106" fill="#ddd6fe" font-size="14">pode apagar e recriar sem medo</text>
+<rect x="60" y="150" width="520" height="80" rx="14" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/>
+<text x="320" y="182" fill="#7dd3fc" font-size="19" font-weight="600">Python do sistema</text>
+<text x="320" y="210" fill="#bfe6ff" font-size="15">apt: picamera2, gpiozero (já vêm no Raspberry Pi OS)</text>
+</g>
+<path d="M320,148 L320,124" stroke="#38bdf8" stroke-width="2.2" fill="none" marker-end="url(#m31-ah4)"/>
+<text x="334" y="141" fill="#7dd3fc" font-family="Inter,sans-serif" font-size="14">--system-site-packages</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Como ler:</strong> o venv (roxo) fica em cima do Python do sistema (ciano). A seta mostra que, com a opção <span class="font-mono">--system-site-packages</span>, o venv "enxerga para baixo" e acha a câmera e os pinos; sem ela, <span class="font-mono">import picamera2</span> falha dentro do venv.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-1-t4-p3"><strong class="text-neutral-100">Objetivo:</strong> criar o venv do curso, ativá-lo, instalar um pacote e provar que ele enxerga as bibliotecas do sistema.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal do Pi</span></div>
+<pre><code><span class="c"># Criar o ambiente (uma vez só)</span>
+python3 -m venv --system-site-packages ~/robo-venv
+
+<span class="c"># Ativar (toda vez que abrir um terminal novo)</span>
+source ~/robo-venv/bin/activate      <span class="c"># o prompt ganha "(robo-venv)" na frente</span>
+
+<span class="c"># Instalar pacotes DENTRO do venv (sem sudo)</span>
+pip install --upgrade pip
+pip install numpy
+
+<span class="c"># Testar: versão do Python e bibliotecas do sistema visíveis</span>
+python -c "import sys; print(sys.prefix)"
+python -c "import gpiozero, picamera2; print('gpiozero e picamera2 OK')"
+
+<span class="c"># Sair do venv quando quiser</span>
+deactivate</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span><span class="font-mono text-xs">sys.prefix</span> mostra <span class="font-mono text-xs">/home/&lt;seu_usuario&gt;/robo-venv</span>: o Python ativo é o do venv.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Aparece "gpiozero e picamera2 OK".</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"No module named picamera2"? O venv foi criado sem <span class="font-mono text-xs">--system-site-packages</span>, ou você está na versão Lite sem a biblioteca: rode <span class="font-mono text-xs">sudo apt install -y python3-picamera2</span> e recrie o venv.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Faça</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Um venv por projeto grande; para o curso, um só basta.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Anotar os pacotes com <span class="font-mono text-xs">pip freeze &gt; requirements.txt</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Rodar scripts com o Python do venv ativado.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Não faça</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span><span class="font-mono text-xs">sudo pip install</span>: mistura pacotes com os do sistema.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Usar <span class="font-mono text-xs">--break-system-packages</span> para "resolver" o erro.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Instalar a picamera2 pelo pip: no Pi ela vem pelo apt.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-1-t4-p4">OpenCV, Ultralytics e pyserial, que você usa nos próximos módulos, entram todos por esse venv. Fazer certo agora evita o problema mais comum de visão no Pi: "a câmera funciona no terminal, mas o meu script não acha a biblioteca".</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">venv</div><div class="text-xs text-neutral-400">Python isolado numa pasta</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">pip x apt</div><div class="text-xs text-neutral-400">Python x sistema</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">system-site-packages</div><div class="text-xs text-neutral-400">enxerga picamera2</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">requirements.txt</div><div class="text-xs text-neutral-400">lista para recriar</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" id="topico-5" data-inema-topic="modulo-3-1#topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">📍 GPIO no Pi (gpiozero) e cuidados com 3,3 V</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-1-t5-p1">O Pi 5 tem uma fileira dupla de <strong class="text-neutral-100">40 pinos</strong>, como o ESP32 tem os dele. Alguns entregam energia (3,3 V, 5 V e GND); a maioria é <strong class="text-purple-400">GPIO</strong>, pinos que o seu programa liga, desliga ou lê. Em Python, a biblioteca <strong class="text-neutral-100">gpiozero</strong> transforma isso em objetos simples: <span class="font-mono text-xs">LED(17)</span>, <span class="font-mono text-xs">Button(27)</span>. No robô, o GPIO do Pi serve para LEDs de status, um botão de parada e a serial com o ESP32; motores ficam com o ESP32.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-1-t5-p2">Os pinos têm <strong>dois números</strong>. O <strong>físico</strong> conta a posição na fileira (1 a 40). O <strong>BCM</strong> (ou "GPIO") é o nome lógico que o chip usa, e é ele que a gpiozero espera: o pino físico 11 é o <span class="font-mono text-xs">GPIO17</span>. Na dúvida, rode <span class="font-mono text-xs">pinout</span> no terminal do Pi: ele desenha o mapa completo.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Trecho do conector de 40 pinos do Pi 5: pino 1 é 3,3 V, pino 2 é 5 V, pino 6 é GND, pino 11 é GPIO17 ligado ao LED com resistor, pino 13 é GPIO27 ligado ao botão, pino 9 é GND. Aviso: os GPIO aceitam no máximo 3,3 V." class="w-full h-auto" viewBox="0 0 640 300">
+<defs><pattern id="m31-grid5" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.1"/></pattern></defs>
+<rect width="640" height="300" fill="url(#m31-grid5)"/>
+<rect x="250" y="20" width="96" height="236" rx="10" fill="#141019" stroke="#6b5a86" stroke-width="2"/>
+<g font-family="Inter,sans-serif" font-size="15">
+<circle cx="278" cy="46" r="11" fill="#3b0f10" stroke="#f87171" stroke-width="2"/><circle cx="318" cy="46" r="11" fill="#3b0f10" stroke="#f87171" stroke-width="2"/>
+<circle cx="278" cy="86" r="11" fill="#1a1029" stroke="#6b5a86" stroke-width="2"/><circle cx="318" cy="86" r="11" fill="#3b0f10" stroke="#f87171" stroke-width="2"/>
+<circle cx="278" cy="126" r="11" fill="#1a1029" stroke="#6b5a86" stroke-width="2"/><circle cx="318" cy="126" r="11" fill="#1f2937" stroke="#9ca3af" stroke-width="2"/>
+<circle cx="278" cy="166" r="11" fill="#1a1029" stroke="#6b5a86" stroke-width="2"/><circle cx="318" cy="166" r="11" fill="#1a1029" stroke="#6b5a86" stroke-width="2"/>
+<circle cx="278" cy="206" r="11" fill="#1f2937" stroke="#9ca3af" stroke-width="2"/><circle cx="318" cy="206" r="11" fill="#1a1029" stroke="#6b5a86" stroke-width="2"/>
+<circle cx="278" cy="246" r="11" fill="#22153a" stroke="#c084fc" stroke-width="2.5"/>
+<text x="236" y="51" fill="#fca5a5" text-anchor="end">1 · 3,3 V</text><text x="342" y="51" fill="#fca5a5">2 · 5 V</text>
+<text x="342" y="91" fill="#fca5a5">4 · 5 V</text><text x="342" y="131" fill="#d1d5db">6 · GND</text>
+<text x="236" y="211" fill="#d1d5db" text-anchor="end">9 · GND</text>
+<text x="236" y="251" fill="#c084fc" text-anchor="end" font-weight="600">11 · GPIO17 → LED</text>
+</g>
+<path d="M290,246 C380,246 400,270 440,270" stroke="#c084fc" stroke-width="2.5" fill="none"/>
+<text x="446" y="275" fill="#ddd6fe" font-family="Inter,sans-serif" font-size="14">330 Ω + LED → GND</text>
+<text x="420" y="196" fill="#7dd3fc" font-family="Inter,sans-serif" font-size="14">13 · GPIO27 → botão</text>
+<text x="420" y="216" fill="#7dd3fc" font-family="Inter,sans-serif" font-size="14">(pino seguinte, abaixo)</text>
+<text x="30" y="290" fill="#fca5a5" font-family="Inter,sans-serif" font-size="14">vermelho = energia: nunca ligue 5 V num GPIO</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Como ler:</strong> o retângulo é o começo do conector, visto de cima, com o pino 1 no canto (quadrado na placa). Vermelho é energia, cinza é GND, roxo é o GPIO que você vai usar. O botão vai no pino 13, logo abaixo do 11, e no GND do pino 14 ao lado.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-1-t5-p3"><strong class="text-neutral-100">Objetivo:</strong> piscar um LED de status e acender o LED fixo enquanto o botão estiver apertado. Ligue: GPIO17 (pino 11) → resistor 330 Ω → perna longa do LED; perna curta → GND (pino 9). Botão entre GPIO27 (pino 13) e GND (pino 14). Com o venv ativado, salve como <span class="font-mono text-xs">~/robo/led.py</span>.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">~/robo/led.py</span></div>
+<pre><code><span class="c"># LED de status e botão no Raspberry Pi 5 com gpiozero</span>
+<span class="c"># Rode com: python ~/robo/led.py   (Ctrl+C para sair)</span>
+<span class="k">from</span> gpiozero <span class="k">import</span> LED, Button
+<span class="k">from</span> signal <span class="k">import</span> pause
+
+led = LED(17)                       <span class="c"># número BCM: GPIO17 = pino físico 11</span>
+botao = Button(27, bounce_time=0.05) <span class="c"># GPIO27 = pino 13; pull-up interno ligado</span>
+
+<span class="k">def</span> apertou():
+    led.on()
+    print(<span class="s">"botão apertado: LED aceso"</span>)
+
+<span class="k">def</span> soltou():
+    led.blink(on_time=0.2, off_time=0.8)  <span class="c"># volta a piscar em segundo plano</span>
+    print(<span class="s">"botão solto: LED piscando"</span>)
+
+botao.when_pressed = apertou
+botao.when_released = soltou
+soltou()                            <span class="c"># estado inicial: piscando</span>
+print(<span class="s">"Pronto. Aperte o botão. Ctrl+C para sair."</span>)
+pause()                             <span class="c"># mantém o programa vivo esperando eventos</span></code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>O LED pisca rápido (0,2 s aceso, 0,8 s apagado) ao iniciar.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Segurando o botão, ele fica aceso e o terminal mostra "botão apertado".</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Nada acende? Confira se usou o número BCM (17) e não o físico (11), e se o LED não está invertido.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Seguro no GPIO</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Sinais de até 3,3 V; para sensor de 5 V, divisor de tensão ou conversor de nível.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>LED sempre com resistor; poucos miliampères por pino.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Ligar fios com o Pi desligado.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Queima o Pi</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>TX de um Arduino de 5 V direto no RX do Pi.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Motor, relé ou servo alimentado por um GPIO.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Encostar o pino de 5 V num pino vizinho com o Pi ligado.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-1-t5-p4">O pino de 3,3 V é o mesmo cuidado do ESP32, mas o erro custa mais caro: um Pi 5 queimado sai bem mais caro que um ESP32. E a gpiozero, com eventos como <span class="font-mono text-xs">when_pressed</span>, é o jeito mais simples de colocar um botão físico de parada no robô, que você vai usar no projeto 3.6.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">BCM x físico</div><div class="text-xs text-neutral-400">GPIO17 = pino 11</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">gpiozero</div><div class="text-xs text-neutral-400">LED, Button, eventos</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">pinout</div><div class="text-xs text-neutral-400">mapa no terminal</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">3,3 V máximo</div><div class="text-xs text-neutral-400">5 V queima o pino</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" id="topico-6" data-inema-topic="modulo-3-1#topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🔋 Energia e calor no Pi 5 dentro do robô</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-1-t6-p1">Na bancada, o Pi 5 usa a <strong class="text-neutral-100">fonte oficial de 27 W</strong> (5 V, 5 A, USB-C). Com fonte mais fraca ele funciona, mas limita a corrente das portas USB e pode reiniciar quando a câmera e a IA puxam carga ao mesmo tempo. No robô não há tomada: a bateria passa por um <strong class="text-purple-400">regulador buck</strong> que entrega 5 V estáveis com folga de corrente. E rodando visão, o processador esquenta: sem o <strong class="text-neutral-100">cooler ativo</strong>, ele reduz a velocidade sozinho para se proteger, e o seu detector fica mais lento sem aviso.</p>
+<div class="bg-dark-800 border border-purple-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-purple-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m3-1-t6-p2"><strong>Subtensão</strong> é quando a tensão cai abaixo do necessário por um instante (por exemplo, quando o motor arranca); o Pi registra isso e pode reiniciar. <strong>Throttling</strong> é o próprio Pi baixando a velocidade do processador por calor ou energia fraca. Um <strong>regulador buck</strong> converte uma tensão maior (a bateria) em uma menor (5 V) com pouca perda em calor.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Caminho de energia no robô: a bateria alimenta dois ramos separados; um regulador buck de 5 V e pelo menos 5 A alimenta o Raspberry Pi 5; o driver dos motores recebe a bateria direto; todos os GND são ligados juntos." class="w-full h-auto" viewBox="0 0 640 280">
+<defs><pattern id="m31-grid6" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#a855f7" opacity="0.1"/></pattern><marker id="m31-ah6" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#fbbf24"/></marker><filter id="m31-glow6" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect width="640" height="280" fill="url(#m31-grid6)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect x="18" y="90" width="130" height="90" rx="12" fill="#2a1f0a" stroke="#fbbf24" stroke-width="2"/>
+<text x="83" y="126" fill="#fde68a" font-size="18" font-weight="600">bateria</text><text x="83" y="152" fill="#fde68a" font-size="14">2S ou 3S</text>
+<g filter="url(#m31-glow6)"><rect x="236" y="26" width="150" height="80" rx="12" fill="#22153a" stroke="#a855f7" stroke-width="2.5"/></g>
+<text x="311" y="60" fill="#c084fc" font-size="17" font-weight="600">buck 5 V</text><text x="311" y="84" fill="#ede9fe" font-size="14">5 A ou mais</text>
+<rect x="460" y="26" width="160" height="80" rx="12" fill="#1a1029" stroke="#c084fc" stroke-width="2"/>
+<text x="540" y="60" fill="#c084fc" font-size="17" font-weight="600">Pi 5</text><text x="540" y="84" fill="#ede9fe" font-size="14">+ cooler ativo</text>
+<rect x="236" y="164" width="150" height="80" rx="12" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/>
+<text x="311" y="198" fill="#7dd3fc" font-size="17" font-weight="600">driver</text><text x="311" y="222" fill="#bfe6ff" font-size="14">motores</text>
+<rect x="460" y="164" width="160" height="80" rx="12" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/>
+<text x="540" y="198" fill="#7dd3fc" font-size="17" font-weight="600">ESP32</text><text x="540" y="222" fill="#bfe6ff" font-size="14">GND comum</text>
+</g>
+<g fill="none" stroke="#fbbf24" stroke-width="2.2"><path d="M148,120 L200,120 L200,66 L228,66" marker-end="url(#m31-ah6)"/><path d="M200,150 L200,204 L228,204" marker-end="url(#m31-ah6)"/><path d="M386,66 L452,66" marker-end="url(#m31-ah6)"/></g>
+<path d="M386,224 L452,224" stroke="#9ca3af" stroke-width="2" stroke-dasharray="5 4" fill="none"/>
+<text x="320" y="270" fill="#a8a8b3" font-family="Inter,sans-serif" font-size="14" text-anchor="middle">ramos separados: o tranco do motor não derruba o Pi</text>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-purple-400">Como ler:</strong> a energia (âmbar) sai da bateria e se divide antes de chegar a qualquer placa. O ramo de cima, com o buck em destaque, é o que mantém o Pi estável. O tracejado cinza lembra que os GND de todas as placas precisam estar ligados entre si.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m3-1-t6-p3"><strong class="text-neutral-100">Objetivo:</strong> acompanhar temperatura e alertas de energia enquanto o robô trabalha. Salve como <span class="font-mono text-xs">~/robo/saude.py</span> e deixe rodando num segundo terminal durante os testes de visão.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">~/robo/saude.py</span></div>
+<pre><code><span class="c"># Monitor de saúde do Pi 5: temperatura e alertas de energia/calor</span>
+<span class="k">import</span> subprocess, time
+
+<span class="k">def</span> temperatura():
+    <span class="k">with</span> open(<span class="s">"/sys/class/thermal/thermal_zone0/temp"</span>) <span class="k">as</span> f:
+        <span class="k">return</span> int(f.read()) / 1000          <span class="c"># vem em milésimos de grau</span>
+
+<span class="k">def</span> alertas():
+    saida = subprocess.run([<span class="s">"vcgencmd"</span>, <span class="s">"get_throttled"</span>],
+                           capture_output=<span class="k">True</span>, text=<span class="k">True</span>).stdout
+    valor = int(saida.strip().split(<span class="s">"="</span>)[1], 16)
+    msgs = []
+    <span class="k">if</span> valor &amp; 0x1:     msgs.append(<span class="s">"SUBTENSÃO AGORA"</span>)
+    <span class="k">if</span> valor &amp; 0x4:     msgs.append(<span class="s">"limitado AGORA"</span>)
+    <span class="k">if</span> valor &amp; 0x10000: msgs.append(<span class="s">"houve subtensão desde o boot"</span>)
+    <span class="k">if</span> valor &amp; 0x40000: msgs.append(<span class="s">"houve limitação desde o boot"</span>)
+    <span class="k">return</span> msgs <span class="k">or</span> [<span class="s">"energia OK"</span>]
+
+<span class="k">while</span> <span class="k">True</span>:
+    t = temperatura()
+    aviso = <span class="s">"  QUENTE: confira o cooler"</span> <span class="k">if</span> t &gt; 75 <span class="k">else</span> <span class="s">""</span>
+    print(f<span class="s">"{time.strftime('%H:%M:%S')}  {t:.1f} °C  {', '.join(alertas())}{aviso}"</span>)
+    time.sleep(2)</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>A cada 2 s aparece uma linha como "14:02:10  48.3 °C  energia OK".</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Com o cooler, a temperatura sob carga de visão fica bem abaixo de 80 °C.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"houve subtensão"? Troque a fonte, o cabo USB-C ou o buck por um de mais corrente antes de seguir.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-900/20 rounded-xl border border-purple-500/30 p-5">
+<h4 class="font-bold text-purple-400 mb-3">✓ Faça</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Cooler ativo oficial encaixado e ventilação no chassi.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Buck dedicado ao Pi, com folga de corrente e fios curtos e grossos.</span></li>
+<li class="flex items-start gap-2"><span class="text-purple-400">✓</span><span>Desligar com <span class="font-mono text-xs">sudo shutdown -h now</span> antes de cortar a bateria.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Não faça</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Power bank qualquer: muitos não seguram 5 A e o Pi reinicia.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Pi e motores no mesmo regulador.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Pi fechado numa caixa sem ar, ao sol.</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Bateria de lítio</h3>
+<p class="text-neutral-300 text-sm">Se usar LiPo ou 18650, use pack com BMS (placa de proteção), carregue sempre com supervisão e num saco anti-chamas, e nunca perfure ou amasse a célula. As regras do módulo 1.5 valem em dobro aqui, porque o Pi puxa bem mais corrente que o ESP32.</p>
+</div>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m3-1-t6-p4">A maioria dos "bugs" de visão em robô começa aqui: o Pi reinicia quando o robô acelera, ou o detector cai pela metade de velocidade depois de alguns minutos. Medir temperatura e subtensão separa problema de energia de problema de código, e poupa você de procurar erro no lugar errado.</p>
+<h3 class="text-lg font-semibold text-purple-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2"><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Fonte 27 W</div><div class="text-xs text-neutral-400">5 V e 5 A na bancada</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Buck 5 V</div><div class="text-xs text-neutral-400">bateria → Pi</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">get_throttled</div><div class="text-xs text-neutral-400">0x0 = tudo certo</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-purple-400 font-semibold text-sm">Cooler ativo</div><div class="text-xs text-neutral-400">evita perder velocidade</div></div></div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-purple-900/30 via-dark-800 to-dark-800 rounded-xl border border-purple-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Resumo do módulo</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Pi pensa, ESP32 age</strong><span class="text-neutral-400">: imagem pesada fica no computador; ao microcontrolador vai só o comando.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Headless desde o Imager</strong><span class="text-neutral-400">: Raspberry Pi OS 64-bit (Trixie), Wi-Fi e SSH configurados antes do primeiro boot.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Terminal e venv</strong><span class="text-neutral-400">: uns quinze comandos e um ambiente com <span class="font-mono text-xs">--system-site-packages</span> resolvem quase tudo.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">GPIO de 3,3 V</strong><span class="text-neutral-400">: gpiozero com número BCM; nada de 5 V nem motor nos pinos.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-purple-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Energia e calor medidos</strong><span class="text-neutral-400">: buck dedicado, cooler ativo e <span class="font-mono text-xs">get_throttled</span> em 0x0.</span></div></div>
+</div>
+<h3 class="font-semibold text-purple-400 mb-3">Para ir além</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.raspberrypi.com/documentation/computers/getting-started.html" rel="noopener" target="_blank">Getting started (Raspberry Pi)</a> <span class="text-neutral-500">— Imager, primeiro boot e configuração</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.raspberrypi.com/documentation/computers/remote-access.html" rel="noopener" target="_blank">Acesso remoto e SSH</a> <span class="text-neutral-500">— todas as formas de entrar no Pi pela rede</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.raspberrypi.com/documentation/computers/os.html" rel="noopener" target="_blank">Raspberry Pi OS</a> <span class="text-neutral-500">— Python, venv e pacotes do sistema</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://gpiozero.readthedocs.io/" rel="noopener" target="_blank">Documentação da gpiozero</a> <span class="text-neutral-500">— LED, botão, sensores e receitas prontas</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://www.raspberrypi.com/documentation/computers/raspberry-pi.html" rel="noopener" target="_blank">Hardware do Raspberry Pi</a> <span class="text-neutral-500">— energia, GPIO, temperatura e cooler</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-purple-400 mb-1">Próximo módulo</h3>
+<p class="text-neutral-300">3.2 · Câmera e OpenCV: ligar a Camera Module 3, achar um objeto pela cor e transmitir o vídeo para o navegador.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="index.html">← Anterior: índice da Trilha 3</a>
+<a class="inline-flex items-center px-5 py-3 bg-purple-700 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors" href="modulo-3-2.html">Próximo: 3.2 Câmera e OpenCV →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica do Zero ao Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licença MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

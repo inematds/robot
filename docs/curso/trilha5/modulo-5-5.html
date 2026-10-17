@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="inema-course" content="robot">
+<title>Módulo 5.5 · Simular antes do real | Robótica do Zero ao Expert</title>
+<meta name="description" content="Por que simular o robô antes de ligar o motor: MuJoCo e o gêmeo do SO-101, quando vale o Isaac Sim/Isaac Lab, real2sim (foto da mesa vira cena), a distância sim2real e dados sintéticos para treinar.">
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script type="application/json" data-inema-manifest>
+{
+  "course": "robot",
+  "tracks": [
+    { "n": "1", "title": "Primeiros passos", "modules": [
+      { "id": "1-1", "title": "O que é um robô e o seu kit", "topics": 6, "href": "curso/trilha1/modulo-1-1.html" },
+      { "id": "1-2", "title": "Eletrônica essencial", "topics": 6, "href": "curso/trilha1/modulo-1-2.html" },
+      { "id": "1-3", "title": "ESP32: o primeiro programa", "topics": 6, "href": "curso/trilha1/modulo-1-3.html" },
+      { "id": "1-4", "title": "Sensores: o robô percebe", "topics": 6, "href": "curso/trilha1/modulo-1-4.html" },
+      { "id": "1-5", "title": "Motores e energia", "topics": 6, "href": "curso/trilha1/modulo-1-5.html" },
+      { "id": "1-6", "title": "Projeto: rover que desvia de obstáculos", "topics": 6, "href": "curso/trilha1/modulo-1-6.html" }
+    ]},
+    { "n": "2", "title": "Robô autônomo", "modules": [
+      { "id": "2-1", "title": "Controle pelo celular: Wi-Fi e BLE", "topics": 6, "href": "curso/trilha2/modulo-2-1.html" },
+      { "id": "2-2", "title": "IMU e encoders: saber onde está", "topics": 6, "href": "curso/trilha2/modulo-2-2.html" },
+      { "id": "2-3", "title": "Controle PID na prática", "topics": 6, "href": "curso/trilha2/modulo-2-3.html" },
+      { "id": "2-4", "title": "Várias tarefas ao mesmo tempo", "topics": 6, "href": "curso/trilha2/modulo-2-4.html" },
+      { "id": "2-5", "title": "Telemetria e registro de dados", "topics": 6, "href": "curso/trilha2/modulo-2-5.html" },
+      { "id": "2-6", "title": "Projeto: seguidor de linha com PID", "topics": 6, "href": "curso/trilha2/modulo-2-6.html" }
+    ]},
+    { "n": "3", "title": "Visão e IA embarcada", "modules": [
+      { "id": "3-1", "title": "Raspberry Pi 5 e Linux", "topics": 6, "href": "curso/trilha3/modulo-3-1.html" },
+      { "id": "3-2", "title": "Câmera e OpenCV", "topics": 6, "href": "curso/trilha3/modulo-3-2.html" },
+      { "id": "3-3", "title": "Detectar objetos com YOLO26", "topics": 6, "href": "curso/trilha3/modulo-3-3.html" },
+      { "id": "3-4", "title": "IA dentro do microcontrolador", "topics": 6, "href": "curso/trilha3/modulo-3-4.html" },
+      { "id": "3-5", "title": "Raspberry Pi conversa com o ESP32", "topics": 6, "href": "curso/trilha3/modulo-3-5.html" },
+      { "id": "3-6", "title": "Projeto: robô que segue um objeto", "topics": 6, "href": "curso/trilha3/modulo-3-6.html" }
+    ]},
+    { "n": "4", "title": "ROS 2 e navegação", "modules": [
+      { "id": "4-1", "title": "ROS 2 sem medo", "topics": 6, "href": "curso/trilha4/modulo-4-1.html" },
+      { "id": "4-2", "title": "Descrever e simular o robô", "topics": 6, "href": "curso/trilha4/modulo-4-2.html" },
+      { "id": "4-3", "title": "micro-ROS no ESP32", "topics": 6, "href": "curso/trilha4/modulo-4-3.html" },
+      { "id": "4-4", "title": "LiDAR e mapas (SLAM)", "topics": 6, "href": "curso/trilha4/modulo-4-4.html" },
+      { "id": "4-5", "title": "Navegação com Nav2", "topics": 6, "href": "curso/trilha4/modulo-4-5.html" },
+      { "id": "4-6", "title": "Projeto: robô que mapeia e navega", "topics": 6, "href": "curso/trilha4/modulo-4-6.html" }
+    ]},
+    { "n": "5", "title": "IA moderna e braço robótico", "modules": [
+      { "id": "5-1", "title": "Modelo de linguagem como cérebro", "topics": 6, "href": "curso/trilha5/modulo-5-1.html" },
+      { "id": "5-2", "title": "Voz local: ouvir e falar", "topics": 6, "href": "curso/trilha5/modulo-5-2.html" },
+      { "id": "5-3", "title": "Braço SO-101 e LeRobot", "topics": 6, "href": "curso/trilha5/modulo-5-3.html" },
+      { "id": "5-4", "title": "Aprender por demonstração", "topics": 6, "href": "curso/trilha5/modulo-5-4.html" },
+      { "id": "5-5", "title": "Simular antes do real", "topics": 6, "href": "curso/trilha5/modulo-5-5.html" },
+      { "id": "5-6", "title": "Projeto final: robô assistente", "topics": 6, "href": "curso/trilha5/modulo-5-6.html" }
+    ]},
+    { "n": "6", "title": "Para o professor", "modules": [
+      { "id": "6-1", "title": "Como ministrar este curso", "topics": 8, "href": "curso/trilha6/modulo-6-1.html" }
+    ]}
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link rel="stylesheet" href="../../assets/learn.css">
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T5 ativa -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600" aria-label="Navegação principal">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html" aria-label="Robótica do Zero ao Expert — início">
+<span class="text-xl sm:text-2xl" aria-hidden="true">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeiros passos</span></a>
+<a class="nav-trail text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10" href="../trilha2/index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autônomo</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visão e IA</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-teal-400 bg-teal-500/10" aria-current="page" href="index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Professor</span></a>
+<span class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block" aria-hidden="true"></span>
+<button class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button" aria-label="Minha jornada">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Minha jornada</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Aparência" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Aparência</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Escuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sépia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Foco</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fonte</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Leitura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamanho</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Largura</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estreito</button><button data-inema-set-linewidth="68" type="button">Médio</button><button data-inema-set-linewidth="75" type="button">Largo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Entrelinha</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Confortável</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento roxo" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento âmbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/escuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewBox="0 0 20 20" aria-hidden="true"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main id="conteudo" data-inema-module="5-5" data-inema-track="5">
+<!-- BREADCRUMB -->
+<nav aria-label="Trilha de navegação" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-teal-400" href="../../index.html">Início</a><span aria-hidden="true">/</span>
+<a class="hover:text-teal-400" href="index.html">Trilha 5</a><span aria-hidden="true">/</span>
+<span class="text-teal-400">Módulo 5.5</span>
+</div>
+</nav>
+<!-- HEADER do módulo -->
+<header class="bg-gradient-to-br from-teal-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-teal-500/20 text-teal-400 text-xs font-semibold rounded-full mb-4">MÓDULO 5.5 · FUNDAMENTO</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">🧪 Simular antes do real</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Na simulação o braço pode bater, cair e errar mil vezes sem quebrar nada. Aqui você roda o <strong class="text-neutral-100">gêmeo digital do SO-101</strong> no MuJoCo, entende quando vale o Isaac Sim, transforma a foto da mesa numa cena e aprende a medir a <strong class="text-teal-400">distância entre o simulado e o real</strong>, que é onde a maioria dos projetos tropeça.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">6</div><div class="text-xs text-neutral-400">Tópicos</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">Avançado</div><div class="text-xs text-neutral-400">Nível</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">Fundamento</div><div class="text-xs text-neutral-400">Tipo</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-teal-400">Só o PC</div><div class="text-xs text-neutral-400">Hardware exigido</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progresso do módulo 5.5" class="inema-ring" data-inema-meter="modulo:5-5"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:5-5"><strong data-inema-meter-frac="">0 de 0</strong> tópicos lidos · <span data-inema-section-counter="">Seção 1 de 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<!-- TOC sticky + scrollspy -->
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Índice da página" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">Neste módulo</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-1">1. Por que simular antes</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-2">2. MuJoCo e o gêmeo</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-3">3. Isaac Sim/Isaac Lab</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-4">4. Real2sim</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-5">5. Sim2real</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-teal-400" href="#topico-6">6. Dados sintéticos</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Conteúdo detalhado</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" id="topico-1" data-inema-topic="modulo-5-5#topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">🧭 Por que simular antes</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-5-t1-p1">No braço real, cada tentativa custa: você arruma a mesa, espera o movimento, desgasta os servos e corre o risco de derrubar algo. Na simulação, o computador calcula a física e roda centenas de tentativas enquanto você toma um café. Por isso a regra do curso é simples: <strong class="text-neutral-100">nenhum plano ou política vai ao braço real sem passar antes pela simulação</strong>.</p>
+<div class="bg-dark-800 border border-teal-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-teal-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m5-5-t1-p2">Um <strong>simulador de física</strong> é um programa que calcula, passo a passo, como objetos com massa, atrito e motores se movem e se chocam. Um <strong>gêmeo digital</strong> é a cópia de um robô (e às vezes da sala) dentro do simulador, com as mesmas medidas, juntas e limites do real, para que o que funciona num tenha chance de funcionar no outro.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Funil de testes: muitas tentativas baratas na simulação, poucas aprovadas seguem para testes lentos no braço real com velocidade reduzida e só o que passa vai para o uso normal." class="w-full h-auto" viewBox="0 0 640 280">
+<defs>
+<pattern id="m55-grid1" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#14b8a6" opacity="0.12"/></pattern>
+<filter id="m55-glow1" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="640" height="280" fill="url(#m55-grid1)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<g filter="url(#m55-glow1)"><path d="M40,30 L600,30 L470,110 L170,110 Z" fill="#0f2624" stroke="#14b8a6" stroke-width="2.5"/></g>
+<text x="320" y="64" fill="#2dd4bf" font-size="18" font-weight="600">SIMULAÇÃO</text><text x="320" y="90" fill="#ccfbf1" font-size="15">centenas de tentativas, custo quase zero</text>
+<path d="M170,122 L470,122 L410,190 L230,190 Z" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/>
+<text x="320" y="152" fill="#7dd3fc" font-size="17" font-weight="600">REAL DEVAGAR</text><text x="320" y="176" fill="#bfe6ff" font-size="15">20 tentativas</text>
+<path d="M230,202 L410,202 L370,258 L270,258 Z" fill="#1c1c26" stroke="#a8a8b3" stroke-width="2"/>
+<text x="320" y="236" fill="#e6e6e6" font-size="16" font-weight="600">USO</text>
+<text x="60" y="160" fill="#a8a8b3" font-size="14" text-anchor="start">quebra</text><text x="60" y="180" fill="#a8a8b3" font-size="14" text-anchor="start">nada</text>
+<text x="580" y="160" fill="#fca5a5" font-size="14" text-anchor="end">cada erro</text><text x="580" y="180" fill="#fca5a5" font-size="14" text-anchor="end">custa</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">Como ler:</strong> o funil afunila de cima para baixo. A faixa larga (simulação) filtra quase todos os erros de plano e de código. A faixa do meio (real devagar) pega o que a simulação não representa bem. Só o que passa pelas duas chega ao uso normal.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-5">
+<h4 class="font-bold text-teal-400 mb-3">✓ A simulação acerta bem</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Alcance do braço e colisão com a mesa.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Ordem dos passos de um plano e erros de lógica.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Gerar muitas variações de posição para treino.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ A simulação costuma errar</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Atrito da garra e objetos que escorregam.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Folga e atraso dos servos baratos.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Luz, reflexo e textura vistos pela câmera.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-5-t1-p3">Robôs com IA erram de jeitos imprevisíveis. A simulação é o lugar seguro para descobrir esses erros e também a fábrica de dados que reduz quantas demonstrações você precisa gravar à mão.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Simulador</div><div class="text-xs text-neutral-400">física calculada</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Gêmeo digital</div><div class="text-xs text-neutral-400">cópia medida do real</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Funil de testes</div><div class="text-xs text-neutral-400">sim → real devagar → uso</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Custo do erro</div><div class="text-xs text-neutral-400">zero na sim</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" id="topico-2" data-inema-topic="modulo-5-5#topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">🦾 MuJoCo e o gêmeo do SO-101</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-5-t2-p1">O <strong class="text-teal-400">MuJoCo</strong> é um simulador de física aberto e gratuito, mantido pelo Google DeepMind, leve o suficiente para rodar num notebook sem placa de vídeo dedicada. A coleção oficial de modelos dele, o <strong class="text-neutral-100">MuJoCo Menagerie</strong>, já traz o SO-101 pronto, com as mesmas 6 juntas do braço real. Você instala com <span class="font-mono text-xs">pip</span> e controla tudo em Python.</p>
+<div class="bg-dark-800 border border-teal-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-teal-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m5-5-t2-p2"><strong>MJCF</strong> é o arquivo XML que descreve o robô para o MuJoCo: peças, juntas, massas e motores (parecido com o URDF do ROS, visto no 4.2). O <strong>passo de física</strong> é o intervalo que o simulador avança a cada cálculo; no modelo do SO-101 são 5 ms, então 2 segundos simulados são 400 passos.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Gêmeo digital do SO-101: à esquerda o braço real com servos e peças impressas; à direita o modelo MJCF com as mesmas 6 juntas, de shoulder_pan a gripper; os dois recebem o mesmo comando de posição." class="w-full h-auto" viewBox="0 0 640 300">
+<defs>
+<pattern id="m55-grid2" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#14b8a6" opacity="0.1"/></pattern>
+<marker id="m55-ah2" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"/></marker>
+</defs>
+<rect width="640" height="300" fill="url(#m55-grid2)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<text x="130" y="30" fill="#e6e6e6" font-size="17" font-weight="600">braço real</text>
+<text x="510" y="30" fill="#2dd4bf" font-size="17" font-weight="600">gêmeo (MJCF)</text>
+<g stroke="#a8a8b3" stroke-width="10" stroke-linecap="round" fill="none"><path d="M90,250 L90,200 L150,130 L210,150"/></g>
+<rect x="60" y="250" width="60" height="16" rx="4" fill="#3a3a46"/>
+<g fill="#16161e" stroke="#e6e6e6" stroke-width="2"><circle cx="90" cy="200" r="9"/><circle cx="150" cy="130" r="9"/><circle cx="210" cy="150" r="9"/></g>
+<g stroke="#2dd4bf" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.9"><path d="M470,250 L470,200 L530,130 L590,150"/></g>
+<rect x="440" y="250" width="60" height="16" rx="4" fill="#0f2624" stroke="#2dd4bf"/>
+<g fill="#0f2624" stroke="#5eead4" stroke-width="2"><circle cx="470" cy="200" r="9"/><circle cx="530" cy="130" r="9"/><circle cx="590" cy="150" r="9"/></g>
+<rect x="250" y="70" width="140" height="170" rx="12" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/>
+<g fill="#bfe6ff" font-family="JetBrains Mono,monospace" font-size="14"><text x="320" y="100">shoulder_pan</text><text x="320" y="124">shoulder_lift</text><text x="320" y="148">elbow_flex</text><text x="320" y="172">wrist_flex</text><text x="320" y="196">wrist_roll</text><text x="320" y="220">gripper</text></g>
+<text x="320" y="285" fill="#7dd3fc" font-size="15">mesmo comando, mesmas 6 juntas</text>
+</g>
+<g fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 6"><path d="M250,155 L222,155" marker-end="url(#m55-ah2)"/><path d="M390,155 L455,170" marker-end="url(#m55-ah2)"/></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">Como ler:</strong> a caixa do meio é a lista de juntas, igual nos dois lados. O mesmo comando ("ombro a 0,6 rad") vale para o braço real e para o gêmeo. Se o gêmeo e o real chegam a lugares diferentes com o mesmo comando, você acabou de medir a distância sim2real do tópico 5.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-5-t2-p3"><strong class="text-neutral-100">Objetivo:</strong> instalar o MuJoCo num ambiente virtual, baixar só o SO-101 do Menagerie e abrir o gêmeo numa janela 3D.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">instalar-sim.sh</span></div>
+<pre><code>python3 -m venv .venv-sim
+.venv-sim/bin/pip install mujoco numpy
+
+<span class="c"># baixa só a pasta do SO-101 da coleção oficial de modelos</span>
+git clone --depth 1 --filter=blob:none --sparse \
+  https://github.com/google-deepmind/mujoco_menagerie.git
+git -C mujoco_menagerie sparse-checkout set robotstudio_so101
+
+<span class="c"># janela 3D: arraste para girar, clique duplo numa peça e Ctrl+arrastar para empurrar</span>
+.venv-sim/bin/python -m mujoco.viewer --mjcf=mujoco_menagerie/robotstudio_so101/scene.xml</code></pre>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-5-t2-p4">Agora o mesmo gêmeo controlado por código: mandar duas juntas para uma posição e medir onde a garra parou.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">gemeo_so101.py</span></div>
+<pre><code><span class="c"># Gêmeo do SO-101 no MuJoCo: carrega o modelo, move juntas e mede onde a garra foi parar.</span>
+<span class="k">import</span> sys
+<span class="k">import</span> mujoco
+
+CENA = sys.argv[1] <span class="k">if</span> len(sys.argv) &gt; 1 <span class="k">else</span> <span class="s">"mujoco_menagerie/robotstudio_so101/scene.xml"</span>
+model = mujoco.MjModel.from_xml_path(CENA)
+data = mujoco.MjData(model)
+
+print(<span class="s">"juntas:"</span>, [model.joint(i).name <span class="k">for</span> i <span class="k">in</span> range(model.njnt)])
+print(<span class="s">"atuadores:"</span>, [model.actuator(i).name <span class="k">for</span> i <span class="k">in</span> range(model.nu)])
+
+mujoco.mj_resetData(model, data)
+alvo = {<span class="s">"shoulder_pan"</span>: 0.6, <span class="s">"elbow_flex"</span>: 0.5}   <span class="c"># radianos (0,6 rad = uns 34 graus)</span>
+<span class="k">for</span> nome, valor <span class="k">in</span> alvo.items():
+    data.ctrl[model.actuator(nome).id] = valor
+
+garra = model.body(<span class="s">"gripper"</span>).id
+<span class="k">for</span> passo <span class="k">in</span> range(int(2.0 / model.opt.timestep)):  <span class="c"># 2 segundos de física</span>
+    mujoco.mj_step(model, data)
+    <span class="k">if</span> passo % int(0.5 / model.opt.timestep) == 0:
+        x, y, z = data.xpos[garra]
+        pan = data.qpos[model.joint(<span class="s">"shoulder_pan"</span>).qposadr[0]]
+        print(f<span class="s">"t={data.time:4.1f}s  pan={pan:+.3f} rad  garra=({x:+.3f}, {y:+.3f}, {z:+.3f}) m"</span>)
+
+erro = abs(data.qpos[model.joint(<span class="s">"shoulder_pan"</span>).qposadr[0]] - alvo[<span class="s">"shoulder_pan"</span>])
+print(<span class="s">"erro final do shoulder_pan:"</span>, round(erro, 4), <span class="s">"rad"</span>, <span class="s">"OK"</span> <span class="k">if</span> erro &lt; 0.05 <span class="k">else</span> <span class="s">"LONGE DO ALVO"</span>)</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span><span class="font-mono text-xs">.venv-sim/bin/python gemeo_so101.py</span> lista as 6 juntas e os 6 atuadores, de <span class="font-mono text-xs">shoulder_pan</span> a <span class="font-mono text-xs">gripper</span>.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Em meio segundo o <span class="font-mono text-xs">pan</span> chega a +0,600 rad e a garra sai de cerca de (+0,29; 0; +0,23) m para (+0,23; −0,13; +0,14) m. A última linha diz "OK".</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Erro de arquivo não encontrado? Rode o script na pasta onde está <span class="font-mono text-xs">mujoco_menagerie</span>, ou passe o caminho do <span class="font-mono text-xs">scene.xml</span> como argumento.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Veja também: robotica-so101</h3>
+<p class="text-neutral-300 text-sm">O projeto INEMA <a class="text-sky-400 underline" href="https://inematds.github.io/robotica-so101/guia/" rel="noopener" target="_blank">robotica-so101</a> leva este gêmeo mais longe: pega cubo, bola e potinho e os põe numa bandeja (50 de 50 episódios na simulação), filma por três câmeras e roda uma prova com medidas variadas antes de o braço real se mexer.</p>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-5-t2-p5">Com o gêmeo você testa alcance, posição da câmera e lógica do projeto antes de imprimir uma peça. É também a forma de a turma inteira trabalhar no braço quando a escola tem um só.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">MuJoCo</div><div class="text-xs text-neutral-400">física leve e aberta</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Menagerie</div><div class="text-xs text-neutral-400">modelos prontos</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">MJCF</div><div class="text-xs text-neutral-400">descrição do robô</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">ctrl / qpos</div><div class="text-xs text-neutral-400">comando / posição</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" id="topico-3" data-inema-topic="modulo-5-5#topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">🖥️ Isaac Sim/Isaac Lab: quando vale</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-5-t3-p1">O <strong class="text-teal-400">NVIDIA Isaac Sim</strong> é um simulador com imagem quase fotográfica, sensores detalhados e integração com ROS 2. O <strong class="text-teal-400">Isaac Lab</strong>, construído sobre ele, roda milhares de cópias do robô em paralelo na GPU, o que torna viável o aprendizado por reforço (o robô aprende por tentativa e erro, com recompensa). O preço é o hardware: exige placa NVIDIA RTX com bastante memória e uma instalação bem mais pesada.</p>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm">
+<thead class="bg-dark-700"><tr><th class="text-left p-3">Critério</th><th class="text-left p-3">MuJoCo</th><th class="text-left p-3">Isaac Sim / Isaac Lab</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">Computador</td><td class="p-3">qualquer PC ou notebook</td><td class="p-3">GPU NVIDIA RTX com boa memória</td></tr>
+<tr><td class="p-3">Instalação</td><td class="p-3"><span class="font-mono text-xs">pip install mujoco</span></td><td class="p-3">grande, com requisitos de driver</td></tr>
+<tr><td class="p-3">Imagem da câmera</td><td class="p-3">simples</td><td class="p-3">quase fotográfica</td></tr>
+<tr><td class="p-3">Muitos robôs em paralelo</td><td class="p-3">sim (há versões em GPU)</td><td class="p-3">milhares, ponto forte</td></tr>
+<tr><td class="p-3">Melhor para</td><td class="p-3">aprender, testar planos, gerar episódios</td><td class="p-3">reforço em escala, visão realista, humanoides</td></tr>
+</tbody>
+</table>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-5">
+<h4 class="font-bold text-teal-400 mb-3">✓ Vale o Isaac quando</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Você tem (ou aluga) GPU RTX e vai treinar por reforço.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>A política depende muito da imagem e precisa de cenas realistas.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>O projeto já usa o ecossistema NVIDIA (Jetson, ROS 2).</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Fique no MuJoCo quando</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>O PC é de escola, sem placa NVIDIA.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>O objetivo é testar plano, alcance e lógica.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>A turma ainda está aprendendo o que é um gêmeo.</span></li>
+</ul>
+</div>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 E o Gazebo?</h3>
+<p class="text-neutral-300 text-sm">O Gazebo (Trilha 4) é o simulador natural para robô móvel com ROS 2, mapas e Nav2. Para braço com contato fino e geração de episódios para o LeRobot, o MuJoCo é mais direto. No projeto final você pode usar os dois: Gazebo para a base, MuJoCo para o braço.</p>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-5-t3-p2">Escolher o simulador pelo problema, e não pela fama, economiza semanas de instalação. A maior parte do que este curso faz cabe no MuJoCo; o Isaac entra quando o projeto pede escala ou imagem realista.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Isaac Sim</div><div class="text-xs text-neutral-400">imagem realista</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Isaac Lab</div><div class="text-xs text-neutral-400">treino em paralelo</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Reforço</div><div class="text-xs text-neutral-400">aprende por recompensa</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Gazebo</div><div class="text-xs text-neutral-400">base móvel com ROS 2</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" id="topico-4" data-inema-topic="modulo-5-5#topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">📷 Real2sim: foto da mesa vira cena</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-5-t4-p1">Montar uma cena à mão (onde está a caixa, quanto mede o cubo) dá trabalho. <strong class="text-teal-400">Real2sim</strong> é o caminho inverso do sim2real: partir do mundo real para montar a simulação. Um modelo de visão olha a foto da mesa, estima objetos, tamanhos e posições em metros, e um programa monta a cena no MuJoCo. A partir dela, a simulação gera episódios e prova o plano antes do braço se mexer.</p>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Fluxo real2sim: a foto da mesa passa por um modelo de visão e vira cena.json com objetos e medidas; a cena vira o gêmeo no MuJoCo; o gêmeo gera episódios e prova o plano em 20 variações, que termina aprovado ou reprovado." class="w-full h-auto" viewBox="0 0 640 290">
+<defs>
+<pattern id="m55-grid4" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#14b8a6" opacity="0.1"/></pattern>
+<filter id="m55-glow4" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<marker id="m55-ah4" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#2dd4bf"/></marker>
+</defs>
+<rect width="640" height="290" fill="url(#m55-grid4)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<rect x="12" y="50" width="130" height="90" rx="12" fill="#1c1c26" stroke="#a8a8b3" stroke-width="2"/><rect x="34" y="88" width="24" height="24" fill="#f87171"/><rect x="82" y="80" width="44" height="36" fill="none" stroke="#a8a8b3" stroke-width="2"/>
+<text x="77" y="164" fill="#e6e6e6" font-size="15">foto da mesa</text>
+<rect x="172" y="50" width="130" height="90" rx="12" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/>
+<text x="237" y="88" fill="#7dd3fc" font-size="16" font-weight="600">cena.json</text><text x="237" y="112" fill="#bfe6ff" font-size="14">objetos e</text><text x="237" y="130" fill="#bfe6ff" font-size="14">metros</text>
+<text x="237" y="164" fill="#bfe6ff" font-size="14">modelo de visão</text>
+<g filter="url(#m55-glow4)"><rect x="332" y="50" width="130" height="90" rx="12" fill="#0f2624" stroke="#14b8a6" stroke-width="2.5"/></g>
+<text x="397" y="90" fill="#2dd4bf" font-size="16" font-weight="600">gêmeo</text><text x="397" y="114" fill="#ccfbf1" font-size="14">MuJoCo</text>
+<rect x="492" y="50" width="136" height="90" rx="12" fill="#0b1f1d" stroke="#2dd4bf" stroke-width="2"/>
+<text x="560" y="88" fill="#2dd4bf" font-size="16" font-weight="600">episódios</text><text x="560" y="112" fill="#ccfbf1" font-size="14">com variação</text>
+<rect x="250" y="200" width="300" height="60" rx="12" fill="#0b1f1d" stroke="#2dd4bf" stroke-width="2"/>
+<text x="400" y="226" fill="#2dd4bf" font-size="16" font-weight="600">PROVA: 20 variações</text><text x="400" y="248" fill="#ccfbf1" font-size="14">aprovado só com 90% ou mais</text>
+<text x="120" y="236" fill="#fca5a5" font-size="14">reprovado: volta ao plano</text>
+</g>
+<g fill="none" stroke="#2dd4bf" stroke-width="2" opacity="0.85"><path d="M142,95 L166,95" marker-end="url(#m55-ah4)"/><path d="M302,95 L326,95" marker-end="url(#m55-ah4)"/><path d="M462,95 L486,95" marker-end="url(#m55-ah4)"/><path d="M397,140 L397,194" marker-end="url(#m55-ah4)"/></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">Como ler:</strong> a linha de cima monta o mundo virtual; a caixa de baixo é o portão. O ponto fraco é a caixa ciano: o modelo de visão erra medidas, então a prova varia os tamanhos e posições para não aprovar um plano que só funciona na medida perfeita.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-4">Passo a passo com o robotica-real2sim</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Fotografe com uma folha A4 na mesa</h4><p class="text-neutral-300 text-sm">A folha dá a escala. Tire 2 ou 3 fotos de ângulos diferentes: a medida é o que mais erra.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Gere ou escreva a cena</h4><p class="text-neutral-300 text-sm">O projeto usa um modelo de visão para ler a foto. Sem ele, copie o exemplo <span class="font-mono text-xs">exemplos/mesa-teste/cena.json</span> e preencha as medidas com uma trena.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"><span class="text-teal-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Filme, gere episódios e prove</h4><p class="text-neutral-300 text-sm">Compare o filme do gêmeo com a foto. Só depois rode a prova do plano.</p></div></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-5-t4-p2"><strong class="text-neutral-100">Objetivo:</strong> rodar o exemplo pronto do projeto (com o braço Franka Panda da coleção do MuJoCo) sem depender de nenhum serviço externo.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">real2sim.sh</span></div>
+<pre><code>git clone https://github.com/inematds/robotica-real2sim
+cd robotica-real2sim
+./instalar.sh                     <span class="c"># venv + MuJoCo + modelo do braço + testes</span>
+<span class="c"># sem monitor (servidor, WSL): export MUJOCO_GL=egl  (sem GPU: osmesa)</span>
+./r2s.py filmar exemplos/mesa-teste/cena.json ep.mp4 --cameras geral,cima,pulso
+./r2s.py episodios exemplos/mesa-teste/cena.json saida/ -n 50
+./r2s.py provar exemplos/mesa-foto/cena.json resultados/mesa-foto/plano.json --sem-vagas
+./r2s.py provar exemplos/mesa-foto/cena.json resultados/mesa-foto/plano.json</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span><span class="font-mono text-xs">ep.mp4</span> mostra o braço pegando o cubo, com a fase escrita na tela, por três câmeras.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>A geração termina com 50 de 50 episódios bem-sucedidos.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>A primeira prova (sem vagas na bandeja) sai REPROVADO, cerca de 4 em 20: a bola cai em cima da lata. A segunda, com uma vaga por objeto, sai APROVADO, cerca de 19 em 20.</span></li>
+</ul>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-5-t4-p3">O resultado da prova é a lição: um plano que parecia óbvio falhou 16 vezes em 20 e só a simulação mostrou isso, sem derrubar nada. Montar a cena a partir da sua mesa é o que transforma a simulação de demonstração bonita em ferramenta de verdade.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Real2sim</div><div class="text-xs text-neutral-400">do real para a sim</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Escala</div><div class="text-xs text-neutral-400">folha A4 na foto</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Prova</div><div class="text-xs text-neutral-400">N variações, nota mínima</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Trena</div><div class="text-xs text-neutral-400">confere a visão</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" id="topico-5" data-inema-topic="modulo-5-5#topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">📏 Sim2real: a distância entre simulado e real</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-5-t5-p1">Toda simulação é uma aproximação. A diferença entre o que acontece no gêmeo e no braço real tem nome: <strong class="text-teal-400">distância sim2real</strong> (em inglês, <em>reality gap</em>). Ela vem de atrito, folga e atraso dos servos, massa real das peças, luz e textura que a câmera vê. Você não elimina essa distância; você a mede e treina a política para aguentá-la.</p>
+<div class="bg-dark-800 border border-teal-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-teal-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m5-5-t5-p2"><strong>Randomização de domínio</strong> é sortear, a cada episódio simulado, valores um pouco diferentes de atrito, massa, força do motor, cor e luz. A política que funciona em todas essas versões "erradas" tende a funcionar também no real, que é só mais uma versão diferente.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Distância sim2real: a curva do ângulo de uma junta no gêmeo chega ao alvo de forma limpa; a curva real atrasa, passa um pouco e fica com erro; a faixa sombreada mostra a variação sorteada pela randomização, que cobre a curva real." class="w-full h-auto" viewBox="0 0 640 290">
+<defs>
+<pattern id="m55-grid5" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#14b8a6" opacity="0.1"/></pattern>
+</defs>
+<rect width="640" height="290" fill="url(#m55-grid5)"/>
+<g font-family="Inter,sans-serif">
+<path d="M60,30 L60,240 L610,240" stroke="#a8a8b3" stroke-width="2" fill="none"/>
+<text x="610" y="266" fill="#a8a8b3" font-size="14" text-anchor="end">tempo</text>
+<text x="70" y="24" fill="#a8a8b3" font-size="14">ângulo da junta</text>
+<path d="M60,70 L610,70" stroke="#a8a8b3" stroke-width="1.5" stroke-dasharray="5 5"/><text x="606" y="62" fill="#a8a8b3" font-size="14" text-anchor="end">alvo</text>
+<path d="M70,230 C130,230 150,95 200,72 C250,64 300,60 380,58 C460,58 520,64 600,62 L600,90 C520,96 460,98 380,104 C300,112 270,130 230,170 C190,210 150,232 70,236 Z" fill="#38bdf8" opacity="0.14"/>
+<path d="M70,236 C120,236 140,90 190,74 C240,68 400,70 600,70" stroke="#2dd4bf" stroke-width="3" fill="none"/>
+<path d="M70,238 C150,238 170,170 210,110 C240,70 270,52 310,60 C360,70 450,80 600,80" stroke="#f87171" stroke-width="3" fill="none" stroke-dasharray="9 5"/>
+<rect x="380" y="130" width="22" height="4" fill="#2dd4bf"/><text x="410" y="137" fill="#ccfbf1" font-size="15">gêmeo</text>
+<rect x="380" y="158" width="22" height="4" fill="#f87171"/><text x="410" y="165" fill="#fecaca" font-size="15">braço real</text>
+<rect x="380" y="184" width="22" height="12" fill="#38bdf8" opacity="0.4"/><text x="410" y="195" fill="#bfe6ff" font-size="15">faixa randomizada</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">Como ler:</strong> a curva verde (gêmeo) sobe limpa até o alvo. A vermelha tracejada (real) começa atrasada, passa do ponto e para com um pequeno erro, típico de servo barato com folga. A faixa azul é o conjunto de gêmeos sorteados: se ela cobre a curva real, a política treinada nela já "viu" algo parecido com o real.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-5-t5-p3"><strong class="text-neutral-100">Objetivo:</strong> rodar o mesmo comando em 20 versões do SO-101 com atrito, força do servo e massa da garra sorteados, e medir quanto a posição da garra se espalha.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">variar_so101.py</span></div>
+<pre><code><span class="c"># Randomização de domínio: o mesmo comando, 20 braços "um pouco diferentes".</span>
+<span class="c"># Se o resultado espalha muito, o seu controle depende de detalhes que o real não garante.</span>
+<span class="k">import</span> sys
+<span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> mujoco
+
+CENA = sys.argv[1] <span class="k">if</span> len(sys.argv) &gt; 1 <span class="k">else</span> <span class="s">"mujoco_menagerie/robotstudio_so101/scene.xml"</span>
+base = mujoco.MjModel.from_xml_path(CENA)
+rng = np.random.default_rng(42)
+garra = base.body(<span class="s">"gripper"</span>).id
+finais = []
+
+<span class="k">for</span> k <span class="k">in</span> range(20):
+    model = mujoco.MjModel.from_xml_path(CENA)
+    model.dof_damping[:] = base.dof_damping * rng.uniform(0.7, 1.3)          <span class="c"># atrito interno ±30%</span>
+    model.actuator_gainprm[:, 0] *= rng.uniform(0.8, 1.2)                    <span class="c"># força do servo ±20%</span>
+    model.actuator_biasprm[:, 1] = -model.actuator_gainprm[:, 0]            <span class="c"># mantém o servo de posição coerente</span>
+    model.body_mass[garra] = base.body_mass[garra] * rng.uniform(0.8, 1.5)  <span class="c"># garra mais pesada</span>
+    data = mujoco.MjData(model)
+    data.ctrl[model.actuator(<span class="s">"shoulder_lift"</span>).id] = -0.4
+    data.ctrl[model.actuator(<span class="s">"elbow_flex"</span>).id] = 0.6
+    <span class="k">for</span> _ <span class="k">in</span> range(int(0.3 / model.opt.timestep)):   <span class="c"># só 0,3 s: o braço ainda está chegando</span>
+        mujoco.mj_step(model, data)
+    finais.append(data.xpos[garra].copy())
+
+finais = np.array(finais)
+print(<span class="s">"posição média da garra (m):"</span>, np.round(finais.mean(axis=0), 3))
+print(<span class="s">"espalhamento (desvio, mm):"</span>, np.round(finais.std(axis=0) * 1000, 1))</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Saída parecida com: posição média <span class="font-mono text-xs">[0.244 -0. 0.2]</span> e espalhamento de poucos milímetros (no teste, 0,4 mm em x e 2,5 mm em z).</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Troque 0,3 s por 2,0 s: o espalhamento cai, porque o servo de posição chega ao alvo em qualquer versão. A diferença aparece no caminho, não no fim.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Aumente as faixas (por exemplo, massa 0,5 a 3,0) e veja o espalhamento crescer: esse é o tamanho da incerteza que a política precisa aguentar.</span></li>
+</ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 A trena vale mais que o modelo</h3>
+<p class="text-neutral-300 text-sm">No robotica-real2sim, trocar o modelo de visão mudou o tipo de erro de medida, mas não acabou com ele. O que resolveu foi medir a mesa com trena e provar o plano no pior caso (bandeja 15% menor). Regra que fica: só vai ao braço real o que passa no pior caso plausível.</p>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-5-t5-p4">Quem ignora a distância sim2real acha que a simulação "mentiu" quando o braço real falha. Quem a mede sabe antes onde vai falhar e já treinou para isso.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Sim2real</div><div class="text-xs text-neutral-400">levar ao real</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Reality gap</div><div class="text-xs text-neutral-400">a diferença medida</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Randomização</div><div class="text-xs text-neutral-400">sortear a física</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Pior caso</div><div class="text-xs text-neutral-400">portão para o real</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" id="topico-6" data-inema-topic="modulo-5-5#topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🧬 Gerar dados sintéticos para treinar</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-5-t6-p1">Gravar 50 demonstrações à mão cansa; gerar 1.000 na simulação leva pouco tempo de computador. Esses <strong class="text-teal-400">dados sintéticos</strong> dão variedade (posições, tamanhos, massas), e poucos episódios reais corrigem a física que a simulação errou. A receita mais usada hoje é a mistura: muitos sintéticos + alguns reais.</p>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Mistura de dados: muitos episódios sintéticos do gêmeo e poucos episódios reais gravados com o líder entram juntos no treino de uma política; a avaliação compara três versões: só real, só simulação e real mais simulação." class="w-full h-auto" viewBox="0 0 640 280">
+<defs>
+<pattern id="m55-grid6" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#14b8a6" opacity="0.1"/></pattern>
+<filter id="m55-glow6" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<marker id="m55-ah6" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#2dd4bf"/></marker>
+</defs>
+<rect width="640" height="280" fill="url(#m55-grid6)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle">
+<g fill="#14b8a6" opacity="0.75"><rect x="20" y="40" width="14" height="14" rx="2"/><rect x="40" y="40" width="14" height="14" rx="2"/><rect x="60" y="40" width="14" height="14" rx="2"/><rect x="80" y="40" width="14" height="14" rx="2"/><rect x="100" y="40" width="14" height="14" rx="2"/><rect x="120" y="40" width="14" height="14" rx="2"/><rect x="140" y="40" width="14" height="14" rx="2"/><rect x="160" y="40" width="14" height="14" rx="2"/><rect x="20" y="60" width="14" height="14" rx="2"/><rect x="40" y="60" width="14" height="14" rx="2"/><rect x="60" y="60" width="14" height="14" rx="2"/><rect x="80" y="60" width="14" height="14" rx="2"/><rect x="100" y="60" width="14" height="14" rx="2"/><rect x="120" y="60" width="14" height="14" rx="2"/><rect x="140" y="60" width="14" height="14" rx="2"/><rect x="160" y="60" width="14" height="14" rx="2"/><rect x="20" y="80" width="14" height="14" rx="2"/><rect x="40" y="80" width="14" height="14" rx="2"/><rect x="60" y="80" width="14" height="14" rx="2"/><rect x="80" y="80" width="14" height="14" rx="2"/><rect x="100" y="80" width="14" height="14" rx="2"/><rect x="120" y="80" width="14" height="14" rx="2"/><rect x="140" y="80" width="14" height="14" rx="2"/><rect x="160" y="80" width="14" height="14" rx="2"/></g>
+<text x="97" y="122" fill="#ccfbf1" font-size="15">muitos sintéticos</text>
+<g fill="#38bdf8"><rect x="60" y="170" width="14" height="14" rx="2"/><rect x="80" y="170" width="14" height="14" rx="2"/><rect x="100" y="170" width="14" height="14" rx="2"/><rect x="120" y="170" width="14" height="14" rx="2"/></g>
+<text x="97" y="212" fill="#bfe6ff" font-size="15">poucos reais</text>
+<g filter="url(#m55-glow6)"><rect x="250" y="95" width="140" height="80" rx="14" fill="#0f2624" stroke="#14b8a6" stroke-width="2.5"/></g>
+<text x="320" y="130" fill="#2dd4bf" font-size="18" font-weight="600">TREINO</text><text x="320" y="155" fill="#ccfbf1" font-size="14">ACT ou SmolVLA</text>
+<rect x="450" y="40" width="170" height="44" rx="10" fill="#0e1b26" stroke="#38bdf8" stroke-width="2"/><text x="535" y="68" fill="#bfe6ff" font-size="15">só real</text>
+<rect x="450" y="113" width="170" height="44" rx="10" fill="#0b1f1d" stroke="#2dd4bf" stroke-width="2"/><text x="535" y="141" fill="#ccfbf1" font-size="15">só simulação</text>
+<rect x="450" y="186" width="170" height="44" rx="10" fill="#0f2624" stroke="#2dd4bf" stroke-width="2.5"/><text x="535" y="214" fill="#2dd4bf" font-size="15" font-weight="600">real + simulação</text>
+<text x="535" y="262" fill="#a8a8b3" font-size="14">20 tentativas cada</text>
+</g>
+<g fill="none" stroke="#2dd4bf" stroke-width="2" opacity="0.85"><path d="M180,80 L244,120" marker-end="url(#m55-ah6)"/><path d="M140,180 L244,150" marker-end="url(#m55-ah6)"/><path d="M390,120 L444,64" marker-end="url(#m55-ah6)"/><path d="M390,135 L444,135" marker-end="url(#m55-ah6)"/><path d="M390,150 L444,206" marker-end="url(#m55-ah6)"/></g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-teal-400">Como ler:</strong> a grade verde à esquerda (sintéticos) é muito maior que a linha azul (reais), mas os dois entram no mesmo treino. À direita estão as três políticas que você compara no braço real. Se "real + simulação" vencer "só real" com os mesmos episódios reais, o gêmeo está ajudando.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m5-5-t6-p2"><strong class="text-neutral-100">Objetivo:</strong> gerar episódios com câmeras no robotica-real2sim, exportar no formato do LeRobot e treinar uma ACT direto da pasta local.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">sinteticos.sh</span></div>
+<pre><code><span class="c"># dentro da pasta robotica-real2sim</span>
+./instalar.sh --lerobot           <span class="c"># cria .venv-lerobot só para o exportador</span>
+./r2s.py episodios exemplos/mesa-foto/cena.json sint/episodios -n 50 --imagens
+./r2s.py exportar sint/episodios sint/lerobot
+
+<span class="c"># treinar lendo a pasta local (confira as flags com: lerobot-train --help)</span>
+.venv-lerobot/bin/lerobot-train \
+  --dataset.repo_id=local/real2sim --dataset.root=sint/lerobot \
+  --policy.type=act --policy.device=cuda \
+  --output_dir=outputs/train/act-sint --policy.push_to_hub=false</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>No teste do projeto, a exportação gerou 50 episódios, 4.361 quadros a 10 quadros por segundo, 9,7 MB, com as câmeras "cima" e "pulso".</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>O treino começa e mostra a loss caindo, como no 5.4.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Atenção: nesse exemplo o braço simulado é um Franka Panda, com 7 juntas. O dado só serve ao SO-101 depois de trocar o modelo da cena pelo gêmeo do SO-101, que é o roteiro do projeto robotica-so101.</span></li>
+</ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-teal-900/20 rounded-xl border border-teal-500/30 p-5">
+<h4 class="font-bold text-teal-400 mb-3">✓ Sintético bem feito</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Mesmas câmeras, nomes e juntas do braço real.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Só episódios com sucesso conferido pela física.</span></li>
+<li class="flex items-start gap-2"><span class="text-teal-400">✓</span><span>Variação de posição, massa, luz e cor.</span></li>
+</ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Sintético que atrapalha</h4>
+<ul class="space-y-2 text-neutral-300 text-sm">
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Câmera em outro ângulo que a do real.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Tudo perfeito e igual: a política decora.</span></li>
+<li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Nenhum episódio real para corrigir a física.</span></li>
+</ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m5-5-t6-p3">Dado é o gargalo da robótica com IA. Saber fabricar dados na simulação, e provar com a comparação de três versões que eles ajudam, é a habilidade que separa um projeto de feira de um projeto que melhora a cada rodada.</p>
+<h3 class="text-lg font-semibold text-teal-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Sintético</div><div class="text-xs text-neutral-400">gerado na simulação</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Mistura</div><div class="text-xs text-neutral-400">muito sim + pouco real</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">Exportar</div><div class="text-xs text-neutral-400">formato do LeRobot</div></div>
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-teal-400 font-semibold text-sm">3 versões</div><div class="text-xs text-neutral-400">prova que ajuda</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span>
+<span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-teal-900/30 via-dark-800 to-dark-800 rounded-xl border border-teal-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Resumo do módulo</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Simulação primeiro</strong><span class="text-neutral-400">: erros baratos, depois real devagar, depois uso.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">MuJoCo + Menagerie</strong><span class="text-neutral-400">: o gêmeo do SO-101 roda em qualquer PC, com as mesmas 6 juntas.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Isaac Sim/Isaac Lab</strong><span class="text-neutral-400"> quando há GPU RTX e o projeto pede reforço em escala ou imagem realista.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Real2sim + prova</strong><span class="text-neutral-400">: a foto monta a cena, a trena confere, a prova no pior caso decide.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-teal-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Sim2real se mede</strong><span class="text-neutral-400">; randomização e mistura sintético + real fazem a política aguentar a diferença.</span></div></div>
+</div>
+<h3 class="font-semibold text-teal-400 mb-3">Para ir além</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://mujoco.org" rel="noopener" target="_blank">MuJoCo</a> <span class="text-neutral-500">— documentação e exemplos em Python</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/google-deepmind/mujoco_menagerie" rel="noopener" target="_blank">MuJoCo Menagerie</a> <span class="text-neutral-500">— modelos prontos, incluindo o SO-101</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://developer.nvidia.com/isaac" rel="noopener" target="_blank">NVIDIA Isaac</a> <span class="text-neutral-500">— Isaac Sim e Isaac Lab, requisitos de hardware</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://huggingface.co/docs/lerobot" rel="noopener" target="_blank">Documentação do LeRobot</a> <span class="text-neutral-500">— formato do dataset e treino</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://inematds.github.io/robotica-so101/guia/" rel="noopener" target="_blank">robotica-so101 (INEMA)</a> e <a class="text-sky-400 hover:text-sky-300 underline" href="https://inematds.github.io/robotica-real2sim/guia/" rel="noopener" target="_blank">robotica-real2sim (INEMA)</a> <span class="text-neutral-500">— gêmeo do SO-101 e foto da mesa vira simulação</span></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-teal-400 mb-1">Próximo módulo</h3>
+<p class="text-neutral-300">5.6 · Projeto final: o robô assistente que ouve, planeja, enxerga e pega, juntando tudo da Trilha 5.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-5-4.html">← Anterior: 5.4 Aprender por demonstração</a>
+<a class="inline-flex items-center px-5 py-3 bg-teal-700 text-white rounded-lg font-semibold hover:bg-teal-600 transition-colors" href="modulo-5-6.html">Próximo: 5.6 Projeto final →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica do Zero ao Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licença MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<!-- SCRIPTS NÚCLEO v1 (toggleTopic, tema, modal) + copiar código -->
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<!-- learn.js + INEMA.init() POR ÚLTIMO -->
+<script src="../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>

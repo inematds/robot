@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="inema-course" content="robot">
+<title>Módulo 2.5 · Telemetria e registro de dados | Robótica do Zero ao Expert</title>
+<meta name="description" content="Telemetria do robô com ESP32: o que medir e com que frequência, Serial Plotter, log CSV em cartão microSD, MQTT com PubSubClient, painel no navegador ou Node-RED/Grafana e análise do log em Python com pandas.">
+<!-- 1) ANTI-FOUC — PRIMEIRO script (Erro #18) -->
+<script>
+(function () { try {
+  var html = document.documentElement, DEF = { theme: 'inema-dark', font: 'inter', fontScale: 100, lineWidth: 68, leading: 1.7, accent: 'emerald' };
+  function clone(o) { var r = {}; for (var x in o) r[x] = o[x]; return r; } var p = clone(DEF);
+  try { var raw = localStorage.getItem('inema.prefs'); if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') { for (var k in DEF) if (parsed[k] != null) p[k] = parsed[k]; } } else { var legacy = localStorage.getItem('theme'); if (legacy === 'light') p.theme = 'claro'; else if (legacy === 'dark') p.theme = 'inema-dark'; } } catch (e) { p = clone(DEF); }
+  var THEMES = { 'inema-dark': { dark: true, attr: null, cs: 'dark' }, 'claro': { dark: false, attr: null, cs: 'light' }, 'sepia': { dark: false, attr: 'sepia', cs: 'light' }, 'foco': { dark: null, attr: 'foco', cs: null }, 'contraste': { dark: true, attr: 'contraste', cs: 'dark' } };
+  var t = THEMES[p.theme] || THEMES['inema-dark']; if (t.dark === true) html.classList.add('dark'); else if (t.dark === false) html.classList.remove('dark');
+  if (t.attr) html.setAttribute('data-theme', t.attr); else html.removeAttribute('data-theme'); html.style.colorScheme = (t.cs ? t.cs : (html.classList.contains('dark') ? 'dark' : 'light'));
+  html.setAttribute('data-font', p.font || 'inter'); html.setAttribute('data-accent', p.accent || 'emerald');
+  var s = html.style, scale = (+p.fontScale || 100); s.setProperty('--inema-font-scale', (scale / 100).toString()); s.setProperty('font-size', scale + '%'); s.setProperty('--measure', (+p.lineWidth || 68) + 'ch'); s.setProperty('--lh-body', (+p.leading || 1.7).toString());
+  s.setProperty('--font-body', p.font === 'system' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : (p.font === 'leitura' ? '"Atkinson Hyperlegible", "Inter", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'));
+  var ACC = { emerald: [152, 76, 45], blue: [217, 91, 60], purple: [258, 90, 66], amber: [38, 92, 50], teal: [174, 72, 41], rose: [350, 89, 60] }, a = ACC[p.accent] || ACC.emerald;
+  s.setProperty('--accent-h', a[0] + ''); s.setProperty('--accent-s', a[1] + '%'); s.setProperty('--accent-l', a[2] + '%'); s.setProperty('--accent', 'hsl(' + a[0] + ' ' + a[1] + '% ' + a[2] + '%)');
+} catch (err) { try { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } catch (e) {} } })();
+</script>
+<!-- 2) MANIFESTO (verbatim de _shared/manifest.json — Erro #28) -->
+<script type="application/json" data-inema-manifest>
+{
+  "course": "robot",
+  "tracks": [
+    { "n": "1", "title": "Primeiros passos", "modules": [
+      { "id": "1-1", "title": "O que é um robô e o seu kit", "topics": 6, "href": "curso/trilha1/modulo-1-1.html" },
+      { "id": "1-2", "title": "Eletrônica essencial", "topics": 6, "href": "curso/trilha1/modulo-1-2.html" },
+      { "id": "1-3", "title": "ESP32: o primeiro programa", "topics": 6, "href": "curso/trilha1/modulo-1-3.html" },
+      { "id": "1-4", "title": "Sensores: o robô percebe", "topics": 6, "href": "curso/trilha1/modulo-1-4.html" },
+      { "id": "1-5", "title": "Motores e energia", "topics": 6, "href": "curso/trilha1/modulo-1-5.html" },
+      { "id": "1-6", "title": "Projeto: rover que desvia de obstáculos", "topics": 6, "href": "curso/trilha1/modulo-1-6.html" }
+    ]},
+    { "n": "2", "title": "Robô autônomo", "modules": [
+      { "id": "2-1", "title": "Controle pelo celular: Wi-Fi e BLE", "topics": 6, "href": "curso/trilha2/modulo-2-1.html" },
+      { "id": "2-2", "title": "IMU e encoders: saber onde está", "topics": 6, "href": "curso/trilha2/modulo-2-2.html" },
+      { "id": "2-3", "title": "Controle PID na prática", "topics": 6, "href": "curso/trilha2/modulo-2-3.html" },
+      { "id": "2-4", "title": "Várias tarefas ao mesmo tempo", "topics": 6, "href": "curso/trilha2/modulo-2-4.html" },
+      { "id": "2-5", "title": "Telemetria e registro de dados", "topics": 6, "href": "curso/trilha2/modulo-2-5.html" },
+      { "id": "2-6", "title": "Projeto: seguidor de linha com PID", "topics": 6, "href": "curso/trilha2/modulo-2-6.html" }
+    ]},
+    { "n": "3", "title": "Visão e IA embarcada", "modules": [
+      { "id": "3-1", "title": "Raspberry Pi 5 e Linux", "topics": 6, "href": "curso/trilha3/modulo-3-1.html" },
+      { "id": "3-2", "title": "Câmera e OpenCV", "topics": 6, "href": "curso/trilha3/modulo-3-2.html" },
+      { "id": "3-3", "title": "Detectar objetos com YOLO26", "topics": 6, "href": "curso/trilha3/modulo-3-3.html" },
+      { "id": "3-4", "title": "IA dentro do microcontrolador", "topics": 6, "href": "curso/trilha3/modulo-3-4.html" },
+      { "id": "3-5", "title": "Raspberry Pi conversa com o ESP32", "topics": 6, "href": "curso/trilha3/modulo-3-5.html" },
+      { "id": "3-6", "title": "Projeto: robô que segue um objeto", "topics": 6, "href": "curso/trilha3/modulo-3-6.html" }
+    ]},
+    { "n": "4", "title": "ROS 2 e navegação", "modules": [
+      { "id": "4-1", "title": "ROS 2 sem medo", "topics": 6, "href": "curso/trilha4/modulo-4-1.html" },
+      { "id": "4-2", "title": "Descrever e simular o robô", "topics": 6, "href": "curso/trilha4/modulo-4-2.html" },
+      { "id": "4-3", "title": "micro-ROS no ESP32", "topics": 6, "href": "curso/trilha4/modulo-4-3.html" },
+      { "id": "4-4", "title": "LiDAR e mapas (SLAM)", "topics": 6, "href": "curso/trilha4/modulo-4-4.html" },
+      { "id": "4-5", "title": "Navegação com Nav2", "topics": 6, "href": "curso/trilha4/modulo-4-5.html" },
+      { "id": "4-6", "title": "Projeto: robô que mapeia e navega", "topics": 6, "href": "curso/trilha4/modulo-4-6.html" }
+    ]},
+    { "n": "5", "title": "IA moderna e braço robótico", "modules": [
+      { "id": "5-1", "title": "Modelo de linguagem como cérebro", "topics": 6, "href": "curso/trilha5/modulo-5-1.html" },
+      { "id": "5-2", "title": "Voz local: ouvir e falar", "topics": 6, "href": "curso/trilha5/modulo-5-2.html" },
+      { "id": "5-3", "title": "Braço SO-101 e LeRobot", "topics": 6, "href": "curso/trilha5/modulo-5-3.html" },
+      { "id": "5-4", "title": "Aprender por demonstração", "topics": 6, "href": "curso/trilha5/modulo-5-4.html" },
+      { "id": "5-5", "title": "Simular antes do real", "topics": 6, "href": "curso/trilha5/modulo-5-5.html" },
+      { "id": "5-6", "title": "Projeto final: robô assistente", "topics": 6, "href": "curso/trilha5/modulo-5-6.html" }
+    ]},
+    { "n": "6", "title": "Para o professor", "modules": [
+      { "id": "6-1", "title": "Como ministrar este curso", "topics": 8, "href": "curso/trilha6/modulo-6-1.html" }
+    ]}
+  ]
+}
+</script>
+<!-- 3) Tailwind + config (tokens INEMA 2026) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { primary: '#FACC15', dark: { 900: '#0c0c10', 800: '#16161e', 700: '#1c1c26', 600: '#272730' } },
+  fontFamily: { sora: ['Sora', 'Inter', 'system-ui', 'sans-serif'], inter: ['Inter', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] }
+} } };
+</script>
+<!-- 4) Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<!-- 5) CSS base + light mode completo (Sec. 1.5, partes 1–5) — bloco idêntico em todas as páginas -->
+<style>
+body { font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .font-sora { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+.dark body { background-color: #0c0c10; color: #e6e6e6; } .dark .text-neutral-100 { color: #e6e6e6; } .dark .text-neutral-400 { color: #a8a8b3; }
+html.dark:not([data-theme]) { --bg: #0c0c10; --surface: #16161e; --surface-2: #272730; --border: #272730; --border-strong: #3a3a46; } .inema-ring__value { z-index: 1; }
+html:not(.dark):not([data-theme]) { --surface-2: #dcdfe6; }
+.topic-explanation { display: none; } .topic-explanation.active { display: block; }
+.nav-trail { padding: .3rem .4rem; border-radius: .5rem; font-size: .75rem; line-height: 1rem; font-weight: 600; white-space: nowrap; transition: color .15s, background-color .15s; }
+@media (min-width: 640px) { .nav-trail { padding: .375rem .625rem; font-size: .875rem; line-height: 1.25rem; } .fig { padding: 1rem; } }
+.btn-primary { background: #FACC15; color: #1a1206; } .btn-primary:hover { background: #fde047; }
+/* figura SVG: painel escuro nos dois temas (o neon fica legível) · code box: sempre escuro */
+.fig { background: #101016; border: 1px solid #272730; border-radius: 1rem; padding: .75rem; overflow: hidden; }
+.code-box { border: 1px solid #272730; border-radius: .75rem; overflow: hidden; background: #0b0b10; }
+.code-head { display: flex; align-items: center; justify-content: flex-start; gap: .75rem; padding: .5rem .75rem; background: #16161e; border-bottom: 1px solid #272730; }
+.code-file { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .75rem; color: #a8a8b3; }
+.copy-btn { font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: .4rem; background: #272730; color: #e6e6e6; border: 1px solid #3a3a46; } .copy-btn:hover { background: #33333f; }
+.copy-btn .copy-done { display: none; color: #6ee7b7; } .copy-btn.is-copied .copy-label { display: none; } .copy-btn.is-copied .copy-done { display: inline; }
+.code-box pre { margin: 0; padding: 1rem; overflow-x: auto; background: #0b0b10; color: #e6e6e6; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; line-height: 1.6; max-width: none; }
+.code-box .c { color: #8b8b9a; } .code-box .k { color: #7dd3fc; } .code-box .s { color: #fde68a; }
+/* Light — Parte 1: base */
+html:not(.dark) body, html:not(.dark) .bg-dark-900 { background-color: #f6f6f8; color: #111827; } html:not(.dark) .bg-dark-800 { background-color: #fff; } html:not(.dark) .bg-dark-700 { background-color: #eef0f3; } html:not(.dark) .bg-dark-600 { background-color: #e2e4ea; }
+html:not(.dark) .bg-dark-800\/50 { background-color: rgba(255,255,255,.75); } html:not(.dark) .bg-dark-700\/50, html:not(.dark) .bg-dark-700\/30 { background-color: #f3f4f6; } html:not(.dark) .hover\:bg-dark-700\/50:hover, html:not(.dark) .hover\:bg-dark-700:hover { background-color: #e9ebef; } html:not(.dark) .hover\:bg-dark-600:hover { background-color: #dfe2e8; }
+html:not(.dark) .text-neutral-100, html:not(.dark) .hover\:text-neutral-100:hover { color: #111827; } html:not(.dark) .text-neutral-200 { color: #1f2937; } html:not(.dark) .text-neutral-300 { color: #374151; } html:not(.dark) .text-neutral-400 { color: #4b5563; } html:not(.dark) .text-neutral-500 { color: #6b7280; }
+html:not(.dark) .border-dark-600 { border-color: #d6d8df; } html:not(.dark) .border-dark-700, html:not(.dark) .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #e4e6eb; }
+/* Light — Parte 2: acentos das 6 trilhas (texto -700/-800 p/ AA) */
+html:not(.dark) .text-emerald-400, html:not(.dark) .hover\:text-emerald-400:hover, html:not(.dark) .group:hover .group-hover\:text-emerald-400 { color: #047857; } html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(4,120,87,.12); } html:not(.dark) .bg-emerald-500\/10, html:not(.dark) .hover\:bg-emerald-500\/10:hover, html:not(.dark) .bg-emerald-900\/20, html:not(.dark) .bg-emerald-900\/30 { background-color: rgba(4,120,87,.07); } html:not(.dark) .border-emerald-500\/30, html:not(.dark) .hover\:border-emerald-500\/30:hover { border-color: rgba(4,120,87,.3); }
+html:not(.dark) .text-blue-400, html:not(.dark) .hover\:text-blue-400:hover, html:not(.dark) .group:hover .group-hover\:text-blue-400 { color: #1d4ed8; } html:not(.dark) .bg-blue-500\/20 { background-color: rgba(29,78,216,.12); } html:not(.dark) .bg-blue-500\/10, html:not(.dark) .hover\:bg-blue-500\/10:hover, html:not(.dark) .bg-blue-900\/20, html:not(.dark) .bg-blue-900\/30 { background-color: rgba(29,78,216,.07); } html:not(.dark) .border-blue-500\/30, html:not(.dark) .hover\:border-blue-500\/30:hover { border-color: rgba(29,78,216,.3); }
+html:not(.dark) .text-purple-400, html:not(.dark) .hover\:text-purple-400:hover, html:not(.dark) .group:hover .group-hover\:text-purple-400 { color: #6d28d9; } html:not(.dark) .bg-purple-500\/20 { background-color: rgba(109,40,217,.12); } html:not(.dark) .bg-purple-500\/10, html:not(.dark) .hover\:bg-purple-500\/10:hover, html:not(.dark) .bg-purple-900\/20, html:not(.dark) .bg-purple-900\/30 { background-color: rgba(109,40,217,.07); } html:not(.dark) .border-purple-500\/30, html:not(.dark) .hover\:border-purple-500\/30:hover { border-color: rgba(109,40,217,.3); }
+html:not(.dark) .text-amber-400, html:not(.dark) .hover\:text-amber-400:hover, html:not(.dark) .group:hover .group-hover\:text-amber-400 { color: #92400e; } html:not(.dark) .bg-amber-500\/20 { background-color: rgba(146,64,14,.12); } html:not(.dark) .bg-amber-500\/10, html:not(.dark) .hover\:bg-amber-500\/10:hover, html:not(.dark) .bg-amber-900\/20, html:not(.dark) .bg-amber-900\/30 { background-color: rgba(146,64,14,.07); } html:not(.dark) .border-amber-500\/30, html:not(.dark) .hover\:border-amber-500\/30:hover { border-color: rgba(146,64,14,.3); }
+html:not(.dark) .text-teal-400, html:not(.dark) .hover\:text-teal-400:hover, html:not(.dark) .group:hover .group-hover\:text-teal-400 { color: #0f766e; } html:not(.dark) .bg-teal-500\/20 { background-color: rgba(15,118,110,.12); } html:not(.dark) .bg-teal-500\/10, html:not(.dark) .hover\:bg-teal-500\/10:hover, html:not(.dark) .bg-teal-900\/20, html:not(.dark) .bg-teal-900\/30 { background-color: rgba(15,118,110,.07); } html:not(.dark) .border-teal-500\/30, html:not(.dark) .hover\:border-teal-500\/30:hover { border-color: rgba(15,118,110,.3); }
+html:not(.dark) .text-rose-400, html:not(.dark) .hover\:text-rose-400:hover, html:not(.dark) .group:hover .group-hover\:text-rose-400 { color: #9f1239; } html:not(.dark) .bg-rose-500\/20 { background-color: rgba(159,18,57,.12); } html:not(.dark) .bg-rose-500\/10, html:not(.dark) .hover\:bg-rose-500\/10:hover, html:not(.dark) .bg-rose-900\/20, html:not(.dark) .bg-rose-900\/30 { background-color: rgba(159,18,57,.07); } html:not(.dark) .border-rose-500\/30, html:not(.dark) .hover\:border-rose-500\/30:hover { border-color: rgba(159,18,57,.3); }
+/* Light — Parte 3: sem gradiente + especiais (amarelo nunca é letra no claro) */
+html:not(.dark) [class*="bg-gradient-to"] { background-image: none !important; } html:not(.dark) .text-primary, html:not(.dark) .text-yellow-400 { color: #854d0e; } html:not(.dark) .hover\:text-yellow-300:hover { color: #713f12; }
+html:not(.dark) .bg-primary\/10 { background-color: rgba(250,204,21,.16); } html:not(.dark) .border-primary\/30, html:not(.dark) .border-primary\/40 { border-color: rgba(161,98,7,.35); }
+html:not(.dark) .text-sky-400 { color: #0369a1; } html:not(.dark) .hover\:text-sky-300:hover { color: #075985; } html:not(.dark) .text-red-400 { color: #b91c1c; } html:not(.dark) .bg-red-900\/20 { background-color: rgba(185,28,28,.06); } html:not(.dark) .border-red-500\/30 { border-color: rgba(185,28,28,.28); }
+/* Light — Parte 4: nav · Parte 5: bordas suavizadas no DARK (#272730) */
+html:not(.dark) .bg-dark-900\/95 { background-color: rgba(255,255,255,.95); }
+.dark .border-dark-600 { border-color: #272730; } .dark .divide-dark-600 > :not([hidden]) ~ :not([hidden]) { border-color: #272730; }
+/* SVG futurista: suaviza o neon no claro; pulso só sem reduce */
+html:not(.dark) svg[role="img"] { filter: saturate(0.85); }
+@keyframes rb-pulse { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: no-preference) { .rb-a { animation: rb-pulse 3s ease-in-out infinite; } .rb-a:nth-child(2) { animation-delay: .4s; } .rb-a:nth-child(3) { animation-delay: .8s; } }
+</style>
+<!-- 6) learn.css DEPOIS do CSS base -->
+<link rel="stylesheet" href="../../assets/learn.css">
+</head>
+<body class="bg-dark-900 text-neutral-100 min-h-screen">
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<!-- NAV canônico (_shared/nav.html) — contexto curso/, T1 ativa -->
+<nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-dark-600" aria-label="Navegação principal">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-14 gap-1">
+<div class="flex items-center gap-2 flex-shrink-0">
+<a class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300" href="../../index.html" aria-label="Robótica do Zero ao Expert — início">
+<span class="text-xl sm:text-2xl" aria-hidden="true">🦾</span><span class="font-sora font-bold text-lg hidden sm:inline">Robótica</span>
+</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">|</span>
+<a class="text-sky-400 hover:text-sky-300 text-sm font-medium hidden sm:inline" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a>
+<span class="text-neutral-500 hidden sm:inline" aria-hidden="true">-</span>
+<a class="text-amber-700 dark:text-slate-300 hover:underline text-sm font-semibold hidden sm:inline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a>
+</div>
+<div class="flex items-center gap-0.5 sm:gap-1 min-w-0">
+<a class="nav-trail text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10" href="../trilha1/index.html"><span class="lg:hidden">T1</span><span class="hidden lg:inline">Primeiros passos</span></a>
+<a class="nav-trail text-blue-400 bg-blue-500/10" aria-current="page" href="index.html"><span class="lg:hidden">T2</span><span class="hidden lg:inline">Autônomo</span></a>
+<a class="nav-trail text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10" href="../trilha3/index.html"><span class="lg:hidden">T3</span><span class="hidden lg:inline">Visão e IA</span></a>
+<a class="nav-trail text-neutral-400 hover:text-amber-400 hover:bg-amber-500/10" href="../trilha4/index.html"><span class="lg:hidden">T4</span><span class="hidden lg:inline">ROS 2</span></a>
+<a class="nav-trail text-neutral-400 hover:text-teal-400 hover:bg-teal-500/10" href="../trilha5/index.html"><span class="lg:hidden">T5</span><span class="hidden lg:inline">IA moderna</span></a>
+<a class="nav-trail text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10" href="../trilha6/index.html"><span class="lg:hidden">T6</span><span class="hidden lg:inline">Professor</span></a>
+<span class="w-px h-6 bg-dark-600 mx-1 hidden sm:inline-block" aria-hidden="true"></span>
+<button class="inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 hover:bg-dark-700 transition-colors" data-inema-journey-open="" type="button" aria-label="Minha jornada">
+<span aria-hidden="true">◷</span><span class="hidden md:inline">Minha jornada</span>
+<span class="inema-journey-badge" data-count="0" data-inema-journey-badge=""></span>
+</button>
+<div class="relative">
+<button aria-expanded="false" aria-label="Aparência" class="inema-appearance-trigger inline-flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-semibold text-neutral-300 hover:text-neutral-100 transition-colors" data-inema-appearance-toggle="#inema-appearance-panel" type="button">
+<span aria-hidden="true">◑</span><span class="hidden md:inline">Aparência</span>
+</button>
+<div class="inema-appearance-pop right-0" data-inema-appearance="" id="inema-appearance-panel">
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tema</span><div class="inema-segment"><button data-inema-set-theme="inema-dark" type="button">Escuro</button><button data-inema-set-theme="claro" type="button">Claro</button><button data-inema-set-theme="sepia" type="button">Sépia</button></div><div class="inema-segment"><button data-inema-set-theme="foco" type="button">Foco</button><button data-inema-set-theme="contraste" type="button">Alto contraste</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Fonte</span><div class="inema-segment"><button data-inema-set-font="inter" type="button">Inter</button><button data-inema-set-font="system" type="button">Sistema</button><button data-inema-set-font="leitura" type="button">Leitura</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Tamanho</span><div class="inema-segment"><button data-inema-set-fontscale="100" type="button">A</button><button data-inema-set-fontscale="112" type="button">A+</button><button data-inema-set-fontscale="125" type="button">A++</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Largura</span><div class="inema-segment"><button data-inema-set-linewidth="60" type="button">Estreito</button><button data-inema-set-linewidth="68" type="button">Médio</button><button data-inema-set-linewidth="75" type="button">Largo</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Entrelinha</span><div class="inema-segment"><button data-inema-set-leading="1.45" type="button">Compacto</button><button data-inema-set-leading="1.7" type="button">Confortável</button></div></div>
+<div class="inema-pref-group"><span class="inema-pref-group__label">Acento</span><div class="inema-accent-grid"><button aria-label="Acento esmeralda" data-inema-set-accent="emerald" type="button"></button><button aria-label="Acento azul" data-inema-set-accent="blue" type="button"></button><button aria-label="Acento roxo" data-inema-set-accent="purple" type="button"></button><button aria-label="Acento âmbar" data-inema-set-accent="amber" type="button"></button><button aria-label="Acento teal" data-inema-set-accent="teal" type="button"></button><button aria-label="Acento rosa" data-inema-set-accent="rose" type="button"></button></div></div>
+</div>
+</div>
+<!-- i18n:seletor -->
+<button aria-label="Alternar tema claro/escuro" class="p-1.5 sm:p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors" id="theme-toggle" type="button">
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-dark-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+<svg class="hidden w-5 h-5 text-neutral-300" fill="currentColor" id="theme-toggle-light-icon" viewBox="0 0 20 20" aria-hidden="true"><path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2 h-1a1 1 0 100 2 h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2 h1z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main id="conteudo" data-inema-module="2-5" data-inema-track="2">
+<nav aria-label="Trilha de navegação" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="flex flex-wrap items-center gap-2 text-sm text-neutral-400">
+<a class="hover:text-blue-400" href="../../index.html">Início</a><span aria-hidden="true">/</span>
+<a class="hover:text-blue-400" href="index.html">Trilha 2</a><span aria-hidden="true">/</span>
+<span class="text-blue-400">Módulo 2.5</span>
+</div>
+</nav>
+<header class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 py-10 sm:py-12 border-b border-dark-600">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full mb-4">MÓDULO 2.5 · PRÁTICA</span>
+<h1 class="text-2xl sm:text-4xl font-bold mb-4">📡 Telemetria e registro de dados</h1>
+<p class="text-lg text-neutral-400 max-w-3xl">Ajustar um robô "no olho" é adivinhar. Aqui você faz o robô <strong class="text-neutral-100">contar o que sente e o que decide</strong>: gráfico ao vivo no Serial Plotter, arquivo CSV no cartão microSD, mensagens <strong class="text-blue-400">MQTT</strong> para um painel na rede e, no fim, a análise do log em <strong class="text-blue-400">Python</strong>.</p>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">6</div><div class="text-xs text-neutral-400">Tópicos</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Intermediário</div><div class="text-xs text-neutral-400">Nível</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">Prática</div><div class="text-xs text-neutral-400">Tipo</div></div>
+<div class="bg-dark-800/50 rounded-lg p-3 border border-dark-600"><div class="text-xl font-bold text-blue-400">ESP32 + microSD</div><div class="text-xs text-neutral-400">Hardware</div></div>
+</div>
+<div class="flex items-center gap-3 mt-8">
+<div aria-label="Progresso do módulo 2.5" class="inema-ring" data-inema-meter="modulo:2-5"><span class="inema-ring__value" data-inema-meter-pct="">0%</span></div>
+<div class="inema-meter-label" data-inema-meter="modulo:2-5"><strong data-inema-meter-frac="">0 de 0</strong> tópicos lidos · <span data-inema-section-counter="">Seção 1 de 6</span></div>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="lg:flex lg:gap-10">
+<aside class="hidden lg:block lg:w-56 flex-shrink-0">
+<nav aria-label="Índice da página" class="sticky top-20 self-start" data-inema-toc="">
+<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-3">Neste módulo</p>
+<ol class="space-y-1 text-sm">
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-1">1. O que medir e quando</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-2">2. Serial Plotter</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-3">3. CSV no microSD</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-4">4. MQTT na rede</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-5">5. Painel ao vivo</a></li>
+<li><a class="inema-toc-link block py-1 text-neutral-400 hover:text-blue-400" href="#topico-6">6. Log em Python</a></li>
+</ol>
+</nav>
+</aside>
+<article class="inema-prose flex-1 min-w-0">
+<h2 class="text-2xl font-bold mb-8">Conteúdo detalhado</h2>
+<!-- TÓPICO 1 -->
+<section class="mb-16" id="topico-1" data-inema-topic="modulo-2-5#topico-1" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">1</span>
+<h2 class="text-2xl font-bold pt-1">📏 O que medir e com que frequência</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-5-t1-p1"><strong class="text-blue-400">Telemetria</strong> é o robô relatando o próprio estado enquanto trabalha. A regra prática: registre a <strong class="text-neutral-100">entrada</strong> (o que o sensor leu), a <strong class="text-neutral-100">decisão</strong> (erro, saída do PID, estado da máquina) e a <strong class="text-neutral-100">saída</strong> (PWM de cada motor), sempre com o tempo em milissegundos. Com essas três colunas você descobre se o problema está no sentir, no pensar ou no agir.</p>
+<div class="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-5-t1-p2"><strong>Frequência de amostragem</strong> é quantas medidas por segundo você guarda, em hertz (Hz): 50 Hz = uma linha a cada 20 ms. <strong>Baud</strong> é a velocidade da porta serial em bits por segundo; a 115200 baud cabem cerca de 11 500 caracteres por segundo, porque cada caractere gasta 10 bits.</p>
+</div>
+<div class="overflow-x-auto mb-6 rounded-xl border border-dark-600">
+<table class="w-full text-sm"><thead class="bg-dark-700"><tr><th class="text-left p-3">O que</th><th class="text-left p-3">Exemplo</th><th class="text-left p-3">Ritmo sugerido</th></tr></thead>
+<tbody class="divide-y divide-dark-600 text-neutral-300">
+<tr><td class="p-3">Laço de controle</td><td class="p-3">erro, correção do PID, PWM</td><td class="p-3">50 a 200 Hz (o ritmo do PID)</td></tr><tr><td class="p-3">Movimento</td><td class="p-3">velocidade das rodas, ângulo da IMU</td><td class="p-3">20 a 100 Hz</td></tr><tr><td class="p-3">Saúde</td><td class="p-3">tensão da bateria, sinal Wi-Fi (RSSI)</td><td class="p-3">1 a 2 Hz</td></tr><tr><td class="p-3">Eventos</td><td class="p-3">troca de estado, linha perdida</td><td class="p-3">quando acontecem</td></tr><tr><td class="p-3">Painel para pessoas</td><td class="p-3">resumo dos itens acima</td><td class="p-3">5 a 10 Hz (o olho não vê mais)</td></tr>
+</tbody></table>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Orçamento da porta serial a 115200 baud: cerca de 11,5 kB por segundo. Uma linha de 40 bytes a 50 Hz usa 2 kB/s e cabe com folga; a 200 Hz usa 8 kB/s e ainda cabe; a 500 Hz precisaria de 20 kB/s e não cabe." class="w-full h-auto" viewBox="0 0 640 250">
+<defs><pattern id="m25-grid1" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r="1.3" fill="#3b82f6" opacity="0.12"/></pattern></defs>
+<rect width="640" height="250" fill="url(#m25-grid1)"/>
+<g font-family="Inter,sans-serif" font-size="15">
+<text x="20" y="34" fill="#dbeafe" font-weight="600" font-size="16">Serial a 115200 baud ≈ 11,5 kB/s</text>
+<rect x="20" y="48" width="460" height="26" rx="6" fill="none" stroke="#a8a8b3" stroke-dasharray="6 4"/><text x="490" y="67" fill="#a8a8b3">limite</text>
+<rect x="20" y="96" width="80" height="26" rx="6" fill="#3b82f6"/><text x="112" y="115" fill="#bfdbfe">40 B × 50 Hz = 2 kB/s: folga</text>
+<rect x="20" y="144" width="320" height="26" rx="6" fill="#38bdf8"/><text x="350" y="163" fill="#bfe6ff">8 kB/s: cabe</text>
+<rect x="20" y="192" width="460" height="26" rx="6" fill="#f87171" opacity="0.85"/><rect x="480" y="192" width="140" height="26" rx="6" fill="none" stroke="#f87171" stroke-dasharray="5 4"/>
+<text x="30" y="211" fill="#2a1416" font-weight="600">40 B × 500 Hz = 20 kB/s: não cabe</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Como ler:</strong> a caixa tracejada de cima é a capacidade da porta serial. Cada barra é uma linha de CSV com cerca de 40 caracteres, mandada em ritmos diferentes. Quando a barra passa do limite (vermelho), o envio começa a atrasar o próprio laço de controle. Grave rápido no cartão; mande devagar pela rede.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-5">
+<h4 class="font-bold text-blue-400 mb-3">✓ Faça</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Uma coluna de tempo (<span class="font-mono text-xs">t_ms</span>) em toda linha.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Nomes de coluna curtos e iguais em todos os logs.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Uma linha de cabeçalho com os parâmetros do teste (Kp, Kd, velocidade).</span></li></ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Evite</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Frases longas a cada ciclo ("O valor do sensor agora é...").</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Imprimir dentro do laço de controle mais rápido do que a porta aguenta.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Log sem tempo: você não sabe o que veio antes.</span></li></ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-5-t1-p3">No seguidor de linha do 2.6 você vai ajustar Kp e Kd olhando gráficos de antes e depois. Se o log não tiver as colunas certas no ritmo certo, o gráfico não mostra a oscilação que você quer corrigir.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Telemetria</div><div class="text-xs text-neutral-400">o robô relata a si mesmo</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Hz</div><div class="text-xs text-neutral-400">medidas por segundo</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Entrada/decisão/saída</div><div class="text-xs text-neutral-400">as três colunas</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Orçamento</div><div class="text-xs text-neutral-400">bytes × Hz cabem?</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 2 -->
+<section class="mb-16" id="topico-2" data-inema-topic="modulo-2-5#topico-2" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">2</span>
+<h2 class="text-2xl font-bold pt-1">📈 Gráfico ao vivo pelo Serial Plotter</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-5-t2-p1">A Arduino IDE 2.x tem um <strong class="text-blue-400">Serial Plotter</strong> (menu Ferramentas, ou o ícone de gráfico no canto superior direito). Ele lê cada linha da Serial e desenha uma curva por valor. O formato é uma linha por instante, com pares <span class="font-mono text-sm">nome:valor</span> separados por vírgula. Só uma janela pode usar a porta: feche o Serial Monitor antes de abrir o Plotter.</p>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Simulação do Serial Plotter: a leitura crua do sensor (azul) treme muito, o valor filtrado (ciano) segue a tendência sem tremer e o alvo (tracejado) fica parado em 2000." class="w-full h-auto" viewBox="0 0 640 260">
+<rect width="640" height="260" fill="url(#m25-grid1)"/>
+<g font-family="Inter,sans-serif" font-size="15">
+<line x1="50" y1="20" x2="50" y2="210" stroke="#a8a8b3"/><line x1="50" y1="210" x2="620" y2="210" stroke="#a8a8b3"/>
+<text x="42" y="30" fill="#a8a8b3" text-anchor="end" font-size="14">4095</text><text x="42" y="214" fill="#a8a8b3" text-anchor="end" font-size="14">0</text>
+<line x1="50" y1="117" x2="620" y2="117" stroke="#a8a8b3" stroke-width="2" stroke-dasharray="8 6"/>
+<polyline fill="none" stroke="#3b82f6" stroke-width="2" points="50,190 70,170 90,196 110,160 130,180 150,140 170,165 190,120 210,150 230,105 250,128 270,88 290,118 310,80 330,104 350,70 370,98 390,66 410,90 430,62 450,92 470,70 490,96 510,64 530,88 550,70 570,95 590,66 610,86"/>
+<polyline fill="none" stroke="#38bdf8" stroke-width="3" points="50,190 90,184 130,170 170,152 210,134 250,116 290,102 330,92 370,84 410,79 450,78 490,79 530,78 570,79 610,78"/>
+<g font-size="15"><rect x="70" y="232" width="14" height="4" fill="#3b82f6"/><text x="90" y="238" fill="#bfdbfe">pot (cru)</text><rect x="230" y="232" width="14" height="4" fill="#38bdf8"/><text x="250" y="238" fill="#bfe6ff">filtrado</text><rect x="380" y="232" width="14" height="4" fill="#a8a8b3"/><text x="400" y="238" fill="#a8a8b3">alvo (2000)</text></g>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Como ler:</strong> o eixo horizontal é o tempo (as linhas chegando), o vertical é o valor. A curva azul é o que o sensor entrega; a ciano é a mesma leitura depois do filtro, mais lisa e um pouco atrasada; o tracejado é o alvo fixo. Comparar as curvas lado a lado é o jeito mais rápido de ver ruído, atraso e erro.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-5-t2-p2"><strong class="text-neutral-100">Objetivo:</strong> desenhar três curvas ao vivo: a leitura crua de um potenciômetro (ou sensor IR) no GPIO 34, a versão filtrada e um alvo fixo. Funciona no Wokwi, que também tem Serial Plotter.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">plotter-tres-curvas.ino</span></div>
+<pre><code><span class="c">// Três curvas no Serial Plotter da Arduino IDE 2.x (ESP32, pacote esp32 3.x)</span>
+const int PINO_SENSOR = 34;   <span class="c">// potenciômetro ou sensor IR analógico (ADC1)</span>
+const int ALVO = 2000;
+float filtrado = 0;
+unsigned long tPlot = 0;
+void setup() { Serial.begin(115200); }
+void loop() {
+  int cru = analogRead(PINO_SENSOR);           <span class="c">// 0 a 4095</span>
+  filtrado = 0.9 * filtrado + 0.1 * cru;        <span class="c">// filtro exponencial: 10% do novo, 90% do antigo</span>
+  if (millis() - tPlot &gt;= 20) {                <span class="c">// 50 linhas por segundo: o Plotter acompanha</span>
+    tPlot = millis();
+    Serial.printf(<span class="s">"pot:%d,filtrado:%.0f,alvo:%d\n"</span>, cru, filtrado, ALVO);
+  }
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>O Plotter mostra três curvas com a legenda pot, filtrado e alvo.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Girando o potenciômetro rápido, a curva filtrada chega depois, sem os picos.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Uma curva só, chamada "value 1"? Confira o separador: dois-pontos entre nome e valor, vírgula entre pares. Se a sua versão da IDE mudar o formato, a ajuda do Plotter mostra o atual.</span></li></ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 O mesmo formato serve para o PID</h3>
+<p class="text-neutral-300 text-sm">Troque as variáveis por <span class="font-mono text-xs">erro:%d,corr:%d,esq:%d,dir:%d</span> e você vê o PID do 2.3 trabalhando: a correção sobe quando o erro aparece e as rodas se separam. Com o robô sobre a mesa, preso ao cabo, isso já revela sinal trocado e ganho exagerado.</p>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-5-t2-p3">É a telemetria de custo zero: nenhum fio extra, nenhum programa extra. Para testes de bancada (sensor, filtro, sinal do PID) resolve a maior parte das dúvidas em minutos.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">nome:valor</div><div class="text-xs text-neutral-400">uma curva por par</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Filtro exponencial</div><div class="text-xs text-neutral-400">alisa sem guardar histórico</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Porta ocupada</div><div class="text-xs text-neutral-400">Monitor ou Plotter</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Bancada</div><div class="text-xs text-neutral-400">robô parado, no cabo</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 3 -->
+<section class="mb-16" id="topico-3" data-inema-topic="modulo-2-5#topico-3" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">3</span>
+<h2 class="text-2xl font-bold pt-1">💾 Gravar em cartão microSD (CSV)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-5-t3-p1">Robô andando não pode arrastar cabo USB. A solução é levar um <strong class="text-neutral-100">caderno de bordo</strong>: um módulo de cartão microSD gravando um arquivo <strong class="text-blue-400">CSV</strong> a 50 ou 100 linhas por segundo. Depois do teste, você tira o cartão e abre no computador, na planilha ou no Python. O cartão conversa com o ESP32 pelo barramento SPI.</p>
+<div class="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-5-t3-p2"><strong>CSV</strong> (valores separados por vírgula) é um texto em que cada linha é um registro e cada vírgula separa uma coluna; a primeira linha dá os nomes. <strong>SPI</strong> é um barramento de quatro fios (relógio SCK, dados MOSI e MISO, seleção CS) mais rápido que o I2C, usado por cartões, telas e alguns sensores.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Ligação do módulo microSD no ESP32: CS no GPIO 5, SCK no GPIO 18, MISO no GPIO 19, MOSI no GPIO 23, alimentação e GND comuns." class="w-full h-auto" viewBox="0 0 640 280">
+<rect width="640" height="280" fill="url(#m25-grid1)"/>
+<g font-family="Inter,sans-serif" font-size="15">
+<rect x="30" y="20" width="170" height="240" rx="14" fill="#122240" stroke="#3b82f6" stroke-width="2.5"/><text x="115" y="48" fill="#dbeafe" font-weight="600" text-anchor="middle" font-size="17">ESP32</text>
+<rect x="440" y="20" width="170" height="240" rx="14" fill="#0e1a2e" stroke="#38bdf8" stroke-width="2"/><text x="525" y="48" fill="#bfe6ff" font-weight="600" text-anchor="middle" font-size="17">microSD</text>
+<g fill="#dbeafe" text-anchor="end"><text x="188" y="84">GPIO 5</text><text x="188" y="118">GPIO 18</text><text x="188" y="152">GPIO 19</text><text x="188" y="186">GPIO 23</text><text x="188" y="220">3V3</text><text x="188" y="250">GND</text></g>
+<g fill="#bfe6ff"><text x="452" y="84">CS</text><text x="452" y="118">SCK</text><text x="452" y="152">MISO</text><text x="452" y="186">MOSI</text><text x="452" y="220">VCC</text><text x="452" y="250">GND</text></g>
+<g stroke-width="3"><line x1="200" y1="79" x2="440" y2="79" stroke="#60a5fa"/><line x1="200" y1="113" x2="440" y2="113" stroke="#38bdf8"/><line x1="200" y1="147" x2="440" y2="147" stroke="#60a5fa"/><line x1="200" y1="181" x2="440" y2="181" stroke="#38bdf8"/><line x1="200" y1="215" x2="440" y2="215" stroke="#f87171"/><line x1="200" y1="245" x2="440" y2="245" stroke="#a8a8b3"/></g>
+<text x="320" y="206" fill="#fecaca" text-anchor="middle" font-size="14">confira a tensão do seu módulo</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Como ler:</strong> cada fio liga o pino do ESP32 (esquerda) ao pino de mesmo papel no módulo (direita). Os quatro de cima são o SPI padrão do ESP32 (VSPI). O vermelho é a alimentação: há módulos de 3,3 V e módulos com regulador que pedem 5 V no VCC; leia a serigrafia antes de ligar.</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-5-t3-p3"><strong class="text-neutral-100">Objetivo:</strong> criar um arquivo novo a cada ligação (<span class="font-mono text-xs">/log001.csv</span>, <span class="font-mono text-xs">/log002.csv</span>...), gravar 50 linhas por segundo e fechar com segurança ao apertar BOOT. Cartão formatado em FAT32.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">sd-log.ino</span></div>
+<pre><code><span class="c">// Log CSV no cartão microSD (ESP32, pacote esp32 3.x, módulo microSD por SPI)</span>
+#include &lt;SPI.h&gt;
+#include &lt;SD.h&gt;
+const int PINO_CS = 5, PINO_SENSOR = 34, BOTAO = 0;   <span class="c">// SCK 18, MISO 19, MOSI 23 (VSPI padrão)</span>
+File arq;
+char nome[16];
+unsigned long tLog = 0, linhas = 0;
+float filtrado = 0;
+bool gravando = true;
+void setup() {
+  Serial.begin(115200);
+  pinMode(BOTAO, INPUT_PULLUP);
+  if (!SD.begin(PINO_CS)) { Serial.println(<span class="s">"SD nao encontrado: confira fios e FAT32"</span>); while (true) delay(1000); }
+  for (int i = 1; i &lt; 1000; i++) {                       <span class="c">// primeiro nome livre</span>
+    snprintf(nome, sizeof nome, <span class="s">"/log%03d.csv"</span>, i);   <span class="c">// a barra inicial é obrigatória</span>
+    if (!SD.exists(nome)) break;
+  }
+  arq = SD.open(nome, FILE_WRITE);
+  arq.println(<span class="s">"t_ms,sensor,filtrado"</span>);                 <span class="c">// cabeçalho, uma vez</span>
+  Serial.printf(<span class="s">"Gravando em %s (BOOT encerra)\n"</span>, nome);
+}
+void loop() {
+  if (!gravando) return;
+  if (millis() - tLog &gt;= 20) {                            <span class="c">// 50 linhas por segundo</span>
+    tLog = millis();
+    int cru = analogRead(PINO_SENSOR);
+    filtrado = 0.9 * filtrado + 0.1 * cru;
+    arq.printf(<span class="s">"%lu,%d,%.1f\n"</span>, tLog, cru, filtrado);
+    if (++linhas % 25 == 0) arq.flush();                    <span class="c">// grava de fato a cada 0,5 s</span>
+  }
+  if (digitalRead(BOTAO) == LOW) {                          <span class="c">// encerrar antes de tirar o cartão</span>
+    arq.close(); gravando = false;
+    Serial.printf(<span class="s">"Arquivo fechado: %lu linhas. Pode tirar o cartao.\n"</span>, linhas);
+  }
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>O Serial Monitor mostra "Gravando em /log001.csv"; depois de apertar BOOT, o total de linhas (cerca de 50 por segundo gravado).</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>No computador, o arquivo abre na planilha com as colunas t_ms, sensor e filtrado.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"SD nao encontrado": cartão maior que 32 GB em exFAT, fio de CS trocado ou módulo sem alimentação certa.</span></li></ul>
+</div>
+<div class="bg-primary/10 rounded-xl border border-primary/30 p-5 mb-6">
+<h3 class="text-lg font-semibold text-primary mb-2">💡 Por que o flush() importa</h3>
+<p class="text-neutral-300 text-sm">O ESP32 junta as linhas na memória e só escreve no cartão de tempos em tempos. Se a bateria cair antes, o fim do teste se perde e o arquivo pode corromper. <span class="font-mono text-xs">flush()</span> a cada meio segundo limita a perda a 0,5 s; <span class="font-mono text-xs">close()</span> antes de tirar o cartão evita arquivo quebrado.</p>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-5-t3-p4">O cartão grava rápido, sem rede e sem cabo, e guarda testes inteiros para comparar depois. É o registro que você vai usar no ajuste do seguidor de linha.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">CSV</div><div class="text-xs text-neutral-400">texto em colunas</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">SPI</div><div class="text-xs text-neutral-400">CS, SCK, MOSI, MISO</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">flush()</div><div class="text-xs text-neutral-400">grava o que está pendente</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">FAT32</div><div class="text-xs text-neutral-400">formato do cartão</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 4 -->
+<section class="mb-16" id="topico-4" data-inema-topic="modulo-2-5#topico-4" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">4</span>
+<h2 class="text-2xl font-bold pt-1">📡 MQTT: publicar telemetria na rede</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-5-t4-p1">Para ver o robô ao vivo, sem cabo, use <strong class="text-blue-400">MQTT</strong>: um protocolo leve de mensagens, feito para aparelhos pequenos. O robô <strong class="text-neutral-100">publica</strong> num tópico (<span class="font-mono text-sm">robo/telemetria</span>) e não precisa saber quem está ouvindo. Um servidor chamado <strong class="text-neutral-100">broker</strong> entrega a mensagem a todo mundo que <strong class="text-neutral-100">assinou</strong> aquele tópico: o painel no navegador, o Node-RED, um script Python. Comandos fazem o caminho inverso, por outro tópico.</p>
+<div class="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4 mb-6">
+<p class="text-sm text-blue-400 font-semibold mb-1">🌱 Novo aqui?</p>
+<p class="text-sm text-neutral-300" data-inema-block="m2-5-t4-p2">O <strong>broker</strong> é o correio central (o mais usado é o Mosquitto, gratuito). Um <strong>tópico</strong> é o endereço da mensagem, com níveis separados por barra; <span class="font-mono text-xs">robo/#</span> assina tudo abaixo de <span class="font-mono text-xs">robo/</span>. <strong>Publicar</strong> é enviar; <strong>assinar</strong> é pedir para receber.</p>
+</div>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Fluxo MQTT: o robô publica em robo/telemetria; o broker Mosquitto repassa para o painel no navegador, o Node-RED e o Python; o painel publica em robo/comando e o broker entrega ao robô." class="w-full h-auto" viewBox="0 0 640 270">
+<defs><marker id="m25-ah4" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#60a5fa"/></marker><marker id="m25-ah4c" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#38bdf8"/></marker></defs>
+<rect width="640" height="270" fill="url(#m25-grid1)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle" font-size="15">
+<rect x="20" y="95" width="140" height="70" rx="14" fill="#122240" stroke="#3b82f6" stroke-width="2.5"/><text x="90" y="126" fill="#dbeafe" font-weight="600" font-size="17">robô</text><text x="90" y="148" fill="#bfdbfe" font-size="14">ESP32</text>
+<rect x="250" y="85" width="150" height="90" rx="14" fill="#0e1a2e" stroke="#38bdf8" stroke-width="2.5"/><text x="325" y="124" fill="#bfe6ff" font-weight="600" font-size="17">broker</text><text x="325" y="148" fill="#7dd3fc" font-size="14">Mosquitto</text>
+<rect x="480" y="20" width="140" height="50" rx="10" fill="#122240" stroke="#60a5fa"/><text x="550" y="51" fill="#dbeafe">painel web</text>
+<rect x="480" y="105" width="140" height="50" rx="10" fill="#122240" stroke="#60a5fa"/><text x="550" y="136" fill="#dbeafe">Node-RED</text>
+<rect x="480" y="190" width="140" height="50" rx="10" fill="#122240" stroke="#60a5fa"/><text x="550" y="221" fill="#dbeafe">Python</text>
+<path d="M160,118 L243,118" stroke="#60a5fa" stroke-width="2.5" marker-end="url(#m25-ah4)"/><text x="205" y="104" fill="#bfdbfe" font-size="14">publica</text>
+<path d="M400,110 L473,48" stroke="#60a5fa" stroke-width="2" marker-end="url(#m25-ah4)"/><path d="M400,130 L473,130" stroke="#60a5fa" stroke-width="2" marker-end="url(#m25-ah4)"/><path d="M400,150 L473,212" stroke="#60a5fa" stroke-width="2" marker-end="url(#m25-ah4)"/>
+<path d="M480,58 C440,70 420,80 404,92" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 5" fill="none" marker-end="url(#m25-ah4c)"/>
+<path d="M250,150 L167,150" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#m25-ah4c)"/><text x="205" y="174" fill="#7dd3fc" font-size="14">comando</text>
+<text x="325" y="230" fill="#bfdbfe" font-size="14">robo/telemetria →</text><text x="325" y="252" fill="#7dd3fc" font-size="14">← robo/comando (tracejado)</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Como ler:</strong> as setas cheias são a telemetria saindo do robô e sendo copiada pelo broker para cada assinante. As tracejadas são o comando: o painel publica em <span class="font-mono">robo/comando</span> e o broker entrega ao robô. Ninguém fala direto com ninguém; todos falam com o broker.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-4">Passo a passo: broker Mosquitto no seu PC ou Raspberry Pi</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Instale</h4><p class="text-neutral-300 text-sm">Linux e Raspberry Pi OS pelo <span class="font-mono text-xs">apt</span> (abaixo). No Windows e no macOS, use o instalador de mosquitto.org/download.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Abra para a rede local</h4><p class="text-neutral-300 text-sm">O Mosquitto 2.x só aceita conexões da própria máquina até você declarar um <span class="font-mono text-xs">listener</span>. O arquivo <span class="font-mono text-xs">robo.conf</span> abre a porta 1883 (ESP32) e a 9001 (navegador, WebSocket).</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Descubra o IP e escute</h4><p class="text-neutral-300 text-sm">Anote o IP do PC na rede (<span class="font-mono text-xs">hostname -I</span> no Linux, <span class="font-mono text-xs">ipconfig</span> no Windows) e deixe um terminal com <span class="font-mono text-xs">mosquitto_sub</span> aberto.</p></div></div>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">/etc/mosquitto/conf.d/robo.conf</span></div>
+<pre><code><span class="c"># Broker para a rede de casa ou da escola (Mosquitto 2.x)</span>
+listener 1883
+listener 9001
+protocol websockets
+<span class="c"># sem senha: só em rede local de confiança; exposto na internet, configure usuário e senha</span>
+allow_anonymous true</code></pre>
+</div>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">terminal</span></div>
+<pre><code>sudo apt install mosquitto mosquitto-clients
+sudo nano /etc/mosquitto/conf.d/robo.conf      <span class="c"># cole o bloco acima e salve</span>
+sudo systemctl restart mosquitto
+mosquitto_sub -h localhost -t <span class="s">'robo/#'</span> -v         <span class="c"># mostra tudo que o robô publica</span>
+mosquitto_pub -h localhost -t robo/comando -m parar   <span class="c"># em outro terminal: manda um comando</span></code></pre>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-5-t4-p3"><strong class="text-neutral-100">Objetivo:</strong> o ESP32 publica um JSON curto 5 vezes por segundo e obedece a "parar" e "andar" (o LED do GPIO 2 indica parado). Instale a biblioteca <strong class="text-neutral-100">PubSubClient</strong> (Nick O'Leary) pelo Gerenciador de Bibliotecas. Troque os campos entre <span class="font-mono text-xs">&lt; &gt;</span>.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">mqtt-telemetria.ino</span></div>
+<pre><code><span class="c">// Telemetria por MQTT (ESP32, pacote esp32 3.x + biblioteca PubSubClient)</span>
+#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+const char *WIFI_NOME  = <span class="s">"&lt;seu_wifi&gt;"</span>;       <span class="c">// no Wokwi: "Wokwi-GUEST" com senha ""</span>
+const char *WIFI_SENHA = <span class="s">"&lt;sua_senha&gt;"</span>;
+const char *BROKER     = <span class="s">"&lt;ip_do_seu_pc&gt;"</span>;    <span class="c">// teste rápido: "test.mosquitto.org" (público: qualquer um lê)</span>
+const int PINO_SENSOR = 34, PINO_LED = 2;
+WiFiClient wifi;
+PubSubClient mqtt(wifi);
+unsigned long tPub = 0, tTentativa = 0;
+bool parado = false;
+void aoReceber(char *topico, byte *dados, unsigned int n) {   <span class="c">// comandos chegam aqui</span>
+  String msg; for (unsigned int i = 0; i &lt; n; i++) msg += (char)dados[i];
+  if (msg == <span class="s">"parar"</span>) parado = true;
+  if (msg == <span class="s">"andar"</span>) parado = false;
+  digitalWrite(PINO_LED, parado);
+  Serial.printf(<span class="s">"comando: %s\n"</span>, msg.c_str());
+}
+void setup() {
+  Serial.begin(115200);
+  pinMode(PINO_LED, OUTPUT);
+  WiFi.begin(WIFI_NOME, WIFI_SENHA);
+  while (WiFi.status() != WL_CONNECTED) { delay(300); Serial.print(<span class="s">"."</span>); }   <span class="c">// espera só no setup</span>
+  Serial.printf(<span class="s">"\nWi-Fi ok: %s\n"</span>, WiFi.localIP().toString().c_str());
+  mqtt.setServer(BROKER, 1883);
+  mqtt.setCallback(aoReceber);
+}
+void loop() {
+  if (!mqtt.connected() &amp;&amp; millis() - tTentativa &gt; 2000) {    <span class="c">// reconecta sem travar o robô</span>
+    tTentativa = millis();
+    if (mqtt.connect(<span class="s">"robo-inema-01"</span>)) { mqtt.subscribe(<span class="s">"robo/comando"</span>); Serial.println(<span class="s">"MQTT conectado"</span>); }
+  }
+  mqtt.loop();                                                 <span class="c">// envia e recebe; chame em toda volta</span>
+  if (mqtt.connected() &amp;&amp; millis() - tPub &gt;= 200) {           <span class="c">// 5 mensagens por segundo</span>
+    tPub = millis();
+    char json[96];                                             <span class="c">// curto: o buffer padrão é de 256 bytes</span>
+    snprintf(json, sizeof json, <span class="s">"{\"t\":%lu,\"sensor\":%d,\"rssi\":%d,\"parado\":%d}"</span>, tPub, analogRead(PINO_SENSOR), WiFi.RSSI(), parado);
+    mqtt.publish(<span class="s">"robo/telemetria"</span>, json);
+  }
+}</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>O terminal do <span class="font-mono text-xs">mosquitto_sub</span> mostra <span class="font-mono text-xs">robo/telemetria {"t":12345,"sensor":2048,...}</span> 5 vezes por segundo.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>O <span class="font-mono text-xs">mosquitto_pub ... -m parar</span> acende o LED; "andar" apaga.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Nunca conecta? Firewall do PC bloqueando a porta 1883, IP errado ou PC e ESP32 em redes diferentes (rede de convidados isola aparelhos). Em broker público, use um tópico só seu, como <span class="font-mono text-xs">inema/seunome/telemetria</span>.</span></li></ul>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-5-t4-p4">MQTT é o idioma comum da internet das coisas: o mesmo robô fala com painel, planilha, Home Assistant ou outro robô sem mudar uma linha. E é a mesma ideia de publicar e assinar tópicos que você vai reencontrar no ROS 2, na Trilha 4.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Broker</div><div class="text-xs text-neutral-400">correio central</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Tópico</div><div class="text-xs text-neutral-400">endereço com barras</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Publicar/assinar</div><div class="text-xs text-neutral-400">enviar / pedir para receber</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">mqtt.loop()</div><div class="text-xs text-neutral-400">em toda volta do loop</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 5 -->
+<section class="mb-16" id="topico-5" data-inema-topic="modulo-2-5#topico-5" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">5</span>
+<h2 class="text-2xl font-bold pt-1">🖥️ Painel no navegador ou no Node-RED/Grafana</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-5-t5-p1">Com a telemetria no broker, qualquer programa pode desenhar o painel. Há três caminhos, do mais simples ao mais completo. Comece pelo primeiro e só suba quando precisar.</p>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🌐 Página HTML</div><p class="text-sm text-neutral-400">Um arquivo só, abre no navegador e fala com o broker pela porta WebSocket (9001). Bom para a bancada e para mostrar em aula.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">🧩 Node-RED</div><p class="text-sm text-neutral-400">Monta fluxos arrastando blocos: <span class="font-mono text-xs">mqtt in</span> → <span class="font-mono text-xs">json</span> → gráfico. Com o pacote de dashboard da FlowFuse, vira painel com medidores e botões.</p></div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-5"><div class="font-semibold mb-1">📊 Grafana</div><p class="text-sm text-neutral-400">Gráficos de longo prazo e históricos. Em geral guarda os dados num banco de séries temporais (InfluxDB, por exemplo) alimentado pelo Node-RED ou pelo Telegraf.</p></div>
+</div>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-5-t5-p2"><strong class="text-neutral-100">Objetivo:</strong> uma página que mostra o sensor e o sinal Wi-Fi ao vivo, desenha o gráfico dos últimos 120 valores e tem botões Parar e Andar. Salve como <span class="font-mono text-xs">painel.html</span> e abra no navegador do PC que roda o broker (ou troque o endereço).</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">painel.html</span></div>
+<pre><code>&lt;!doctype html&gt;
+&lt;html lang="pt-BR"&gt;&lt;head&gt;&lt;meta charset="utf-8"&gt;&lt;title&gt;Painel do robô&lt;/title&gt;
+&lt;script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"&gt;&lt;/script&gt;&lt;/head&gt;
+&lt;body style="font-family:sans-serif;background:#111;color:#eee;padding:16px"&gt;
+&lt;h1&gt;Robô: &lt;span id="estado"&gt;desconectado&lt;/span&gt;&lt;/h1&gt;
+&lt;p&gt;sensor: &lt;b id="sensor"&gt;-&lt;/b&gt; · Wi-Fi: &lt;b id="rssi"&gt;-&lt;/b&gt; dBm · parado: &lt;b id="parado"&gt;-&lt;/b&gt;&lt;/p&gt;
+&lt;canvas id="g" width="600" height="200" style="background:#000;max-width:100%"&gt;&lt;/canvas&gt;
+&lt;p&gt;&lt;button onclick="cmd('parar')"&gt;Parar&lt;/button&gt; &lt;button onclick="cmd('andar')"&gt;Andar&lt;/button&gt;&lt;/p&gt;
+&lt;script&gt;
+const cli = mqtt.connect('ws://localhost:9001');   <span class="c">// em outro aparelho: ws://&lt;ip_do_seu_pc&gt;:9001</span>
+const pts = [], g = document.getElementById('g').getContext('2d');
+const $ = id =&gt; document.getElementById(id);
+cli.on('connect', () =&gt; { $('estado').textContent = 'conectado'; cli.subscribe('robo/telemetria'); });
+cli.on('message', (topico, m) =&gt; {
+  const d = JSON.parse(m.toString());
+  $('sensor').textContent = d.sensor; $('rssi').textContent = d.rssi; $('parado').textContent = d.parado ? 'sim' : 'não';
+  pts.push(d.sensor); if (pts.length &gt; 120) pts.shift();
+  g.clearRect(0, 0, 600, 200); g.strokeStyle = '#60a5fa'; g.lineWidth = 2; g.beginPath();
+  pts.forEach((v, i) =&gt; g.lineTo(i * 5, 200 - v / 4095 * 200)); g.stroke();
+});
+function cmd(c) { cli.publish('robo/comando', c); }
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>O título muda para "Robô: conectado" e a linha azul anda conforme você gira o sensor.</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>"Parar" acende o LED do ESP32 e o campo "parado" vira "sim".</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Continua "desconectado"? Falta a porta 9001 com <span class="font-mono text-xs">protocol websockets</span> no <span class="font-mono text-xs">robo.conf</span>. Abra o console do navegador (F12) para ver o erro.</span></li></ul>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-4">Passo a passo: o mesmo painel no Node-RED</h3>
+<div class="space-y-4 mb-6">
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">1</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Instale e abra</h4><p class="text-neutral-300 text-sm">Com o Node.js instalado: <span class="font-mono text-xs">npm install -g --unsafe-perm node-red</span>, depois <span class="font-mono text-xs">node-red</span>. O editor abre em <span class="font-mono text-xs">http://localhost:1880</span>.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">2</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Adicione o dashboard</h4><p class="text-neutral-300 text-sm">Menu → Manage palette → Install → procure <span class="font-mono text-xs">@flowfuse/node-red-dashboard</span>.</p></div></div>
+<div class="flex items-start gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center"><span class="text-blue-400 font-bold">3</span></div><div class="flex-1 bg-dark-800 rounded-xl p-4 border border-dark-600"><h4 class="font-semibold mb-1">Ligue os blocos</h4><p class="text-neutral-300 text-sm"><span class="font-mono text-xs">mqtt in</span> (servidor localhost:1883, tópico robo/telemetria) → <span class="font-mono text-xs">json</span> → <span class="font-mono text-xs">change</span> (<span class="font-mono text-xs">msg.payload = msg.payload.sensor</span>) → <span class="font-mono text-xs">ui-chart</span>. Um <span class="font-mono text-xs">ui-button</span> com payload "parar" ligado a um <span class="font-mono text-xs">mqtt out</span> em robo/comando. Clique em Deploy e abra <span class="font-mono text-xs">/dashboard</span>.</p></div></div>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-5-t5-p3">Um painel transforma o robô numa caixa transparente para quem está em volta: o grupo inteiro vê o erro e a bateria enquanto ele anda. Em sala de aula, é o que permite discutir o comportamento do robô com dados, não com impressão.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">WebSocket</div><div class="text-xs text-neutral-400">MQTT dentro do navegador</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Fluxo</div><div class="text-xs text-neutral-400">blocos ligados no Node-RED</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">Série temporal</div><div class="text-xs text-neutral-400">valor + hora, para o Grafana</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">5 a 10 Hz</div><div class="text-xs text-neutral-400">basta para os olhos</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- TÓPICO 6 -->
+<section class="mb-16" id="topico-6" data-inema-topic="modulo-2-5#topico-6" style="scroll-margin-top:5rem">
+<div class="flex items-start gap-4 mb-4">
+<span class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 text-blue-400 font-bold text-xl">6</span>
+<h2 class="text-2xl font-bold pt-1">🐍 Analisar o log em Python (pandas + gráfico)</h2>
+</div>
+<div class="ml-0 sm:ml-16">
+<div class="flex justify-start mb-5"><button aria-pressed="false" data-inema-doubt-toggle="" title="Marcar dúvida neste tópico" type="button"><span aria-hidden="true">?</span><span>Tenho dúvida</span></button></div>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-5-t6-p1">A planilha abre o CSV, mas trava com 50 000 linhas e não compara dois testes com facilidade. O <strong class="text-blue-400">pandas</strong> lê o arquivo numa tabela em uma linha de código, calcula médias e intervalos, e o <strong class="text-blue-400">matplotlib</strong> desenha os gráficos. O script abaixo serve para qualquer log deste curso: você diz o arquivo e as colunas.</p>
+<figure class="fig mb-3">
+<svg role="img" aria-label="Do cartão ao gráfico em quatro passos: o arquivo CSV do microSD vai para o pandas, que calcula estatísticas e o intervalo entre linhas, e o matplotlib gera uma imagem PNG com os gráficos." class="w-full h-auto" viewBox="0 0 640 170">
+<defs><marker id="m25-ah6" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 L2.4,4.5 Z" fill="#60a5fa"/></marker></defs>
+<rect width="640" height="170" fill="url(#m25-grid1)"/>
+<g font-family="Inter,sans-serif" text-anchor="middle" font-size="15">
+<rect x="20" y="40" width="120" height="70" rx="12" fill="#0e1a2e" stroke="#38bdf8" stroke-width="2"/><text x="80" y="72" fill="#bfe6ff" font-weight="600">log001.csv</text><text x="80" y="94" fill="#7dd3fc" font-size="14">microSD</text>
+<rect x="180" y="40" width="120" height="70" rx="12" fill="#122240" stroke="#3b82f6" stroke-width="2"/><text x="240" y="72" fill="#dbeafe" font-weight="600">read_csv</text><text x="240" y="94" fill="#bfdbfe" font-size="14">tabela</text>
+<rect x="340" y="40" width="120" height="70" rx="12" fill="#122240" stroke="#3b82f6" stroke-width="2"/><text x="400" y="72" fill="#dbeafe" font-weight="600">describe</text><text x="400" y="94" fill="#bfdbfe" font-size="14">diff do tempo</text>
+<rect x="500" y="40" width="120" height="70" rx="12" fill="#0e1a2e" stroke="#38bdf8" stroke-width="2"/><text x="560" y="72" fill="#bfe6ff" font-weight="600">gráfico</text><text x="560" y="94" fill="#7dd3fc" font-size="14">log001.png</text>
+<g stroke="#60a5fa" stroke-width="2"><path d="M140,75 L173,75" marker-end="url(#m25-ah6)"/><path d="M300,75 L333,75" marker-end="url(#m25-ah6)"/><path d="M460,75 L493,75" marker-end="url(#m25-ah6)"/></g>
+<text x="320" y="146" fill="#a8a8b3" font-size="14">intervalo maior que o esperado = o robô travou naquele instante</text>
+</g>
+</svg>
+</figure>
+<p class="text-xs text-neutral-400 mb-6 px-1"><strong class="text-blue-400">Como ler:</strong> siga as caixas da esquerda para a direita. O passo do meio é o que mais ensina: a diferença entre um <span class="font-mono">t_ms</span> e o seguinte deveria ser sempre 20 ms; um pico ali revela onde o laço atrasou (cartão lento, Wi-Fi, um delay esquecido).</p>
+<p class="text-sm text-neutral-300 mb-3" data-inema-block="m2-5-t6-p2"><strong class="text-neutral-100">Objetivo:</strong> ler o CSV do tópico 3, imprimir um resumo e salvar um PNG com as curvas e o intervalo entre linhas. Prepare o ambiente uma vez: <span class="font-mono text-xs">python3 -m venv .venv</span>, <span class="font-mono text-xs">source .venv/bin/activate</span> (no Windows, <span class="font-mono text-xs">.venv\Scripts\activate</span>) e <span class="font-mono text-xs">pip install pandas matplotlib</span>.</p>
+<div class="code-box mb-3">
+<div class="code-head"><button type="button" class="copy-btn" onclick="copyCode(this)"><span class="copy-label">Copiar</span><span class="copy-done">Copiado</span></button><span class="code-file">analisa_log.py</span></div>
+<pre><code><span class="c"># analisa_log.py: resumo e gráfico de um log CSV do robô</span>
+<span class="c"># Uso: python analisa_log.py log001.csv [coluna1 coluna2 ...]</span>
+import sys
+import pandas as pd
+import matplotlib.pyplot as plt
+
+arquivo = sys.argv[1] if len(sys.argv) &gt; 1 else <span class="s">"log001.csv"</span>
+df = pd.read_csv(arquivo, comment=<span class="s">"#"</span>)                    <span class="c"># linhas com # são anotações</span>
+colunas = sys.argv[2:] or [c for c in df.columns if c != <span class="s">"t_ms"</span>]
+df[<span class="s">"t_s"</span>] = (df[<span class="s">"t_ms"</span>] - df[<span class="s">"t_ms"</span>].iloc[0]) / 1000      <span class="c"># segundos desde o início</span>
+dt = df[<span class="s">"t_ms"</span>].diff()                                       <span class="c"># intervalo entre linhas</span>
+
+print(f<span class="s">"{len(df)} linhas, {df['t_s'].iloc[-1]:.1f} s gravados"</span>)
+print(f<span class="s">"intervalo: médio {dt.mean():.1f} ms, maior {dt.max():.0f} ms"</span>)
+print(df[colunas].describe().round(1))
+
+fig, (a1, a2) = plt.subplots(2, 1, sharex=True, figsize=(10, 6))
+df.plot(x=<span class="s">"t_s"</span>, y=colunas, ax=a1, title=arquivo)
+a1.set_ylabel(<span class="s">"valor"</span>); a1.grid(alpha=0.3)
+a2.plot(df[<span class="s">"t_s"</span>], dt, color=<span class="s">"tab:red"</span>)
+a2.set_ylabel(<span class="s">"intervalo (ms)"</span>); a2.set_xlabel(<span class="s">"tempo (s)"</span>); a2.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig(arquivo.replace(<span class="s">".csv"</span>, <span class="s">".png"</span>), dpi=120)
+plt.show()</code></pre>
+</div>
+<div class="bg-dark-800 border border-dark-600 rounded-xl p-4 mb-6">
+<p class="text-sm font-semibold text-neutral-100 mb-2">Como verificar</p>
+<ul class="space-y-1 text-sm text-neutral-300"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span><span class="font-mono text-xs">python analisa_log.py log001.csv</span> imprime algo como "1500 linhas, 30.0 s gravados" e "intervalo: médio 20.0 ms".</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>Aparece uma janela com dois gráficos e o arquivo <span class="font-mono text-xs">log001.png</span> fica salvo ao lado do CSV.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>"externally-managed-environment" no pip? O ambiente virtual não está ativo: rode o <span class="font-mono text-xs">activate</span> de novo.</span></li></ul>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-blue-900/20 rounded-xl border border-blue-500/30 p-5">
+<h4 class="font-bold text-blue-400 mb-3">✓ Boas perguntas para o log</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>O intervalo ficou constante ou teve picos?</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>O erro oscila? De quanto em quanto tempo?</span></li><li class="flex items-start gap-2"><span class="text-blue-400">✓</span><span>O PWM bateu em 255 (saturou) em algum trecho?</span></li></ul>
+</div>
+<div class="bg-red-900/20 rounded-xl border border-red-500/30 p-5">
+<h4 class="font-bold text-red-400 mb-3">✗ Conclusões apressadas</h4>
+<ul class="space-y-2 text-neutral-300 text-sm"><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Comparar dois testes com bateria em cargas diferentes.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Mudar três parâmetros de uma vez e não saber qual ajudou.</span></li><li class="flex items-start gap-2"><span class="text-red-400">✗</span><span>Olhar só a média: ela esconde o pico que derrubou o robô.</span></li></ul>
+</div>
+</div>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Por que aprender</h3>
+<p class="text-neutral-300 leading-relaxed mb-6" data-inema-block="m2-5-t6-p3">Este script é a ferramenta de ajuste do projeto 2.6: grave um teste, rode o script, mude um parâmetro, grave de novo e compare os PNG. É também a porta para a Trilha 3, onde Python é a língua principal.</p>
+<h3 class="text-lg font-semibold text-blue-400 mb-3">Conceitos-chave</h3>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+<div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">DataFrame</div><div class="text-xs text-neutral-400">tabela do pandas</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">describe()</div><div class="text-xs text-neutral-400">média, mínimo, máximo</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">diff()</div><div class="text-xs text-neutral-400">diferença entre linhas</div></div><div class="bg-dark-800 border border-dark-600 rounded-lg p-3"><div class="text-blue-400 font-semibold text-sm">venv</div><div class="text-xs text-neutral-400">bibliotecas do projeto</div></div>
+</div>
+<div class="flex justify-start mt-6"><button aria-pressed="false" data-inema-read-toggle="" type="button"><span aria-hidden="true" class="inema-ico-todo">○</span><span aria-hidden="true" class="inema-ico-done"><svg fill="none" height="16" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" width="16"><path d="M5 12l5 5L20 6"></path></svg></span><span class="inema-label-todo">Marcar como lido</span><span class="inema-label-done">Lido</span></button></div>
+</div>
+</section>
+<!-- RESUMO + PARA IR ALÉM + NAVEGAÇÃO -->
+<section class="mb-8">
+<div class="bg-gradient-to-br from-blue-900/30 via-dark-800 to-dark-800 rounded-xl border border-blue-500/30 p-5 sm:p-8">
+<h2 class="text-2xl font-bold mb-6">✅ Resumo do módulo</h2>
+<div class="space-y-3 mb-8">
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Entrada, decisão e saída</strong><span class="text-neutral-400">, sempre com t_ms, no ritmo do fenômeno e dentro do orçamento da porta.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Serial Plotter</strong><span class="text-neutral-400">: pares nome:valor por linha; ideal para a bancada.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">microSD</strong><span class="text-neutral-400">: CSV rápido e sem cabo; flush() periódico e close() antes de tirar.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">MQTT</strong><span class="text-neutral-400">: o robô publica, o broker entrega; comandos voltam por outro tópico.</span></div></div>
+<div class="flex items-start gap-3"><span class="text-blue-400 mt-0.5">✓</span><div><strong class="text-neutral-100">Python</strong><span class="text-neutral-400">: pandas resume, matplotlib desenha; compare testes mudando uma coisa por vez.</span></div></div>
+</div>
+<h3 class="font-semibold text-blue-400 mb-3">Para ir além</h3>
+<ul class="space-y-2 text-sm mb-8">
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://docs.arduino.cc/software/ide-v2/tutorials/ide-v2-serial-plotter/" rel="noopener" target="_blank">Serial Plotter na Arduino IDE 2</a> <span class="text-neutral-500">— formato e opções</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://github.com/espressif/arduino-esp32/tree/master/libraries/SD" rel="noopener" target="_blank">Biblioteca SD do Arduino-ESP32</a> <span class="text-neutral-500">— exemplos oficiais</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://pubsubclient.knolleary.net/" rel="noopener" target="_blank">PubSubClient</a> <span class="text-neutral-500">— API do cliente MQTT</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://mosquitto.org/documentation/" rel="noopener" target="_blank">Mosquitto</a> <span class="text-neutral-500">— broker, listeners e segurança</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://nodered.org/docs/getting-started/" rel="noopener" target="_blank">Node-RED</a> e <a class="text-sky-400 hover:text-sky-300 underline" href="https://dashboard.flowfuse.com/" rel="noopener" target="_blank">FlowFuse Dashboard</a></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://grafana.com/docs/grafana/latest/" rel="noopener" target="_blank">Grafana</a> <span class="text-neutral-500">— painéis de séries temporais</span></li>
+<li><a class="text-sky-400 hover:text-sky-300 underline" href="https://pandas.pydata.org/docs/getting_started/index.html" rel="noopener" target="_blank">pandas: primeiros passos</a></li>
+</ul>
+<div class="bg-dark-800/50 rounded-lg p-4 mb-6 border border-dark-600">
+<h3 class="font-semibold text-blue-400 mb-1">Próximo módulo</h3>
+<p class="text-neutral-300">2.6 · Projeto: seguidor de linha com PID, ajustado com a telemetria que você acabou de montar.</p>
+</div>
+<div class="flex flex-wrap justify-start gap-3">
+<a class="inline-flex items-center px-5 py-3 bg-dark-700 text-neutral-300 rounded-lg font-semibold hover:bg-dark-600 transition-colors" href="modulo-2-4.html">← Anterior: 2.4 Várias tarefas</a>
+<a class="inline-flex items-center px-5 py-3 bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors" href="modulo-2-6.html">Próximo: 2.6 Seguidor de linha →</a>
+</div>
+</div>
+</section>
+</article>
+</div>
+</div>
+</main>
+<footer class="border-t border-dark-600 py-8 mt-8">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-500">
+<p>Robótica do Zero ao Expert · <a class="text-sky-400 hover:text-sky-300" href="https://inema.club" rel="noopener" target="_blank">INEMA.CLUB</a> - <a class="text-amber-700 dark:text-slate-300 hover:underline" href="https://inema.pro" rel="noopener" target="_blank">PRO</a> · Licença MIT · <a class="text-sky-400 hover:text-sky-300" href="https://github.com/inematds/robot" rel="noopener" target="_blank">GitHub</a></p>
+</div>
+</footer>
+<script>
+function toggleTopic(button) { var item = button.closest('.topic-item'); if (!item) return; var exp = item.querySelector('.topic-explanation'); var willOpen = !exp.classList.contains('active'); exp.classList.toggle('active'); button.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+function openModal(id) { var m = document.getElementById(id); if (m) { m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+function closeModal() { document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); }); document.body.style.overflow = 'auto'; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+function copyCode(btn) {
+  var box = btn.closest('.code-box'), code = box && box.querySelector('pre code'); if (!code) return; var text = code.innerText;
+  function done() { btn.classList.add('is-copied'); setTimeout(function () { btn.classList.remove('is-copied'); }, 1600); } function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, fallback); } else { fallback(); }
+}
+(function () {
+  var toggle = document.getElementById('theme-toggle'), darkIcon = document.getElementById('theme-toggle-dark-icon'), lightIcon = document.getElementById('theme-toggle-light-icon'), html = document.documentElement;
+  function sync() { var isDark = html.classList.contains('dark'); if (darkIcon) darkIcon.classList.toggle('hidden', isDark); if (lightIcon) lightIcon.classList.toggle('hidden', !isDark); }
+  sync();
+  if (toggle) toggle.addEventListener('click', function () {
+    html.classList.toggle('dark'); var nowDark = html.classList.contains('dark'); html.style.colorScheme = nowDark ? 'dark' : 'light';
+    try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+    try { var p = JSON.parse(localStorage.getItem('inema.prefs') || '{}'); p.theme = nowDark ? 'inema-dark' : 'claro'; localStorage.setItem('inema.prefs', JSON.stringify(p)); } catch (e) {}
+    sync();
+  });
+})();
+</script>
+<script src="../../assets/learn.js"></script>
+<script>
+if (window.INEMA && typeof window.INEMA.init === 'function') { window.INEMA.init({ autoResume: true }); }
+</script>
+</body>
+</html>
