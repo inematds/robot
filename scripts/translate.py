@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-"""Traduz i18n/source.json → i18n/<lang>.json (cache incremental). Só Codex pela assinatura
-(codex exec -m gpt-6-luna). Sem API. Uso: python3 scripts/translate.py en es [--jobs 4]"""
+"""Traduz i18n/source.json → i18n/<lang>.json (cache incremental). Só o tradutor central do INEMA
+(inema-traduz, INEMA_TRADUCAO_* em ~/.config/inema/modelos.env, hoje Sonnet 5.5) pela assinatura. Sem API. Uso: python3 scripts/translate.py en es [--jobs 4]"""
 import json, os, re, subprocess, sys, tempfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 I18N = REPO / 'i18n'
-MODEL = os.environ.get('CODEX_MODEL', 'gpt-6-luna')
-CODEX = os.environ.get('CODEX_BIN') or (os.path.expanduser('~/.npm-global/bin/codex') if os.path.exists(os.path.expanduser('~/.npm-global/bin/codex')) else 'codex')
 NAME = {'en': 'clear, natural English (global audience)', 'es': 'neutral Latin American Spanish'}
 SYSTEM = """You are a careful professional translator of an educational ROBOTICS course (Arduino/ESP32, Raspberry Pi, computer vision, ROS 2, LeRobot) from Brazilian Portuguese into {name}.
 Translate ALL provided content. Do not summarize, omit or add. Return ONLY a JSON object mapping each exact input ID to the translated string (no other keys).
@@ -21,18 +19,26 @@ Rules:
 - Use a friendly, direct second person ("you"/"tú"), no hype."""
 
 
-def codex_json(system, payload):
+_TRADUTOR = os.path.expanduser("~/projetos/wifi/scripts/inema-traduz")
+def chamar_tradutor(pedido: str, timeout: int = 900) -> str:
+    """Tradução pelo tradutor central do INEMA (INEMA_TRADUCAO_* em ~/.config/inema/modelos.env). Assinatura, nunca API."""
+    if os.path.exists(_TRADUTOR):
+        cmd = [_TRADUTOR]
+    else:  # fora da máquina do Nei: Claude Code da assinatura com o modelo da variável (padrão Sonnet 5.5)
+        cmd = ["claude", "-p", "--model", os.environ.get("INEMA_TRADUCAO_MODELO", "claude-sonnet-5-5"),
+               "--output-format", "text", "--tools", ""]
+    env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "CLAUDECODE")}
     with tempfile.TemporaryDirectory() as d:
-        out = Path(d) / 'out.txt'
-        env = {**os.environ, 'PATH': os.path.dirname(CODEX) + ':' + os.environ.get('PATH', '')}
-        r = subprocess.run([CODEX, 'exec', '-m', MODEL, '--skip-git-repo-check', '--ephemeral', '--sandbox', 'read-only',
-                            '-C', d, '-o', str(out), '-'],
-                           input=system + '\n\nReturn ONLY the JSON object (no code fences).\nINPUT JSON:\n' + payload,
-                           text=True, capture_output=True, timeout=1200, env=env)
-        if r.returncode or not out.exists():
-            raise RuntimeError(f'codex rc={r.returncode}: {r.stderr[-300:]}')
-        t = re.sub(r'^```(?:json)?\s*|\s*```$', '', out.read_text().strip())
-        return json.loads(t[t.index('{'):t.rindex('}') + 1])
+        r = subprocess.run(cmd, input=pedido, capture_output=True, text=True, timeout=timeout, env=env, cwd=d)
+    if r.returncode != 0 or not r.stdout.strip():
+        raise RuntimeError(f"tradutor falhou rc={r.returncode}: {(r.stderr or r.stdout)[-300:]}")
+    return r.stdout
+
+
+def tradutor_json(system, payload):
+    t = chamar_tradutor(system + '\n\nReturn ONLY the JSON object (no code fences).\nINPUT JSON:\n' + payload, timeout=1200)
+    t = re.sub(r'^```(?:json)?\s*|\s*```$', '', t.strip())
+    return json.loads(t[t.index('{'):t.rindex('}') + 1])
 
 
 def code_skeleton(s):
@@ -88,7 +94,7 @@ def run(lang, jobs):
             try:
                 ids = {str(n): k for n, k in enumerate(b)}
                 payload = json.dumps({n: b[k] for n, k in ids.items()}, ensure_ascii=False)
-                raw = codex_json(system, payload)
+                raw = tradutor_json(system, payload)
                 raw = {ids[n]: v for n, v in raw.items() if n in ids}
                 # às vezes o modelo devolve o objeto de entrada com a tradução em "source"
                 raw = {k: (v.get('source') if isinstance(v, dict) else v) for k, v in raw.items()}
